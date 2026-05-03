@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">RunningTrainer</string>
+    <string name="title_activity_main">RunningTrainer</string>
+    <string name="package_name">com.runningtrainer.app</string>
+    <string name="custom_url_scheme">com.runningtrainer.app</string>
+</resources>

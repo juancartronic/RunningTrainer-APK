@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RunningTrainer · Conectando Strava...</title>
+  <style>
+    body { font-family:sans-serif; background:#0f172a; color:#f8fafc; display:flex; justify-content:center; align-items:center; min-height:100vh; margin:0; flex-direction:column; gap:1.5rem; text-align:center; padding:2rem; }
+    .spin { width:44px; height:44px; border:4px solid #334155; border-top-color:#FC4C02; border-radius:50%; animation:spin .8s linear infinite; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+    h2 { margin:0; font-size:1.3rem; }
+    p  { margin:0; color:#94a3b8; font-size:.95rem; }
+    .err { color:#ef4444; font-weight:700; }
+  </style>
+</head>
+<body>
+  <div style="font-size:3rem">🏃‍♂️</div>
+  <div class="spin" id="sp"></div>
+  <h2 id="t">Conectando con Strava...</h2>
+  <p id="d">Procesando tu autorización, espera un momento.</p>
+  <script>
+    var p = new URLSearchParams(location.search), code = p.get('code'), err = p.get('error');
+    if (err || !code) {
+      document.getElementById('sp').style.display='none';
+      document.getElementById('t').textContent='Conexión cancelada';
+      document.getElementById('t').className='err';
+      document.getElementById('d').textContent='No se conectó ninguna cuenta. Volviendo...';
+      setTimeout(function(){ location.href='/?strava_error=cancelled'; }, 2000);
+    } else {
+      location.href='/?strava_code='+encodeURIComponent(code);
+    }
+  </script>
+</body>
+</html>

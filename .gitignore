@@ -1,0 +1,76 @@
+# Operating System Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+*.lnk
+
+# IDEs and Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.classpath
+.settings/
+*.sublime-project
+*.sublime-workspace
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# Dependencies (if you add Node.js later)
+node_modules/
+jspm_packages/
+
+# Temporary files
+*.tmp
+*.temp
+*.cache
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Build outputs (if you add build tools)
+dist/
+build/
+out/
+www/
+
+# Package manager locks (optional)
+package-lock.json
+yarn.lock
+
+# Coverage reports
+coverage/
+*.lcov
+.nyc_output
+
+# Backup files
+*.bak
+*.backup
+*~
+
+# User-specific files
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+.vercel
+.env*.local
+
+# Local git recovery backups
+.git_backup_*/
