@@ -256,6 +256,7 @@ let homeMotionCandidateTimestamps = [];
 let homeHealthPermissionPrompted = false;
 let homeHealthSyncInProgress = false;
 let homeSavedRoutes = [];
+let homeLoadedRouteId = null;
 let homeLoadedRoute = null;
 let homeLastGuidanceTs = 0;
 let homeGuidanceRouteIndex = 0;
@@ -1887,6 +1888,64 @@ function renderMyRoutesList(resetPage = false) {
   }
 }
 
+function syncRoutesStateFromStorage({ resetMyRoutesPage = false } = {}) {
+  loadHomeRoutesStorage();
+
+  homeLoadedRoute = homeSavedRoutes.find((route) => route.id === homeLoadedRouteId) || null;
+  homeLoadedRouteCumulativeMeters = homeLoadedRoute ? computeRouteCumulativeMeters(homeLoadedRoute.points) : [];
+  homeLoadedRouteTotalMeters = homeLoadedRouteCumulativeMeters.length
+    ? homeLoadedRouteCumulativeMeters[homeLoadedRouteCumulativeMeters.length - 1]
+    : 0;
+
+  if (!homeLoadedRoute && homeLoadedRouteId) {
+    homeLoadedRouteId = null;
+    homeGuidanceRouteIndex = 0;
+    homeFinishAnnounced = false;
+    homeLastGuidanceMessage = '';
+    if (!homeRouteIsRecording) {
+      setHomeGpsStatus('');
+    }
+    resetGpsProgressCard();
+  }
+
+  drawLoadedRouteOnMap();
+  renderHomeRoutesList();
+  renderMyRoutesList(resetMyRoutesPage);
+}
+
+function deleteRoutesByIds(routeIds = []) {
+  const normalizedIds = Array.isArray(routeIds)
+    ? routeIds.map((id) => String(id || '')).filter(Boolean)
+    : [];
+  if (!normalizedIds.length) return 0;
+
+  // Leer desde storage justo antes de borrar evita inconsistencias entre vistas.
+  syncRoutesStateFromStorage();
+
+  const idsSet = new Set(normalizedIds);
+  const existingIds = new Set(homeSavedRoutes.map((route) => route.id));
+  const removableIds = new Set([...idsSet].filter((id) => existingIds.has(id)));
+  if (!removableIds.size) {
+    renderAllRoutesLists();
+    return 0;
+  }
+
+  const removedLoadedRoute = homeLoadedRouteId ? removableIds.has(homeLoadedRouteId) : false;
+  const removedCount = removableIds.size;
+
+  homeSavedRoutes = homeSavedRoutes.filter((route) => !removableIds.has(route.id));
+  saveHomeRoutesStorage();
+  myRoutesSelectedIds = new Set([...myRoutesSelectedIds].filter((id) => !removableIds.has(id)));
+
+  if (removedLoadedRoute) {
+    setLoadedRoute(null);
+  } else {
+    renderAllRoutesLists();
+  }
+
+  return removedCount;
+}
+
 function renderAllRoutesLists() {
   renderHomeRoutesList();
   renderMyRoutesList();
@@ -1935,12 +1994,10 @@ function handleRoutesListClick(event, { closeMenuOnLoad = false } = {}) {
   } else if (action === 'export') {
     exportRoute(route);
   } else if (action === 'delete') {
-    homeSavedRoutes = homeSavedRoutes.filter((r) => r.id !== routeId);
-    saveHomeRoutesStorage();
-    if (homeLoadedRouteId === routeId) {
-      setLoadedRoute(null);
+    const removedCount = deleteRoutesByIds([routeId]);
+    if (removedCount > 0) {
+      showToast('Ruta eliminada.', 'success');
     }
-    renderAllRoutesLists();
   }
 }
 
@@ -1962,7 +2019,7 @@ function openHomeRoutesMenu() {
   if (!homeRoutesMenu) return;
   closeHomeHistoryMenu();
   closeGpsSettingsPanel();
-  renderHomeRoutesList();
+  syncRoutesStateFromStorage();
   homeRoutesMenu.classList.add('active');
   homeRoutesMenu.setAttribute('aria-hidden', 'false');
   syncHomeGpsOverlayState();
@@ -3706,6 +3763,7 @@ function initHomeDashboard() {
   if (myRoutesClearActiveBtn && !myRoutesClearActiveBtn.dataset.bound) {
     myRoutesClearActiveBtn.dataset.bound = '1';
     myRoutesClearActiveBtn.addEventListener('click', () => {
+      syncRoutesStateFromStorage();
       const selectedIds = [...myRoutesSelectedIds];
       if (!selectedIds.length) {
         showToast('Selecciona una o varias rutas para borrar.', 'error');
@@ -3728,16 +3786,13 @@ function initHomeDashboard() {
         myRoutesDeleteConfirmBtn?.focus();
       }
       myRoutesDeleteConfirmBtn._pendingAction = () => {
-        homeSavedRoutes = homeSavedRoutes.filter((route) => !selectedSet.has(route.id));
-        const removedLoadedRoute = selectedSet.has(homeLoadedRouteId);
-        saveHomeRoutesStorage();
-        myRoutesSelectedIds.clear();
-        if (removedLoadedRoute) {
-          setLoadedRoute(null);
-        } else {
-          renderAllRoutesLists();
+        const deleted = deleteRoutesByIds(selectedIds);
+        if (deleted > 0) {
+          showToast(`${deleted} ${deleted === 1 ? 'ruta eliminada.' : 'rutas eliminadas.'}`, 'success');
+          return;
         }
-        showToast(`${removedCount} ${removedCount === 1 ? 'ruta eliminada.' : 'rutas eliminadas.'}`, 'success');
+        myRoutesSelectedIds.clear();
+        renderMyRoutesList();
       };
     });
   }
@@ -3840,9 +3895,8 @@ function initHomeDashboard() {
     });
   }
 
-  loadHomeRoutesStorage();
   loadHomeRouteHistoryStorage();
-  renderAllRoutesLists();
+  syncRoutesStateFromStorage();
 }
 
 // Inicializar event listeners
@@ -4226,7 +4280,7 @@ function initBottomNavigation() {
     if (navKey === 'mis-rutas') {
       closeHomeRoutesMenu();
       closeHomeHistoryMenu();
-      renderMyRoutesList(true);
+      syncRoutesStateFromStorage({ resetMyRoutesPage: true });
     }
 
     if (navKey === 'inicio') {
@@ -4555,6 +4609,15 @@ async function importUserBackup(file) {
     }
     if (backup.homeDailyData) {
       localStorage.setItem(HOME_DAILY_KEY, JSON.stringify(backup.homeDailyData));
+    }
+
+    loadHomeRouteHistoryStorage();
+    syncRoutesStateFromStorage({ resetMyRoutesPage: true });
+    if (homeHistoryMenu?.classList.contains('active')) {
+      renderHomeHistoryList();
+    }
+    if (calendarView?.classList.contains('active')) {
+      renderCalendarTrainingLog();
     }
 
     showToast(`Datos de ${backup.user.name || email} importados. Inicia sesión para continuar.`, 'success');
