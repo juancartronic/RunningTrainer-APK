@@ -5,6 +5,22 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/),
 y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.2.1] - 2026-05-17
+
+### 🔄 Cambiado
+
+#### Entrenamientos y UI
+- Ajuste visual de tarjetas de planes para reducir altura y separación en móviles.
+- Menor separación entre título de sección y primera tarjeta en la vista de entrenamientos.
+
+#### Mensajes motivacionales
+- El globo motivacional al seleccionar plan ahora se auto-oculta en ~4 segundos.
+- Se evita la reaparición inmediata del mismo mensaje para mejorar la experiencia.
+
+#### Documentación
+- README actualizado con URL real del repositorio, flujo de build actual y estructura de archivos vigente.
+- Enlaces y ejemplos de clonado ajustados al repositorio actual.
+
 ## [1.1.0] - 2026-03-14
 
 ### ✨ Agregado
@@ -156,24 +172,14 @@ Primer lanzamiento público de RunningTrainer con todas las funcionalidades core
 
 ### Planeado para Futuras Versiones
 
-#### v1.1.0
-- [ ] PWA completa con Service Workers
-- [ ] Modo offline funcional
-- [ ] Instalación en home screen
+#### Próximos incrementos
+- [ ] PWA completa con Service Worker y modo offline
+- [ ] Backend (Firebase/Supabase) y sincronización multi-dispositivo
+- [ ] Suite de tests automatizados (unit + e2e)
+- [ ] Métricas avanzadas (ritmo, carga, evolución por bloques)
 
-#### v1.2.0
-- [ ] Backend con Firebase/Supabase
-- [ ] Sincronización en la nube
-- [ ] Múltiples dispositivos
-
-#### v1.3.0
-- [ ] Sistema de logros y badges
-- [ ] Estadísticas avanzadas
-- [ ] Gráficas de ritmo y VO2max
-
-#### v2.0.0
+#### v2.0.0 (visión)
 - [ ] Soporte multiidioma
-- [ ] Modo oscuro
 - [ ] Integración con smartwatches
 - [ ] Compartir en redes sociales
 
@@ -190,6 +196,7 @@ Primer lanzamiento público de RunningTrainer con todas las funcionalidades core
 
 ---
 
-[1.0.0]: https://github.com/tu-usuario/running-trainer/releases/tag/v1.0.0
-[1.1.0]: https://github.com/tu-usuario/running-trainer/releases/tag/v1.1.0
-[Unreleased]: https://github.com/tu-usuario/running-trainer/compare/v1.1.0...HEAD
+[1.0.0]: https://github.com/juancartronic/RunningTrainer-APK/releases/tag/v1.0.0
+[1.1.0]: https://github.com/juancartronic/RunningTrainer-APK/releases/tag/v1.1.0
+[1.2.1]: https://github.com/juancartronic/RunningTrainer-APK/releases/tag/v1.2.1
+[Unreleased]: https://github.com/juancartronic/RunningTrainer-APK/compare/v1.2.1...HEAD

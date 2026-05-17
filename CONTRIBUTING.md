@@ -188,15 +188,14 @@ Para agregar un nuevo idioma:
 
 - [ ] 🔐 Backend con Firebase/Supabase
 - [ ] 📱 Progressive Web App (PWA) completa
-- [ ] 🏆 Sistema de logros y badges
 - [ ] 📊 Gráficas de ritmo y VO2max
 - [ ] 🌍 Soporte multiidioma (i18n)
 - [ ] 🎵 Integración con Spotify
-- [ ] 🗺️ Mapas de rutas con Leaflet
+- [ ] 🗺️ Mejoras de mapas y capas avanzadas de rutas
 - [ ] ⌚ Sincronización con smartwatches
 - [ ] 👥 Sistema de amigos y competencias
 - [ ] 📸 Compartir logros en redes sociales
-- [ ] 🌙 Modo oscuro
+- [ ] 🧠 Recomendaciones inteligentes de entrenamiento según progreso
 - [ ] ♿ Mejoras de accesibilidad
 - [ ] 🧪 Suite de tests (Jest, Cypress)
 

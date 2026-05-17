@@ -2,7 +2,7 @@
 
 **RunningTrainer** es una aplicación web progresiva diseñada para ayudar a corredores de todos los niveles a alcanzar sus objetivos de running mediante planes de entrenamiento estructurados, seguimiento de progreso y un sistema de gamificación con experiencia (XP) y niveles.
 
-![Version](https://img.shields.io/badge/version-1.2.0-blue.svg)
+![Version](https://img.shields.io/badge/version-1.2.1-blue.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 ![HTML5](https://img.shields.io/badge/HTML5-E34F26?logo=html5&logoColor=white)
 ![CSS3](https://img.shields.io/badge/CSS3-1572B6?logo=css3&logoColor=white)
@@ -79,6 +79,7 @@
   - 🟥 Experto (1500+ XP)
 - Gana XP al completar entrenamientos
 - Mensajes motivacionales personalizados por nivel
+- Globo motivacional auto-ocultable (~4 segundos) al seleccionar planes
 - Barra de experiencia en tiempo real
 
 ###  **Diseño Responsive**
@@ -149,18 +150,20 @@ Visualiza tu avance con:
 
 ```bash
 # Clona el repositorio
-git clone https://github.com/tu-usuario/running-trainer.git
+git clone https://github.com/juancartronic/RunningTrainer-APK.git
 
 # Navega al directorio
-cd running-trainer
+cd RunningTrainer-APK/RunningTrainer
+
+# Instala dependencias
+npm install
+
+# Genera /www para servir la app
+npm run build:web
 
 # Abre con tu servidor local favorito
-# Opción A: Live Server (VSCode)
-# Opción B: Python
-python -m http.server 8000
-
-# Opción C: Node.js
-npx http-server
+# Opción recomendada (sin caché)
+npx http-server ./www -c-1
 ```
 
 ### Opción 2: Descarga directa
@@ -198,6 +201,7 @@ Al abrir la aplicación por primera vez:
 - Haz clic en cualquiera de las 9 tarjetas de planes
 - El plan se marcará como activo
 - Se mostrará el calendario semanal completo
+- El mensaje motivacional de selección se cierra automáticamente a los pocos segundos
 
 ### 3. Seguir el Entrenamiento
 
@@ -379,7 +383,6 @@ RunningTrainer/
 ├── app.js                  # Lógica JavaScript principal
 ├── data.js                 # Datos de planes de entrenamiento
 ├── gps.js                  # Módulo de tracking GPS
-├── strava.js               # Integración con Strava API
 ├── callback.html           # Callback OAuth de Strava
 ├── runningtrainer.config.js # Configuración de la app
 ├── capacitor.config.ts     # Configuración Capacitor (Android)
@@ -411,12 +414,8 @@ RunningTrainer/
 #### `app.js`
 - Sistema de autenticación y usuarios
 - Gestión de planes y progreso
-- Lógica del temporizador automático
+- 9 planes disponibles (incluye planes personalizados 10K/20K/Maratón)
 - Cálculo de XP y niveles
-- Renderizado dinámico de semanas
-- Generación de PDFs
-- Actualización de gráficas
-
 #### `data.js`
 - Objeto `planes` con todos los entrenamientos
 - Estructura: `plan -> semanas -> [día, descripción]`
@@ -583,7 +582,7 @@ Toggle configurable: 🔔 Sonido ON/OFF
 ```bash
 # Haz fork desde GitHub
 # Luego clona tu fork
-git clone https://github.com/tu-usuario/running-trainer.git
+git clone https://github.com/tu-usuario/RunningTrainer-APK.git
 ```
 
 ### 2. Crea una Rama

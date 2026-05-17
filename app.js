@@ -4302,8 +4302,13 @@ function applyDarkMode() {
   }
 
   if (darkModeToggle) {
-    darkModeToggle.textContent = darkMode ? '☀️ Modo claro' : '🌙 Modo oscuro';
-    darkModeToggle.title = darkMode ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro';
+    const darkModeToggleLabel = document.getElementById('darkModeToggleLabel');
+    if (darkModeToggleLabel) {
+      darkModeToggleLabel.textContent = darkMode ? 'Modo oscuro' : 'Modo claro';
+    }
+    darkModeToggle.classList.toggle('is-dark', darkMode);
+    darkModeToggle.setAttribute('aria-checked', darkMode ? 'true' : 'false');
+    darkModeToggle.title = darkMode ? 'Tema actual: oscuro' : 'Tema actual: claro';
     darkModeToggle.setAttribute('aria-label', darkModeToggle.title);
   }
 
@@ -5155,11 +5160,11 @@ function initApp() {
   
   // Verificar si hay datos guardados
   if (currentUser.progressData) {
-    showToast(`¡Bienvenido/a ${currentUser.name}! Tus datos de entrenamiento se han cargado correctamente`, "success");
+    showToast(`Hola ${currentUser.name}, tu progreso está listo.`);
   }
 }
 
-function cambiarPlan(tipo, { showMotivationalBubble = true } = {}) {
+function cambiarPlan(tipo, { showMotivationalBubble = false } = {}) {
   if (!currentUser) return;
   
   // Cerrar todos los desplegables de semanas del plan anterior
@@ -5689,8 +5694,10 @@ function updateMotivationalMessage({ showBubble = false } = {}) {
   const { completedTrainingDays: completedDays, totalTrainingDays: totalDays } = getPlanTrainingStats();
 
   const percentage = totalDays > 0 ? Math.round((completedDays / totalDays) * 100) : 0;
-  document.getElementById("progressBar").value = percentage;
-  document.getElementById("progressText").textContent = `${percentage}% completado`;
+  const progressBar = document.getElementById("progressBar");
+  const progressText = document.getElementById("progressText");
+  if (progressBar) progressBar.value = percentage;
+  if (progressText) progressText.textContent = `${percentage}% completado`;
   
   // Obtener mensaje según el nivel del usuario
   const userLevel = currentUser.level || 'beginner';
