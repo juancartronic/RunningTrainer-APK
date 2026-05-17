@@ -352,10 +352,6 @@ body.dark-mode .user-bar {
   color: var(--text-primary);
 }
 
-.profile-view .user-info {
-  margin-top: 0.65rem;
-}
-
 /* En modo noche, sobreescribir vars CSS solo dentro del modal para que
    los estilos inline (color:var(--text-primary) etc.) también sean negros */
 body.dark-mode .profile-modal-overlay .profile-modal-content {
@@ -475,7 +471,7 @@ body.dark-mode .profile-modal-overlay .profile-modal-content input[type="passwor
 
 .profile-actions {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.75rem;
   margin: 0 0 1rem;
 }
@@ -483,13 +479,6 @@ body.dark-mode .profile-modal-overlay .profile-modal-content input[type="passwor
 .profile-action-btn {
   width: 100%;
   min-height: 40px;
-}
-
-.profile-extra-settings {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin: 0 0 1rem;
 }
 
 .badges-container {
@@ -521,28 +510,6 @@ body.dark-mode .profile-modal-overlay .profile-modal-content input[type="passwor
 .level-progress-content ul {
   margin: 0.45rem 0 0;
   padding-left: 1.1rem;
-}
-
-.profile-backup-actions {
-  display: flex;
-  gap: 0.6rem;
-  flex-wrap: wrap;
-}
-
-.profile-backup-logout {
-  display: flex;
-  margin-top: 0.6rem;
-}
-
-.profile-backup-logout .profile-logout-btn {
-  background: var(--danger);
-  color: #fff;
-  border: 1px solid var(--danger);
-}
-
-.profile-backup-logout .profile-logout-btn:hover {
-  background: #dc2626;
-  color: #fff;
 }
 
 .stat-item {
@@ -760,16 +727,17 @@ body.dark-mode .profile-modal-overlay .profile-modal-content input[type="passwor
   }
   
   .plans-grid {
-    gap: 4px;
-    row-gap: 4px;
-    margin-top: 4px;
+    gap: 8px;
+      row-gap: 12px; /* Reduce el espacio entre filas de tarjetas */
+      margin-top: 10px; /* Reduce la separación con el título */
   }
 
   .plan-card {
-    padding: 8px 10px;
+    padding: 12px 14px;
     border-radius: 14px;
-    gap: 8px;
-    margin-bottom: 6px;
+    gap: 12px;
+      padding: 8px 10px; /* Reduce padding para hacer las tarjetas más finas */
+      margin-bottom: 10px; /* Reduce el espacio entre tarjetas */
   }
 
   .plan-circle {
@@ -784,7 +752,7 @@ body.dark-mode .profile-modal-overlay .profile-modal-content input[type="passwor
   }
 
   .plan-title {
-    font-size: 0.92rem;
+    font-size: 0.88rem;
   }
 
   .plan-description {
@@ -864,7 +832,7 @@ body.dark-mode .profile-modal-overlay .profile-modal-content input[type="passwor
   }
 
   .plans-grid {
-    gap: 4px;
+    gap: 7px;
   }
 
   .plan-card {
@@ -885,7 +853,7 @@ body.dark-mode .profile-modal-overlay .profile-modal-content input[type="passwor
   }
 
   .plan-title {
-    font-size: 0.86rem;
+    font-size: 0.82rem;
     margin: 0;
   }
 
@@ -1087,65 +1055,22 @@ body.dark-mode .timer-modal-content .sound-status {
   padding: 10px 14px;
   border-radius: 8px;
   border: 1px solid #dbe4f0;
-  background: #f8fafc;
+  background: #f1f5f9;
   cursor: pointer;
   font-size: 0.95rem;
   transition: all 0.3s ease;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 10px;
+  justify-content: center;
+  gap: 6px;
   font-weight: 600;
   color: var(--text-primary);
 }
 
 body.dark-mode .dark-mode-toggle {
-  background: #e2e8f0;
-  border-color: #cbd5e1;
-  color: #0f172a;
-}
-
-.dark-mode-toggle-left {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.dark-mode-toggle-icon {
-  width: 18px;
-  height: 18px;
-  fill: #111111;
-  flex-shrink: 0;
-}
-
-.theme-switch {
-  width: 40px;
-  height: 22px;
-  border-radius: 999px;
-  background: #cbd5e1;
-  position: relative;
-  transition: background 0.25s ease;
-  flex-shrink: 0;
-}
-
-.theme-switch-knob {
-  position: absolute;
-  top: 3px;
-  left: 3px;
-  width: 16px;
-  height: 16px;
-  border-radius: 999px;
-  background: #ffffff;
-  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.25);
-  transition: transform 0.25s ease;
-}
-
-.dark-mode-toggle.is-dark .theme-switch {
-  background: #2563eb;
-}
-
-.dark-mode-toggle.is-dark .theme-switch-knob {
-  transform: translateX(18px);
+  background: #334155;
+  border-color: #475569;
+  color: #f8fafc;
 }
 
 #splashScreen {
@@ -1254,27 +1179,27 @@ body.dark-mode .home-welcome-card {
 .home-stats-row {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 8px;
+  gap: 10px;
 }
 
 .home-mini-stat {
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
   border-radius: 14px;
-  padding: clamp(6px, 1vh, 10px);
+  padding: clamp(8px, 1.2vh, 12px);
   box-shadow: 0 4px 14px rgba(15, 23, 42, 0.07);
 }
 
 .home-mini-stat h3 {
-  margin: 0 0 4px;
-  font-size: 0.78rem;
+  margin: 0 0 6px;
+  font-size: 0.82rem;
   color: var(--text-secondary);
   font-weight: 600;
 }
 
 .home-mini-stat p {
   margin: 0;
-  font-size: clamp(1.1rem, 3.4vw, 1.55rem);
+  font-size: clamp(1.25rem, 3.8vw, 1.75rem);
   font-weight: 800;
   line-height: 1;
 }
@@ -1376,15 +1301,9 @@ body.dark-mode .home-welcome-card {
   color: var(--primary);
   font-size: 1.12rem;
   font-weight: 700;
-  line-height: 1.1;
   padding: 8px 2px;
   position: relative;
   cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  opacity: 1;
-  visibility: visible;
 }
 
 .home-open-gps-btn::after {
@@ -1509,11 +1428,8 @@ body.home-gps-open .bottom-nav {
   color: var(--text-secondary);
   font-size: 1.12rem;
   font-weight: 700;
-  line-height: 1.1;
   padding: 8px 2px;
   position: relative;
-  opacity: 1;
-  visibility: visible;
 }
 
 .home-gps-top-tab.active {
@@ -1755,11 +1671,6 @@ body.dark-mode .home-gps-close-btn {
 
 .home-gps-fab-label {
   font-size: 0.82rem;
-  color: #ffffff;
-  line-height: 1;
-  display: block;
-  opacity: 1;
-  visibility: visible;
 }
 
 .home-gps-fab-start.recording {
@@ -2298,20 +2209,12 @@ body.dark-mode .home-route-gps-btn--unload {
   }
 
   .home-stats-row {
-    gap: 6px;
-  }
-
-  .home-mini-stat {
-    padding: 6px 8px;
+    gap: 8px;
   }
 
   .home-mini-stat h3 {
-    font-size: 0.7rem;
-    margin-bottom: 3px;
-  }
-
-  .home-mini-stat p {
-    font-size: clamp(1rem, 3.2vw, 1.35rem);
+    font-size: 0.74rem;
+    margin-bottom: 4px;
   }
 
   .home-steps-ring-wrap {
@@ -2350,21 +2253,17 @@ body.dark-mode .home-route-gps-btn--unload {
 
 .my-routes-actions {
   display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  align-items: center;
-  gap: 7px;
+  flex-wrap: nowrap;
+  gap: 6px;
   margin-bottom: 12px;
 }
 
-.my-routes-btn.btn {
-  padding: 4px 11px;
-  min-height: 26px;
-  font-size: 0.82rem;
-  line-height: 1.15;
-  font-weight: 600;
+.my-routes-btn {
+  padding: 5px 9px;
+  min-height: 28px;
+  font-size: 0.75rem;
   border-radius: 7px;
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.1);
   white-space: nowrap;
 }
 
@@ -2437,8 +2336,8 @@ body.dark-mode .home-route-gps-btn--unload {
 
 @media (max-width: 520px) {
   .my-routes-actions {
-    justify-content: center;
-    gap: 6px;
+    grid-template-columns: repeat(2, auto);
+    justify-content: flex-start;
   }
 }
 .app-title {
@@ -2478,9 +2377,9 @@ body.dark-mode .home-route-gps-btn--unload {
 .plans-grid {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  margin-bottom: 24px;
-  padding: 8px 0;
+  gap: 10px;
+  margin-bottom: 50px;
+  padding: 20px 0;
 }
 
 .plan-card {
@@ -2614,7 +2513,7 @@ body.dark-mode .plan-card {
 }
 
 .plan-title {
-  font-size: 0.79rem;
+  font-size: 0.75rem;
   font-weight: 700;
   color: #0f172a;
   margin: 0;
@@ -2690,15 +2589,15 @@ body.dark-mode .plan-card.active .plan-title {
 /* ── Botón de semana ── */
 .week-button {
   background: white;
-  border-radius: 9px;
-  padding: 9px 13px 9px 17px;
-  margin: 4px 0;
+  border-radius: 10px;
+  padding: 11px 16px 11px 20px;
+  margin: 6px 0;
   box-shadow: 0 2px 8px rgba(0,0,0,0.06);
   transition: box-shadow 0.2s ease, transform 0.2s ease;
   border: 1px solid rgba(0,0,0,0.07);
   position: relative; overflow: hidden; cursor: pointer; width: 100%;
   display: flex; justify-content: space-between; align-items: center;
-  gap: 8px;
+  gap: 10px;
 }
 .week-button:hover { transform: translateY(-2px); box-shadow: 0 4px 14px rgba(0,0,0,0.1); }
 .week-button::before {
@@ -2710,7 +2609,7 @@ body.dark-mode .plan-card.active .plan-title {
 
 /* Nombre de semana */
 .week-btn-label {
-  font-size: 0.86rem; font-weight: 700; color: var(--dark); flex: 1;
+  font-size: 0.92rem; font-weight: 700; color: var(--dark); flex: 1;
 }
 
 /* Píldoras de progreso dentro del botón */
@@ -2718,7 +2617,7 @@ body.dark-mode .plan-card.active .plan-title {
   display: flex; align-items: center; gap: 8px; flex-shrink: 0;
 }
 .week-progress-pill {
-  font-size: 0.68rem; font-weight: 600; padding: 2px 7px;
+  font-size: 0.72rem; font-weight: 600; padding: 2px 9px;
   border-radius: 99px; background: #f1f5f9; color: #64748b;
   white-space: nowrap;
 }
@@ -2726,7 +2625,7 @@ body.dark-mode .plan-card.active .plan-title {
   background: #dcfce7; color: #16a34a;
 }
 .week-btn-arrow {
-  font-size: 0.6rem; color: #94a3b8;
+  font-size: 0.65rem; color: #94a3b8;
   transition: transform 0.25s ease; flex-shrink: 0;
 }
 .week-button.active .week-btn-arrow { transform: rotate(90deg); }
@@ -3024,8 +2923,8 @@ progress::-webkit-progress-value {
   z-index: 1100;
   display: grid;
   grid-template-columns: repeat(5, 1fr);
-  gap: 5px;
-  padding: 8px 10px calc(8px + env(safe-area-inset-bottom, 0px));
+  gap: 6px;
+  padding: 10px 12px calc(10px + env(safe-area-inset-bottom, 0px));
   background: rgba(255, 255, 255, 0.96);
   backdrop-filter: blur(10px);
   border-top: 1px solid rgba(148, 163, 184, 0.35);
@@ -3058,36 +2957,30 @@ body.dark-mode .bottom-nav {
   border: none;
   background: transparent;
   color: var(--text-secondary);
-  padding: 6px 3px 4px;
+  padding: 8px 4px 6px;
   border-radius: 12px;
   cursor: pointer;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  min-height: 43px;
-  gap: 3px;
+  gap: 4px;
   position: relative;
   z-index: 1;
   transition: color 0.25s ease, transform 0.2s ease;
 }
 
 .bnav-icon {
-  width: 20px;
-  height: 20px;
+  width: 22px;
+  height: 22px;
   flex-shrink: 0;
   transition: transform 0.32s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.25s ease;
 }
 
 .bnav-label {
-  font-size: 0.64rem;
+  font-size: 0.68rem;
   font-weight: 600;
   letter-spacing: 0.01em;
   line-height: 1;
-  color: currentColor;
-  display: block;
-  opacity: 1;
-  visibility: visible;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -3103,7 +2996,7 @@ body.dark-mode .bottom-nav {
 }
 
 .bottom-nav-btn.active .bnav-icon {
-  transform: translateY(-2px) scale(1.14);
+  transform: translateY(-3px) scale(1.18);
 }
 
 .bottom-nav-btn:active {
@@ -3123,7 +3016,7 @@ body.dark-mode .bottom-nav {
   .header-badge { font-size: 0.8rem; padding: 6px 12px; }
   .controls { flex-direction: column; align-items: center; }
   .controls .btn { width: 100%; max-width: 300px; }
-  .week-button { padding: 8px 12px; font-size: 0.84rem; }
+  .week-button { padding: 10px 14px; font-size: 0.9rem; }
   .day-item { grid-template-columns: 1fr; gap: 6px; }
   .day-item .actions { align-self: flex-end; }
   .timer-modal-content { padding: 1rem; }
@@ -3149,27 +3042,26 @@ body.dark-mode .bottom-nav {
   .app-title { font-size: 1.55rem; }
   .app-subtitle { font-size: 0.92rem; margin: 6px 0 10px; }
   .header-badge { display: none; }
-  .week-button { font-size: 0.82rem; padding: 7px 10px; }
+  .week-button { font-size: 0.88rem; padding: 9px 12px; }
   .day-details { padding: 4px 10px 10px; }
   .chart-container, .progress-container, .motivational-card { padding: 15px; }
   .timer-modal-content { padding: 0.85rem; }
   #countdown { font-size: 2.1rem; }
   .auth-box { padding: 1.5rem; }
   .bottom-nav {
-    padding-left: 7px;
-    padding-right: 7px;
-    gap: 3px;
+    padding-left: 8px;
+    padding-right: 8px;
+    gap: 4px;
   }
   .bottom-nav-btn {
-    padding: 6px 2px 4px;
-    min-height: 40px;
+    padding: 7px 2px 5px;
   }
   .bnav-icon {
-    width: 18px;
-    height: 18px;
+    width: 20px;
+    height: 20px;
   }
   .bnav-label {
-    font-size: 0.56rem;
+    font-size: 0.58rem;
   }
 }
 
@@ -3867,7 +3759,6 @@ body.dark-mode .perspectives-shell {
   border-radius: 0;
   padding: 4px 0;
   min-height: 0;
-  min-width: 0;
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
@@ -3885,18 +3776,11 @@ body.dark-mode .perspectives-shell {
 }
 
 .perspective-summary-value {
-  font-size: clamp(1.52rem, 4.2vw, 2.2rem);
+  font-size: clamp(1.95rem, 5.2vw, 2.75rem);
   font-weight: 500;
   color: var(--primary);
-  line-height: 1.08;
-  white-space: normal;
-  overflow-wrap: anywhere;
-  max-inline-size: 100%;
-  text-align: center;
-}
-
-.perspective-summary-grid[data-metric="distance"] .perspective-summary-value {
-  font-size: clamp(1.36rem, 3.65vw, 1.95rem);
+  line-height: 1.04;
+  white-space: nowrap;
 }
 
 .perspective-summary-meta {
@@ -4010,12 +3894,7 @@ body.dark-mode .perspectives-shell {
   }
 
   .perspective-summary-value {
-    font-size: clamp(1.2rem, 6.9vw, 1.8rem);
-    line-height: 1.1;
-  }
-
-  .perspective-summary-grid[data-metric="distance"] .perspective-summary-value {
-    font-size: clamp(1.05rem, 6.15vw, 1.55rem);
+    font-size: clamp(1.7rem, 8.8vw, 2.2rem);
   }
 
   .perspective-chart-pill {

@@ -213,6 +213,14 @@
       </div>
     </div>
     <div id="motivationalMessage" class="motivational-card low"></div>
+    <div class="progress-container">
+      <progress id="progressBar" value="0" max="100"></progress>
+      <div class="progress-labels">
+        <span>Inicio</span>
+        <span id="progressText" class="progress-text">0% completado</span>
+        <span>Meta</span>
+      </div>
+    </div>
     <div id="weeksDefaultAnchor"></div>
     <div id="weeks"></div>
     </section>
@@ -268,6 +276,8 @@
 
     <section id="myRoutesSection" class="app-view my-routes-view">
       <div class="my-routes-card">
+        <h2 class="section-title">Mis rutas</h2>
+
         <div class="my-routes-actions">
           <button id="myRoutesImportBtn" type="button" class="btn btn-primary my-routes-btn">Añadir</button>
           <button id="myRoutesClearActiveBtn" type="button" class="btn btn-secondary my-routes-btn">Borrar</button>
@@ -283,6 +293,8 @@
 
     <section id="profileSection" class="app-view profile-view">
       <div class="profile-modal-content">
+        <h2 class="section-title" style="font-size: 1.5rem; margin-bottom: 1.5rem;">Perfil de Usuario</h2>
+
         <input type="file" id="profilePhotoInput" accept="image/*" capture="environment" style="display: none;">
 
         <div class="user-info" style="justify-content: center; margin-bottom: 1.5rem;">
@@ -294,65 +306,8 @@
         </div>
 
         <div class="profile-actions">
-          <button id="darkModeToggle" class="dark-mode-toggle profile-action-btn" type="button" role="switch" aria-checked="false">
-            <span class="dark-mode-toggle-left">
-              <svg class="dark-mode-toggle-icon" viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M13.8 3.3a3.5 3.5 0 1 1 6.9 1.3 3.5 3.5 0 0 1-6.9-1.3Zm-7.5 2a3.2 3.2 0 1 1 5.9 2.2 3.2 3.2 0 0 1-5.9-2.2Zm11.2 6.4a2.9 2.9 0 1 1 5.6 1.6 2.9 2.9 0 0 1-5.6-1.6Zm-9.7 1.4c3.2-3.2 8.3-3.5 11.2-.6 2.8 2.8 2.6 7.3-.4 10.3-3.1 3.1-8.1 3.5-11 .6-2.9-2.9-2.6-7.3.2-10.3Zm2 2c-2 2-2.2 5-.5 6.7 1.7 1.7 4.8 1.5 6.8-.5 2-2 2.3-5 .6-6.7-1.8-1.8-4.8-1.6-6.9.5Z"/>
-              </svg>
-              <span id="darkModeToggleLabel">Modo claro</span>
-            </span>
-            <span class="theme-switch" aria-hidden="true"><span class="theme-switch-knob"></span></span>
-          </button>
-        </div>
-
-        <div class="profile-extra-settings">
-          <div class="home-gps-setting-row home-gps-setting-row--col">
-            <div class="home-gps-setting-info">
-              <span class="home-gps-setting-label">Pasos mínimos diarios</span>
-              <span class="home-gps-setting-desc">Objetivo de pasos para el anillo de inicio. Rango: 1.000 – 50.000.</span>
-            </div>
-            <div class="home-gps-setting-controls">
-              <input
-                id="profileMinStepsInput"
-                type="number"
-                min="1000"
-                max="50000"
-                step="100"
-                inputmode="numeric"
-                placeholder="Ej: 5800"
-                class="home-gps-setting-input"
-              >
-            </div>
-            <div id="profileMinStepsHelp" class="home-gps-setting-desc" style="margin-top:4px;">Rango permitido: 1.000 a 50.000 pasos.</div>
-          </div>
-
-          <div class="home-gps-setting-row home-gps-setting-row--col">
-            <div class="home-gps-setting-info">
-              <span class="home-gps-setting-label">Voz del entrenador</span>
-              <span class="home-gps-setting-desc">Activa la voz para que la app te guíe y lea cada acción en voz alta.</span>
-            </div>
-            <div class="home-gps-setting-controls home-gps-setting-controls--col">
-              <button id="gpsCoachToggleBtn" type="button" class="btn btn-primary btn-sm" aria-pressed="true">🔊 Voz activada</button>
-
-              <label class="home-gps-setting-sublabel" for="gpsCoachVoiceSelect">Voz disponible</label>
-              <select id="gpsCoachVoiceSelect" class="home-gps-setting-input"></select>
-
-              <label class="home-gps-setting-sublabel" for="gpsCoachStyleSelect">Estilo</label>
-              <select id="gpsCoachStyleSelect" class="home-gps-setting-input">
-                <option value="pep">Pep (motivador)</option>
-                <option value="calm">Calmado</option>
-                <option value="neutral">Neutro</option>
-              </select>
-
-              <label class="home-gps-setting-sublabel" for="gpsCoachRateInput">Velocidad <span id="gpsCoachRateValue">1.00</span></label>
-              <input id="gpsCoachRateInput" type="range" min="0.85" max="1.25" step="0.05" value="1" class="home-gps-setting-range">
-
-              <label class="home-gps-setting-sublabel" for="gpsCoachPitchInput">Tono <span id="gpsCoachPitchValue">1.00</span></label>
-              <input id="gpsCoachPitchInput" type="range" min="0.85" max="1.20" step="0.05" value="1" class="home-gps-setting-range">
-
-              <button id="gpsCoachTestBtn" type="button" class="btn btn-secondary btn-sm">Probar voz</button>
-            </div>
-          </div>
+          <button id="darkModeToggle" class="dark-mode-toggle profile-action-btn" type="button">🌙 Modo oscuro</button>
+          <button id="logoutBtn" class="btn btn-danger profile-action-btn" type="button">Cerrar sesión</button>
         </div>
 
         <div class="xp-section">
@@ -398,13 +353,10 @@
         <div class="level-progress-panel" style="margin-bottom: 1rem;">
           <div class="level-progress-title">Copia de seguridad</div>
           <div class="level-progress-content" style="margin-bottom: 0.75rem;">Exporta todos tus datos para guardarlos o restaurarlos en otro dispositivo.</div>
-          <div class="profile-backup-actions">
+          <div style="display: flex; gap: 0.6rem; flex-wrap: wrap;">
             <button id="profileExportBtn" class="btn btn-secondary" type="button">Exportar datos</button>
             <button id="profileImportBtn" class="btn btn-secondary" type="button">Importar datos</button>
             <input id="profileImportInput" type="file" accept=".json,application/json" hidden>
-          </div>
-          <div class="profile-backup-logout">
-            <button id="logoutBtn" class="btn btn-secondary profile-logout-btn" type="button">Cerrar sesión</button>
           </div>
         </div>
       </div>
@@ -732,6 +684,26 @@
 
           <div class="home-gps-setting-row home-gps-setting-row--col">
             <div class="home-gps-setting-info">
+              <span class="home-gps-setting-label">Pasos mínimos diarios</span>
+              <span class="home-gps-setting-desc">Objetivo de pasos para el anillo de inicio. Rango: 1.000 – 50.000.</span>
+            </div>
+            <div class="home-gps-setting-controls">
+              <input
+                id="profileMinStepsInput"
+                type="number"
+                min="1000"
+                max="50000"
+                step="100"
+                inputmode="numeric"
+                placeholder="Ej: 5800"
+                class="home-gps-setting-input"
+              >
+            </div>
+            <div id="profileMinStepsHelp" class="home-gps-setting-desc" style="margin-top:4px;">Rango permitido: 1.000 a 50.000 pasos.</div>
+          </div>
+
+          <div class="home-gps-setting-row home-gps-setting-row--col">
+            <div class="home-gps-setting-info">
               <span class="home-gps-setting-label">Tipo de mapa</span>
               <span class="home-gps-setting-desc">Elige la capa visual para la ruta: calles, satélite o relieve.</span>
             </div>
@@ -760,6 +732,34 @@
               <button id="profilePedometerRecommendedBtn" type="button" class="btn btn-secondary btn-sm">Aplicar valores recomendados</button>
             </div>
             <div id="profilePedometerHelp" class="home-gps-setting-desc" style="margin-top:4px;"></div>
+          </div>
+
+          <div class="home-gps-setting-row home-gps-setting-row--col">
+            <div class="home-gps-setting-info">
+              <span class="home-gps-setting-label">Voz del entrenador</span>
+              <span class="home-gps-setting-desc">Activa la voz para que la app te guíe y lea cada acción en voz alta.</span>
+            </div>
+            <div class="home-gps-setting-controls home-gps-setting-controls--col">
+              <button id="gpsCoachToggleBtn" type="button" class="btn btn-primary btn-sm" aria-pressed="true">🔊 Voz activada</button>
+
+              <label class="home-gps-setting-sublabel" for="gpsCoachVoiceSelect">Voz disponible</label>
+              <select id="gpsCoachVoiceSelect" class="home-gps-setting-input"></select>
+
+              <label class="home-gps-setting-sublabel" for="gpsCoachStyleSelect">Estilo</label>
+              <select id="gpsCoachStyleSelect" class="home-gps-setting-input">
+                <option value="pep">Pep (motivador)</option>
+                <option value="calm">Calmado</option>
+                <option value="neutral">Neutro</option>
+              </select>
+
+              <label class="home-gps-setting-sublabel" for="gpsCoachRateInput">Velocidad <span id="gpsCoachRateValue">1.00</span></label>
+              <input id="gpsCoachRateInput" type="range" min="0.85" max="1.25" step="0.05" value="1" class="home-gps-setting-range">
+
+              <label class="home-gps-setting-sublabel" for="gpsCoachPitchInput">Tono <span id="gpsCoachPitchValue">1.00</span></label>
+              <input id="gpsCoachPitchInput" type="range" min="0.85" max="1.20" step="0.05" value="1" class="home-gps-setting-range">
+
+              <button id="gpsCoachTestBtn" type="button" class="btn btn-secondary btn-sm">Probar voz</button>
+            </div>
           </div>
 
         </div>

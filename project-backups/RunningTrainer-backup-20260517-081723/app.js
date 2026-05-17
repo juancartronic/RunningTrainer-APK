@@ -256,7 +256,6 @@ let homeMotionCandidateTimestamps = [];
 let homeHealthPermissionPrompted = false;
 let homeHealthSyncInProgress = false;
 let homeSavedRoutes = [];
-let homeLoadedRouteId = null;
 let homeLoadedRoute = null;
 let homeLastGuidanceTs = 0;
 let homeGuidanceRouteIndex = 0;
@@ -1888,64 +1887,6 @@ function renderMyRoutesList(resetPage = false) {
   }
 }
 
-function syncRoutesStateFromStorage({ resetMyRoutesPage = false } = {}) {
-  loadHomeRoutesStorage();
-
-  homeLoadedRoute = homeSavedRoutes.find((route) => route.id === homeLoadedRouteId) || null;
-  homeLoadedRouteCumulativeMeters = homeLoadedRoute ? computeRouteCumulativeMeters(homeLoadedRoute.points) : [];
-  homeLoadedRouteTotalMeters = homeLoadedRouteCumulativeMeters.length
-    ? homeLoadedRouteCumulativeMeters[homeLoadedRouteCumulativeMeters.length - 1]
-    : 0;
-
-  if (!homeLoadedRoute && homeLoadedRouteId) {
-    homeLoadedRouteId = null;
-    homeGuidanceRouteIndex = 0;
-    homeFinishAnnounced = false;
-    homeLastGuidanceMessage = '';
-    if (!homeRouteIsRecording) {
-      setHomeGpsStatus('');
-    }
-    resetGpsProgressCard();
-  }
-
-  drawLoadedRouteOnMap();
-  renderHomeRoutesList();
-  renderMyRoutesList(resetMyRoutesPage);
-}
-
-function deleteRoutesByIds(routeIds = []) {
-  const normalizedIds = Array.isArray(routeIds)
-    ? routeIds.map((id) => String(id || '')).filter(Boolean)
-    : [];
-  if (!normalizedIds.length) return 0;
-
-  // Leer desde storage justo antes de borrar evita inconsistencias entre vistas.
-  syncRoutesStateFromStorage();
-
-  const idsSet = new Set(normalizedIds);
-  const existingIds = new Set(homeSavedRoutes.map((route) => route.id));
-  const removableIds = new Set([...idsSet].filter((id) => existingIds.has(id)));
-  if (!removableIds.size) {
-    renderAllRoutesLists();
-    return 0;
-  }
-
-  const removedLoadedRoute = homeLoadedRouteId ? removableIds.has(homeLoadedRouteId) : false;
-  const removedCount = removableIds.size;
-
-  homeSavedRoutes = homeSavedRoutes.filter((route) => !removableIds.has(route.id));
-  saveHomeRoutesStorage();
-  myRoutesSelectedIds = new Set([...myRoutesSelectedIds].filter((id) => !removableIds.has(id)));
-
-  if (removedLoadedRoute) {
-    setLoadedRoute(null);
-  } else {
-    renderAllRoutesLists();
-  }
-
-  return removedCount;
-}
-
 function renderAllRoutesLists() {
   renderHomeRoutesList();
   renderMyRoutesList();
@@ -1994,10 +1935,12 @@ function handleRoutesListClick(event, { closeMenuOnLoad = false } = {}) {
   } else if (action === 'export') {
     exportRoute(route);
   } else if (action === 'delete') {
-    const removedCount = deleteRoutesByIds([routeId]);
-    if (removedCount > 0) {
-      showToast('Ruta eliminada.', 'success');
+    homeSavedRoutes = homeSavedRoutes.filter((r) => r.id !== routeId);
+    saveHomeRoutesStorage();
+    if (homeLoadedRouteId === routeId) {
+      setLoadedRoute(null);
     }
+    renderAllRoutesLists();
   }
 }
 
@@ -2019,7 +1962,7 @@ function openHomeRoutesMenu() {
   if (!homeRoutesMenu) return;
   closeHomeHistoryMenu();
   closeGpsSettingsPanel();
-  syncRoutesStateFromStorage();
+  renderHomeRoutesList();
   homeRoutesMenu.classList.add('active');
   homeRoutesMenu.setAttribute('aria-hidden', 'false');
   syncHomeGpsOverlayState();
@@ -2648,8 +2591,6 @@ function renderPerspectiveSummary(metric, timeline, buckets) {
   const daysOverGoal = metric === 'steps'
     ? timeline.filter((entry) => entry.steps >= getHomeStepsGoal()).length
     : 0;
-
-  perspectiveSummaryEl.dataset.metric = metric;
 
   perspectiveSummaryEl.innerHTML = [
     createPerspectiveSummaryCard('Promedio', formatPerspectiveHeadlineValue(metric, averageValue), getPerspectiveSummaryMeta(metric, 'average')),
@@ -3765,7 +3706,6 @@ function initHomeDashboard() {
   if (myRoutesClearActiveBtn && !myRoutesClearActiveBtn.dataset.bound) {
     myRoutesClearActiveBtn.dataset.bound = '1';
     myRoutesClearActiveBtn.addEventListener('click', () => {
-      syncRoutesStateFromStorage();
       const selectedIds = [...myRoutesSelectedIds];
       if (!selectedIds.length) {
         showToast('Selecciona una o varias rutas para borrar.', 'error');
@@ -3788,13 +3728,16 @@ function initHomeDashboard() {
         myRoutesDeleteConfirmBtn?.focus();
       }
       myRoutesDeleteConfirmBtn._pendingAction = () => {
-        const deleted = deleteRoutesByIds(selectedIds);
-        if (deleted > 0) {
-          showToast(`${deleted} ${deleted === 1 ? 'ruta eliminada.' : 'rutas eliminadas.'}`, 'success');
-          return;
-        }
+        homeSavedRoutes = homeSavedRoutes.filter((route) => !selectedSet.has(route.id));
+        const removedLoadedRoute = selectedSet.has(homeLoadedRouteId);
+        saveHomeRoutesStorage();
         myRoutesSelectedIds.clear();
-        renderMyRoutesList();
+        if (removedLoadedRoute) {
+          setLoadedRoute(null);
+        } else {
+          renderAllRoutesLists();
+        }
+        showToast(`${removedCount} ${removedCount === 1 ? 'ruta eliminada.' : 'rutas eliminadas.'}`, 'success');
       };
     });
   }
@@ -3897,8 +3840,9 @@ function initHomeDashboard() {
     });
   }
 
+  loadHomeRoutesStorage();
   loadHomeRouteHistoryStorage();
-  syncRoutesStateFromStorage();
+  renderAllRoutesLists();
 }
 
 // Inicializar event listeners
@@ -4282,7 +4226,7 @@ function initBottomNavigation() {
     if (navKey === 'mis-rutas') {
       closeHomeRoutesMenu();
       closeHomeHistoryMenu();
-      syncRoutesStateFromStorage({ resetMyRoutesPage: true });
+      renderMyRoutesList(true);
     }
 
     if (navKey === 'inicio') {
@@ -4358,13 +4302,8 @@ function applyDarkMode() {
   }
 
   if (darkModeToggle) {
-    const darkModeToggleLabel = document.getElementById('darkModeToggleLabel');
-    if (darkModeToggleLabel) {
-      darkModeToggleLabel.textContent = darkMode ? 'Modo oscuro' : 'Modo claro';
-    }
-    darkModeToggle.classList.toggle('is-dark', darkMode);
-    darkModeToggle.setAttribute('aria-checked', darkMode ? 'true' : 'false');
-    darkModeToggle.title = darkMode ? 'Tema actual: oscuro' : 'Tema actual: claro';
+    darkModeToggle.textContent = darkMode ? '☀️ Modo claro' : '🌙 Modo oscuro';
+    darkModeToggle.title = darkMode ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro';
     darkModeToggle.setAttribute('aria-label', darkModeToggle.title);
   }
 
@@ -4611,15 +4550,6 @@ async function importUserBackup(file) {
     }
     if (backup.homeDailyData) {
       localStorage.setItem(HOME_DAILY_KEY, JSON.stringify(backup.homeDailyData));
-    }
-
-    loadHomeRouteHistoryStorage();
-    syncRoutesStateFromStorage({ resetMyRoutesPage: true });
-    if (homeHistoryMenu?.classList.contains('active')) {
-      renderHomeHistoryList();
-    }
-    if (calendarView?.classList.contains('active')) {
-      renderCalendarTrainingLog();
     }
 
     showToast(`Datos de ${backup.user.name || email} importados. Inicia sesión para continuar.`, 'success');
@@ -5225,11 +5155,11 @@ function initApp() {
   
   // Verificar si hay datos guardados
   if (currentUser.progressData) {
-    showToast(`Hola ${currentUser.name}, tu progreso está listo.`);
+    showToast(`¡Bienvenido/a ${currentUser.name}! Tus datos de entrenamiento se han cargado correctamente`, "success");
   }
 }
 
-function cambiarPlan(tipo, { showMotivationalBubble = false } = {}) {
+function cambiarPlan(tipo, { showMotivationalBubble = true } = {}) {
   if (!currentUser) return;
   
   // Cerrar todos los desplegables de semanas del plan anterior
@@ -5759,10 +5689,8 @@ function updateMotivationalMessage({ showBubble = false } = {}) {
   const { completedTrainingDays: completedDays, totalTrainingDays: totalDays } = getPlanTrainingStats();
 
   const percentage = totalDays > 0 ? Math.round((completedDays / totalDays) * 100) : 0;
-  const progressBar = document.getElementById("progressBar");
-  const progressText = document.getElementById("progressText");
-  if (progressBar) progressBar.value = percentage;
-  if (progressText) progressText.textContent = `${percentage}% completado`;
+  document.getElementById("progressBar").value = percentage;
+  document.getElementById("progressText").textContent = `${percentage}% completado`;
   
   // Obtener mensaje según el nivel del usuario
   const userLevel = currentUser.level || 'beginner';
