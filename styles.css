@@ -25,6 +25,7 @@ body {
   margin: 0;
   padding: 0;
   padding-bottom: calc(84px + env(safe-area-inset-bottom, 0px));
+  overflow-x: hidden;
   line-height: 1.6;
   transition: background-color 0.3s ease, color 0.3s ease;
 }
@@ -727,12 +728,16 @@ body.dark-mode .profile-modal-overlay .profile-modal-content input[type="passwor
   
   .plans-grid {
     gap: 8px;
+      row-gap: 12px; /* Reduce el espacio entre filas de tarjetas */
+      margin-top: 10px; /* Reduce la separación con el título */
   }
 
   .plan-card {
     padding: 12px 14px;
     border-radius: 14px;
     gap: 12px;
+      padding: 8px 10px; /* Reduce padding para hacer las tarjetas más finas */
+      margin-bottom: 10px; /* Reduce el espacio entre tarjetas */
   }
 
   .plan-circle {
@@ -1358,7 +1363,7 @@ body.home-gps-open .bottom-nav {
   height: 100%;
   display: flex;
   flex-direction: column;
-  padding: max(10px, env(safe-area-inset-top)) 20px max(18px, env(safe-area-inset-bottom));
+  padding: max(10px, env(safe-area-inset-top)) 12px max(14px, env(safe-area-inset-bottom));
   background: var(--bg-primary);
   position: relative;
 }
@@ -1508,44 +1513,33 @@ body.home-gps-open .bottom-nav {
 }
 
 .home-gps-progress-card {
-  margin: 0 0 8px;
+  margin: 0 0 6px;
   border: 1px solid var(--border-color);
   background: var(--bg-secondary);
-  border-radius: 12px;
-  padding: 8px 10px;
-}
-
-.home-gps-progress-head {
+  border-radius: 10px;
+  padding: 6px 10px;
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  font-size: 0.82rem;
-  font-weight: 700;
-}
-
-.home-gps-progress-bar {
-  margin-top: 6px;
-  height: 7px;
-  border-radius: 999px;
-  background: rgba(148, 163, 184, 0.28);
-  overflow: hidden;
-}
-
-.home-gps-progress-fill {
-  height: 100%;
-  width: 0;
-  border-radius: 999px;
-  background: linear-gradient(90deg, var(--primary), var(--secondary));
-  transition: width 0.25s ease;
-}
-
-.home-gps-progress-metrics {
-  margin-top: 6px;
-  display: flex;
   justify-content: space-between;
   gap: 8px;
-  font-size: 0.74rem;
-  color: var(--text-secondary);
+}
+
+.home-gps-progress-name {
+  font-size: 0.82rem;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+  flex: 1;
+}
+
+.home-gps-progress-dist {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--primary);
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 body.dark-mode .home-gps-status.info {
@@ -1558,9 +1552,9 @@ body.dark-mode .home-gps-status.error {
 
 .home-gps-stage {
   flex: 1;
-  min-height: 240px;
-  margin-top: 6px;
-  border-radius: 18px;
+  min-height: clamp(320px, 62vh, 680px);
+  margin-top: 2px;
+  border-radius: 14px;
   overflow: hidden;
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
@@ -1625,7 +1619,7 @@ body.dark-mode .home-gps-close-btn {
 }
 
 .home-gps-bottom-actions {
-  margin-top: 8px;
+  margin-top: 6px;
   margin-bottom: 8px;
   padding: 7px 2px 0;
   border-top: 1px solid var(--border-color);
@@ -1775,6 +1769,34 @@ body.dark-mode .home-gps-close-btn {
   align-items: center;
   gap: 8px;
   margin-top: 8px;
+}
+
+.home-gps-setting-controls--col {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+#gpsCoachToggleBtn {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  text-align: center;
+  line-height: 1.3;
+}
+
+#gpsCoachVoiceSelect,
+#gpsCoachStyleSelect,
+#gpsCoachTestBtn {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.home-gps-setting-range {
+  width: 100%;
+  accent-color: var(--primary);
 }
 
 .home-map-type-selector {
@@ -2034,17 +2056,44 @@ body.dark-mode .home-gps-close-btn {
 }
 
 .home-route-item {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
   border: 1px solid var(--border-color);
   border-radius: 10px;
-  padding: 8px;
+  padding: 8px 10px;
+  transition: border-color 0.2s;
+}
+
+.home-route-item--active {
+  border-color: var(--primary);
+  background: rgba(59, 130, 246, 0.05);
+}
+
+.home-route-item-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
 .home-route-item-title {
   font-weight: 700;
   font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.home-route-active-badge {
+  display: inline-block;
+  background: var(--primary);
+  color: #fff;
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 999px;
+  letter-spacing: 0.02em;
 }
 
 .home-route-item-meta {
@@ -2064,6 +2113,56 @@ body.dark-mode .home-gps-close-btn {
   border-radius: 8px;
   padding: 4px 8px;
   font-size: 0.75rem;
+}
+
+.home-route-item-gps-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 2px;
+}
+
+.home-route-gps-btn {
+  border: none;
+  border-radius: 8px;
+  padding: 5px 10px;
+  font-size: 0.74rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.1s;
+  line-height: 1.2;
+}
+
+.home-route-gps-btn:active {
+  transform: scale(0.96);
+}
+
+.home-route-gps-btn--load {
+  background: rgba(59, 130, 246, 0.12);
+  color: var(--primary);
+}
+
+.home-route-gps-btn--load:hover {
+  background: rgba(59, 130, 246, 0.22);
+}
+
+.home-route-gps-btn--unload {
+  background: rgba(239, 68, 68, 0.1);
+  color: #dc2626;
+}
+
+.home-route-gps-btn--unload:hover {
+  background: rgba(239, 68, 68, 0.2);
+}
+
+body.dark-mode .home-route-gps-btn--load {
+  color: #93c5fd;
+  background: rgba(59, 130, 246, 0.18);
+}
+
+body.dark-mode .home-route-gps-btn--unload {
+  color: #fca5a5;
+  background: rgba(239, 68, 68, 0.18);
 }
 
 @media (max-width: 520px) {
@@ -2129,6 +2228,7 @@ body.dark-mode .home-gps-close-btn {
 
 .my-routes-view {
   padding-bottom: 16px;
+  overflow-x: clip;
 }
 
 .my-routes-card {
@@ -2152,14 +2252,61 @@ body.dark-mode .home-gps-close-btn {
 }
 
 .my-routes-actions {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 6px;
   margin-bottom: 12px;
+}
+
+.my-routes-btn {
+  padding: 5px 9px;
+  min-height: 28px;
+  font-size: 0.75rem;
+  border-radius: 7px;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.1);
+  white-space: nowrap;
+}
+
+.my-routes-btn--active {
+  outline: 2px solid var(--primary);
+  outline-offset: 1px;
 }
 
 .my-routes-list {
   gap: 8px;
+  min-width: 0;
+}
+
+.my-routes-route-item {
+  position: relative;
+  padding-right: 36px;
+  min-width: 0;
+}
+
+.my-routes-route-item .home-route-item-info,
+.my-routes-route-item .home-route-item-title,
+.my-routes-route-item .home-route-item-meta {
+  min-width: 0;
+}
+
+.my-routes-route-item .home-route-item-title,
+.my-routes-route-item .home-route-item-meta {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.my-routes-item-select {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+}
+
+.my-routes-select-checkbox {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--primary);
+  cursor: pointer;
 }
 
 .my-routes-load-more {
@@ -2189,7 +2336,8 @@ body.dark-mode .home-gps-close-btn {
 
 @media (max-width: 520px) {
   .my-routes-actions {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, auto);
+    justify-content: flex-start;
   }
 }
 .app-title {
@@ -2237,7 +2385,8 @@ body.dark-mode .home-gps-close-btn {
 .plan-card {
   background: var(--bg-secondary);
   border-radius: 16px;
-  padding: 14px 16px;
+  padding: 8px 10px; /* Reduce padding to make the cards thinner */
+  gap: 8px; /* Reduce gap between elements */
   text-align: left;
   cursor: pointer;
   transition: all 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
@@ -2301,9 +2450,9 @@ body.dark-mode .plan-card {
 }
 
 .plan-circle {
-  width: 52px;
-  height: 52px;
-  min-width: 52px;
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
   border-radius: 14px;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   display: flex;
@@ -2349,7 +2498,7 @@ body.dark-mode .plan-card {
 }
 
 .plan-icon {
-  font-size: 1.6rem;
+  font-size: 1.2rem;
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
   line-height: 1;
 }
@@ -2364,7 +2513,7 @@ body.dark-mode .plan-card {
 }
 
 .plan-title {
-  font-size: 0.95rem;
+  font-size: 0.75rem;
   font-weight: 700;
   color: #0f172a;
   margin: 0;
@@ -2539,10 +2688,14 @@ body.dark-mode .plan-card.active .plan-title {
   font-size: 0.8rem; padding: 6px 14px;
 }
 .chart-container {
-  background: white; border-radius: 16px; padding: 24px 24px 20px;
+  background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 16px; padding: 24px 24px 20px;
   margin-top: 40px; box-shadow: 0 4px 24px rgba(0,0,0,0.07);
   position: relative; opacity: 0; transform: translateY(20px);
   animation: slideUp 0.6s ease-out 0.2s forwards;
+}
+
+body.dark-mode .chart-container {
+  box-shadow: 0 14px 30px rgba(2, 6, 23, 0.28);
 }
 .chart-container::before {
   content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px;
@@ -2558,14 +2711,14 @@ body.dark-mode .plan-card.active .plan-title {
   display: flex; align-items: center; gap: 10px; margin-bottom: 6px;
 }
 .chart-main-title {
-  font-size: 1.05rem; font-weight: 700; color: var(--dark);
+  font-size: 1.05rem; font-weight: 700; color: var(--text-primary);
 }
 .chart-week-badge {
   font-size: 0.75rem; font-weight: 600; padding: 2px 10px;
-  border-radius: 99px; background: #f1f5f9; color: var(--gray);
+  border-radius: 99px; background: var(--bg-primary); color: var(--text-secondary); border: 1px solid var(--border-color);
 }
 .chart-summary {
-  font-size: 0.88rem; color: var(--gray); line-height: 1.5;
+  font-size: 0.88rem; color: var(--text-secondary); line-height: 1.5;
   display: flex; flex-wrap: wrap; gap: 14px;
 }
 .chart-summary .cs-item {
@@ -2575,7 +2728,7 @@ body.dark-mode .plan-card.active .plan-title {
   width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0;
 }
 .chart-summary .cs-val {
-  font-weight: 700; color: var(--dark);
+  font-weight: 700; color: var(--text-primary);
 }
 .chart-summary .cs-ahead  { color: #10b981; font-weight: 700; }
 .chart-summary .cs-behind { color: #ef4444; font-weight: 700; }
@@ -2712,7 +2865,7 @@ progress::-webkit-progress-value {
   cursor: pointer;
   user-select: none;
   pointer-events: all;
-  animation: bubbleIn 0.5s cubic-bezier(.34,1.56,.64,1) forwards;
+  animation: bubbleIn 0.5s cubic-bezier(.34,1.56,.64,1) forwards, bubbleAutoHide 4s ease forwards;
   transition: opacity 0.3s ease, transform 0.3s ease;
 }
 .motivational-bubble::after {
@@ -2741,6 +2894,10 @@ progress::-webkit-progress-value {
   0%   { opacity: 0; transform: scale(0.6) translateY(20px); }
   100% { opacity: 1; transform: scale(1) translateY(0); }
 }
+@keyframes bubbleAutoHide {
+  0%, 82% { opacity: 1; transform: scale(1) translateY(0); }
+  100% { opacity: 0; transform: scale(0.85) translateY(-10px); pointer-events: none; }
+}
 .motivational-bubble.bubble-out {
   opacity: 0; transform: scale(0.85) translateY(-10px); pointer-events: none;
 }
@@ -2757,9 +2914,12 @@ progress::-webkit-progress-value {
 /* Barra inferior de navegacion tipo app */
 .bottom-nav {
   position: fixed;
-  left: 0;
-  right: 0;
+  left: 50%;
+  right: auto;
   bottom: 0;
+  width: 100dvw;
+  max-width: 100dvw;
+  transform: translateX(-50%);
   z-index: 1100;
   display: grid;
   grid-template-columns: repeat(5, 1fr);
@@ -3477,3 +3637,283 @@ body.dark-mode .bottom-nav {
 }
 .strava-upload-status.success { color: #10b981; background: rgba(16,185,129,0.1); }
 .strava-upload-status.error { color: #ef4444; background: rgba(239,68,68,0.1); }
+
+.perspectives-shell {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 20px;
+  padding: 20px 22px 22px;
+  margin-top: 20px;
+  box-shadow: 0 8px 30px rgba(15,23,42,0.06);
+}
+
+body.dark-mode .perspectives-shell {
+  box-shadow: 0 14px 30px rgba(2, 6, 23, 0.28);
+}
+
+.perspectives-tabs,
+.perspectives-periods {
+  display: flex;
+  align-items: center;
+}
+
+.perspectives-tabs {
+  gap: 28px;
+  margin-bottom: 18px;
+  padding: 0 4px 2px;
+  border-bottom: 1px solid var(--border-color);
+  overflow-x: auto;
+  flex-wrap: nowrap;
+  scrollbar-width: none;
+}
+
+.perspectives-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.perspectives-tab,
+.perspectives-period {
+  border: none;
+  cursor: pointer;
+  transition: color 0.18s ease, background 0.18s ease, border-color 0.18s ease;
+}
+
+.perspectives-tab {
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 0.92rem;
+  font-weight: 500;
+  padding: 2px 0 14px;
+  white-space: nowrap;
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.perspectives-tab:hover {
+  color: var(--text-primary);
+}
+
+.perspectives-tab.active {
+  background: transparent;
+  color: var(--primary);
+  box-shadow: none;
+  font-weight: 600;
+}
+
+.perspectives-tab.active::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 4px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--primary), var(--secondary));
+}
+
+.perspectives-periods {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0;
+  margin-bottom: 28px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+  border-radius: 18px;
+  overflow: hidden;
+}
+
+.perspectives-period {
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 0.92rem;
+  font-weight: 500;
+  padding: 11px 8px;
+  border-right: 1px solid var(--border-color);
+  box-shadow: none;
+}
+
+.perspectives-period:last-child {
+  border-right: none;
+}
+
+.perspectives-period:hover {
+  background: rgba(59, 130, 246, 0.08);
+}
+
+.perspectives-period.active {
+  background: var(--primary);
+  color: #fff;
+  box-shadow: none;
+}
+
+.perspective-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+  margin-bottom: 18px;
+}
+
+.perspective-summary-card {
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 4px 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 6px;
+  text-align: center;
+}
+
+.perspective-summary-label {
+  font-size: 0.84rem;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--text-primary);
+}
+
+.perspective-summary-value {
+  font-size: clamp(1.95rem, 5.2vw, 2.75rem);
+  font-weight: 500;
+  color: var(--primary);
+  line-height: 1.04;
+  white-space: nowrap;
+}
+
+.perspective-summary-meta {
+  font-size: 0.68rem;
+  color: var(--text-secondary);
+  line-height: 1.25;
+}
+
+.perspective-chart-summary {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.perspective-chart-summary:empty {
+  display: none;
+}
+
+.perspective-chart-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 7px 12px;
+  border-radius: 999px;
+  background: var(--bg-primary);
+  color: var(--text-secondary);
+  font-size: 0.76rem;
+  border: 1px solid var(--border-color);
+}
+
+.perspective-chart-card {
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 4px 0 0;
+  box-shadow: none;
+}
+
+#perspectivesChart {
+  width: 100% !important;
+  height: 360px !important;
+}
+
+.perspective-detail-actions {
+  display: flex;
+  justify-content: center;
+  margin-top: 16px;
+}
+
+.perspective-detail-toggle {
+  border: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border-radius: 999px;
+  padding: 9px 20px;
+  font-size: 0.92rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.perspective-detail-toggle.active {
+  background: var(--bg-primary);
+}
+
+.perspectives-shell .daily-history-card {
+  margin: 18px 0 0;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+}
+
+.perspective-detail-panel.hidden {
+  display: none;
+}
+
+.perspectives-shell .daily-history-list {
+  max-height: 360px;
+}
+
+#calendarSection .chart-container {
+  margin-top: 24px;
+}
+
+@media (max-width: 768px) {
+  .perspectives-shell {
+    padding: 18px 16px 20px;
+  }
+
+  .perspectives-tabs {
+    gap: 18px;
+  }
+
+  .perspectives-period {
+    font-size: 0.84rem;
+    padding: 10px 3px;
+  }
+
+  .perspective-summary-grid {
+    gap: 10px;
+  }
+}
+
+@media (max-width: 560px) {
+  .perspectives-tabs {
+    gap: 14px;
+  }
+
+  .perspectives-tab {
+    font-size: 0.86rem;
+  }
+
+  .perspective-summary-value {
+    font-size: clamp(1.7rem, 8.8vw, 2.2rem);
+  }
+
+  .perspective-chart-pill {
+    width: 100%;
+  }
+
+  .daily-history-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .daily-history-date {
+    grid-column: 1 / -1;
+  }
+
+  .daily-history-stat {
+    align-items: flex-start;
+  }
+}
+
+.hidden {
+  display: none;
+}

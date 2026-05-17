@@ -9,10 +9,13 @@ android {
 
 apply from: "../capacitor-cordova-android-plugins/cordova.variables.gradle"
 dependencies {
+    implementation project(':capacitor-community-text-to-speech')
     implementation project(':capacitor-geolocation')
-
+    implementation project(':capacitor-share')
+    implementation project(':capacitor-health-connect')
+    implementation "androidx.health.connect:connect-client:1.1.0-alpha10"
 }
-
+apply from: "../../node_modules/cordova-plugin-health/src/android/build-extras.gradle"
 
 if (hasProperty('postBuildExtras')) {
   postBuildExtras()

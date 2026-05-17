@@ -11,7 +11,6 @@ const filesToCopy = [
   'app.js',
   'data.js',
   'gps.js',
-  'strava.js',
   'runningtrainer.config.js'
 ];
 

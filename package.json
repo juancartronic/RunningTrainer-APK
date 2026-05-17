@@ -9,9 +9,13 @@
     "android:apk": "npm run build:web && npx cap sync android && cd android && gradlew.bat assembleDebug"
   },
   "dependencies": {
+    "@capacitor-community/text-to-speech": "^5.1.0",
     "@capacitor/android": "^6.2.0",
     "@capacitor/core": "^6.2.0",
-    "@capacitor/geolocation": "^6.1.1"
+    "@capacitor/geolocation": "^6.1.1",
+    "@capacitor/share": "^6.0.4",
+    "capacitor-health-connect": "^0.7.0",
+    "cordova-plugin-health": "^3.2.4"
   },
   "devDependencies": {
     "@capacitor/cli": "^6.2.0",

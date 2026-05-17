@@ -57,12 +57,32 @@ public class StepCounterPlugin extends Plugin implements SensorEventListener {
         }
 
         if (!hasRecognitionPermission()) {
-            pendingStartCall = call;
-            requestPermissionForAlias("activityRecognition", call, "handlePermissionResult");
+            call.reject("Permiso de actividad fisica requerido.");
             return;
         }
 
         beginListening(call);
+    }
+
+    @PluginMethod
+    public void requestPermission(PluginCall call) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+            JSObject result = new JSObject();
+            result.put("granted", true);
+            result.put("state", "granted");
+            call.resolve(result);
+            return;
+        }
+
+        if (hasRecognitionPermission()) {
+            JSObject result = new JSObject();
+            result.put("granted", true);
+            result.put("state", "granted");
+            call.resolve(result);
+            return;
+        }
+
+        requestPermissionForAlias("activityRecognition", call, "handleRequestPermissionResult");
     }
 
     @PluginMethod
@@ -74,18 +94,12 @@ public class StepCounterPlugin extends Plugin implements SensorEventListener {
     }
 
     @PermissionCallback
-    private void handlePermissionResult(PluginCall call) {
-        if (!hasRecognitionPermission()) {
-          if (pendingStartCall != null) {
-              pendingStartCall.reject("Permiso de actividad fisica denegado.");
-              pendingStartCall = null;
-          }
-          return;
-        }
-
-        PluginCall targetCall = pendingStartCall != null ? pendingStartCall : call;
-        pendingStartCall = null;
-        beginListening(targetCall);
+    private void handleRequestPermissionResult(PluginCall call) {
+        JSObject result = new JSObject();
+        boolean granted = hasRecognitionPermission();
+        result.put("granted", granted);
+        result.put("state", granted ? "granted" : "denied");
+        call.resolve(result);
     }
 
     private void beginListening(PluginCall call) {

@@ -15,6 +15,18 @@ const AUTH_CONFIG = {
 const LOGIN_ATTEMPTS_KEY = 'runningTrainerLoginAttempts';
 let loginAttempts = JSON.parse(localStorage.getItem(LOGIN_ATTEMPTS_KEY) || '{}');
 let chart;
+let perspectivesChart;
+const PERSPECTIVE_PERIODS = [7, 30, 180, 365];
+const PERSPECTIVE_METRICS = {
+  steps: { label: 'Pasos', color: '#2563eb', dataKey: 'steps' },
+  calories: { label: 'Calorías', color: '#f97316', dataKey: 'calories' },
+  distance: { label: 'Distancia', color: '#10b981', dataKey: 'distanceKm' },
+  activeTime: { label: 'Tiempo Activo', color: '#7c3aed', dataKey: 'activeSeconds' }
+};
+const perspectiveState = {
+  metric: 'steps',
+  periodDays: 7
+};
 const _savedDarkMode = localStorage.getItem('darkMode');
 let darkMode = _savedDarkMode !== null
   ? _savedDarkMode === 'true'
@@ -49,6 +61,9 @@ const profileMinStepsInput = document.getElementById('profileMinStepsInput');
 const profileMinStepsHelp = document.getElementById('profileMinStepsHelp');
 const profilePedometerUpper = document.getElementById('profilePedometerUpper');
 const profilePedometerLower = document.getElementById('profilePedometerLower');
+const profilePedometerModeSelect = document.getElementById('profilePedometerModeSelect');
+const profilePedometerRecommendedBtn = document.getElementById('profilePedometerRecommendedBtn');
+const profilePedometerHelp = document.getElementById('profilePedometerHelp');
 const levelProgressDetails = document.getElementById('levelProgressDetails');
 const profilePhotoInput = document.getElementById('profilePhotoInput');
 const badgesGrid = document.getElementById('badgesGrid');
@@ -61,6 +76,11 @@ const calendarView = document.getElementById('calendarSection');
 const myRoutesView = document.getElementById('myRoutesSection');
 const myRoutesImportBtn = document.getElementById('myRoutesImportBtn');
 const myRoutesClearActiveBtn = document.getElementById('myRoutesClearActiveBtn');
+const myRoutesShareBtn = document.getElementById('myRoutesShareBtn');
+const myRoutesDeleteModal = document.getElementById('myRoutesDeleteModal');
+const myRoutesDeleteModalMsg = document.getElementById('myRoutesDeleteModalMsg');
+const myRoutesDeleteConfirmBtn = document.getElementById('myRoutesDeleteConfirmBtn');
+const myRoutesDeleteCancelBtn = document.getElementById('myRoutesDeleteCancelBtn');
 const myRoutesImportInput = document.getElementById('myRoutesImportInput');
 const myRoutesList = document.getElementById('myRoutesList');
 const myRoutesSearch = document.getElementById('myRoutesSearch');
@@ -90,10 +110,7 @@ const homeGpsActivityTabs = document.querySelectorAll('.home-gps-activity-tab');
 const homeGpsStatus = document.getElementById('homeGpsStatus');
 const homeGpsProgressCard = document.getElementById('homeGpsProgressCard');
 const homeGpsProgressTitle = document.getElementById('homeGpsProgressTitle');
-const homeGpsProgressPercent = document.getElementById('homeGpsProgressPercent');
-const homeGpsProgressFill = document.getElementById('homeGpsProgressFill');
-const homeGpsCovered = document.getElementById('homeGpsCovered');
-const homeGpsRemaining = document.getElementById('homeGpsRemaining');
+const homeGpsProgressDistance = document.getElementById('homeGpsProgressDistance');
 const homeRoutesMenu = document.getElementById('homeRoutesScreen');
 const homeRoutesCloseBtn = document.getElementById('homeRoutesScreenCloseBtn');
 const homeRouteImportBtn = document.getElementById('homeRouteImportBtn');
@@ -110,15 +127,33 @@ const homeHistoryCloseBtn = document.getElementById('homeHistoryCloseBtn');
 const homeHistoryClearBtn = document.getElementById('homeHistoryClearBtn');
 const homeHistoryList = document.getElementById('homeHistoryList');
 const calendarTrainingLogList = document.getElementById('calendarTrainingLogList');
+const perspectiveSummaryEl = document.getElementById('perspectiveSummary');
+const perspectiveChartTitleEl = document.getElementById('perspectiveChartTitle');
+const perspectiveChartBadgeEl = document.getElementById('perspectiveChartBadge');
+const perspectiveChartSummaryEl = document.getElementById('perspectiveChartSummary');
+const perspectivesChartCanvas = document.getElementById('perspectivesChart');
+const dailyHistoryTitleEl = document.getElementById('dailyHistoryTitle');
+const dailyHistoryPillEl = document.getElementById('dailyHistoryPill');
+const perspectiveDetailToggleBtn = document.getElementById('perspectiveDetailToggleBtn');
+const perspectiveDetailPanel = document.getElementById('perspectiveDetailPanel');
 const homeGpsSettingsPanel = document.getElementById('homeGpsSettingsPanel');
 const homeGpsSettingsPanelCloseBtn = document.getElementById('homeGpsSettingsPanelCloseBtn');
 const gpsScreenAlwaysOnToggle = document.getElementById('gpsScreenAlwaysOnToggle');
 const homeMapTypeButtons = document.querySelectorAll('.home-map-type-btn');
+const gpsCoachVoiceSelect = document.getElementById('gpsCoachVoiceSelect');
+const gpsCoachStyleSelect = document.getElementById('gpsCoachStyleSelect');
+const gpsCoachRateInput = document.getElementById('gpsCoachRateInput');
+const gpsCoachPitchInput = document.getElementById('gpsCoachPitchInput');
+const gpsCoachRateValue = document.getElementById('gpsCoachRateValue');
+const gpsCoachPitchValue = document.getElementById('gpsCoachPitchValue');
+const gpsCoachTestBtn = document.getElementById('gpsCoachTestBtn');
+const gpsCoachToggleBtn = document.getElementById('gpsCoachToggleBtn');
 
 let gpsScreenAlwaysOn = localStorage.getItem('gpsScreenAlwaysOn') !== 'false'; // default true
 
 const HOME_DAILY_KEY = 'runningTrainerHomeDaily';
 const HOME_DAILY_HISTORY_KEY = 'runningTrainerDailyHistory';
+const HOME_DAILY_HISTORY_LIMIT = 365;
 const HOME_SAVED_ROUTES_KEY = 'runningTrainerSavedRoutes';
 const HOME_ROUTE_HISTORY_KEY = 'runningTrainerRouteHistory';
 const HOME_MAP_TYPE_KEY = 'runningTrainerHomeMapType';
@@ -128,9 +163,43 @@ const MY_ROUTES_PAGE_SIZE = 10;
 const HOME_STEPS_RING_CIRCUMFERENCE = 2 * Math.PI * HOME_STEPS_RING_RADIUS;
 
 const HOME_MAP_TYPES = ['streets', 'satellite', 'terrain'];
+const COACH_STYLES = ['pep', 'calm', 'neutral'];
+const COACH_RATE_DEFAULT = 1;
+const COACH_PITCH_DEFAULT = 1;
+const PEDOMETER_MODES = ['walk', 'run'];
+const PEDOMETER_MODE_PRESETS = {
+  walk: {
+    upperThreshold: 12.0,
+    lowerThreshold: 10.3,
+    minStepIntervalMs: 300,
+    maxBurstGapMs: 2200,
+    minEnergy: 0.62,
+    minCadenceSpm: 55,
+    maxCadenceSpm: 150
+  },
+  run: {
+    upperThreshold: 12.6,
+    lowerThreshold: 10.8,
+    minStepIntervalMs: 220,
+    maxBurstGapMs: 1300,
+    minEnergy: 0.82,
+    minCadenceSpm: 110,
+    maxCadenceSpm: 220
+  }
+};
 let homeMapType = localStorage.getItem(HOME_MAP_TYPE_KEY) || 'streets';
 let homeMapTileLayers = null;
 let homeCurrentMapTileLayer = null;
+let cachedCoachVoices = [];
+let cachedNativeCoachVoices = [];
+
+function getNativeTextToSpeechPlugin() {
+  return window.Capacitor?.Plugins?.TextToSpeech || null;
+}
+
+function getNativeSharePlugin() {
+  return window.Capacitor?.Plugins?.Share || null;
+}
 
 function normalizeHomeStepsGoal(value, fallback = HOME_STEPS_GOAL_DEFAULT) {
   const numeric = Number(value);
@@ -161,6 +230,7 @@ let homeDailyData = null;
 let _gpsSessionBaseSeconds = 0;
 let _gpsSessionBaseDistanceKm = 0;
 let _stepActiveTimer = null;
+let _lastStepActiveUpdateMs = 0;
 let homeMap = null;
 let homeRoutePolyline = null;
 let homeLoadedRoutePolyline = null;
@@ -168,11 +238,24 @@ let homeRouteMarker = null;
 let homeRouteIsRecording = false;
 let homeTimerTickInterval = null;
 let homeMotionEnabled = false;
+let _initMotionInProgress = false;
 let homeMotionWasAboveThreshold = false;
 let homeLastStepTs = 0;
 let homeNativeStepListener = null;
+let homeHealthConnectSyncDate = '';
+let homeCordovaHealthSyncDate = '';
+let homeHealthConnectRetryTimer = null;
+let homeHealthConnectRetryCount = 0;
+let homeMotionLastSampleTs = 0;
+let homeMotionGravity = 9.81;
+let homeMotionSmoothedMagnitude = 9.81;
+let homeMotionEnergy = 0;
+let homeMotionLastCandidateTs = 0;
+let homeMotionPendingSteps = 0;
+let homeMotionCandidateTimestamps = [];
+let homeHealthPermissionPrompted = false;
+let homeHealthSyncInProgress = false;
 let homeSavedRoutes = [];
-let homeLoadedRouteId = null;
 let homeLoadedRoute = null;
 let homeLastGuidanceTs = 0;
 let homeGuidanceRouteIndex = 0;
@@ -186,6 +269,7 @@ let homeLastGuidanceMessage = '';
 let homeRouteHistory = [];
 let homeCurrentSplitSeconds = [];
 let myRoutesPage = 1;
+let myRoutesSelectedIds = new Set();
 
 // Elementos del temporizador
 const timerModal = document.getElementById('timerModal');
@@ -475,42 +559,56 @@ const mensajesMotivadores = {
 // ===========================================
 
 // Animación de inicio
+
 document.addEventListener('DOMContentLoaded', () => {
   const splashScreen = document.getElementById('splashScreen');
   const splashTitle = document.getElementById('splashTitle');
   const loadingCircle = document.getElementById('loadingCircle');
-  
+
   // Aplicar tema siempre al arrancar (oscuro o claro)
   applyDarkMode();
-  
+
   // Verificar autenticación primero
   const isAuthenticated = checkAuthStatus();
-  
+
   setTimeout(() => {
     splashTitle.style.animation = 'fadeInUp 0.8s ease-out forwards';
     loadingCircle.style.animation = 'fadeInUp 0.8s ease-out 0.3s forwards';
   }, 100);
-  
+
   setTimeout(() => {
     splashScreen.style.opacity = '0';
     document.body.classList.add('app-loaded');
     setTimeout(() => splashScreen.remove(), 500);
-    
+
     // Si no está autenticado, mostrar el formulario de login
     if (!isAuthenticated) {
       authContainer.classList.remove('hidden');
     }
   }, 2500);
-  
+
   // Inicializar event listeners
   initEventListeners();
   initModal10K();
   initModal20K();
   initModalMaraton();
+
+  // --- Refuerzo: sincronizar pasos acumulados del sistema al abrir la app ---
+  // Mantener arranque liviano: evitar llamadas a APIs de salud al iniciar.
+  setTimeout(() => {
+    renderHomeDashboard();
+  }, 2000);
+
+  // El plugin StepCounter local no expone getCurrentSnapshot; el snapshot llega por startUpdates.
+  // Se inicializa desde initHomeDashboard -> enableHomeMotionTracking.
 });
 
 function getTodayKey() {
-  return new Date().toISOString().slice(0, 10);
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = String(now.getMonth() + 1).padStart(2, '0');
+  const d = String(now.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
 }
 
 function createEmptyHomeDailyData(previousData = null) {
@@ -532,7 +630,9 @@ function createEmptyHomeDailyData(previousData = null) {
 
 function archiveDailyData(data) {
   if (!data) return;
-  const totalSteps = Math.max(data.stepsSensor || 0, data.stepsDistance || 0);
+  const sensor = data.stepsSensor || 0;
+  const dist   = data.stepsDistance || 0;
+  const totalSteps = sensor > 0 ? sensor : dist;
   if (totalSteps === 0 && (data.activeSeconds || 0) === 0) return;
   const history = JSON.parse(localStorage.getItem(HOME_DAILY_HISTORY_KEY) || '[]');
   if (!history.some(e => e.date === data.date)) {
@@ -543,7 +643,7 @@ function archiveDailyData(data) {
       activeSeconds: data.activeSeconds || 0,
       distanceKm: data.distanceKm || 0
     });
-    if (history.length > 90) history.length = 90;
+    if (history.length > HOME_DAILY_HISTORY_LIMIT) history.length = HOME_DAILY_HISTORY_LIMIT;
     localStorage.setItem(HOME_DAILY_HISTORY_KEY, JSON.stringify(history));
   }
 }
@@ -569,7 +669,11 @@ function saveHomeDailyData() {
 
 function getHomeTotalSteps() {
   ensureHomeDailyData();
-  return Math.max(homeDailyData.stepsSensor || 0, homeDailyData.stepsDistance || 0);
+  // El sensor hardware es más preciso que los pasos estimados del GPS.
+  // Usar stepsDistance solo como fallback cuando no hay datos del sensor.
+  const sensor = homeDailyData.stepsSensor || 0;
+  const dist   = homeDailyData.stepsDistance || 0;
+  return sensor > 0 ? sensor : dist;
 }
 
 function calculateCalories(distanceKm, activeSeconds) {
@@ -643,62 +747,337 @@ function updateHomeStepsUI() {
 }
 
 function getPedometerThresholds() {
+  const config = getPedometerConfig();
+  return {
+    upperThreshold: config.upperThreshold,
+    lowerThreshold: config.lowerThreshold,
+  };
+}
+
+function getPedometerMode() {
+  const mode = String(currentUser?.pedometerMode || '').toLowerCase();
+  return PEDOMETER_MODES.includes(mode) ? mode : 'walk';
+}
+
+function getPedometerModePreset(mode = getPedometerMode()) {
+  return PEDOMETER_MODE_PRESETS[mode] || PEDOMETER_MODE_PRESETS.walk;
+}
+
+function getPedometerConfig() {
+  const mode = getPedometerMode();
+  const preset = getPedometerModePreset(mode);
   const upper = Number(currentUser?.pedometerUpper);
   const lower = Number(currentUser?.pedometerLower);
+
   return {
-    upperThreshold: Number.isFinite(upper) && upper > 0 ? upper : 12.2,
-    lowerThreshold: Number.isFinite(lower) && lower > 0 ? lower : 10.5,
+    mode,
+    upperThreshold: Number.isFinite(upper) && upper > 0 ? upper : preset.upperThreshold,
+    lowerThreshold: Number.isFinite(lower) && lower > 0 ? lower : preset.lowerThreshold,
+    minStepIntervalMs: preset.minStepIntervalMs,
+    maxBurstGapMs: preset.maxBurstGapMs,
+    minEnergy: preset.minEnergy,
+    minCadenceSpm: preset.minCadenceSpm,
+    maxCadenceSpm: preset.maxCadenceSpm
   };
+}
+
+function updatePedometerHelpText() {
+  if (!profilePedometerHelp) return;
+  const mode = getPedometerMode();
+  const config = getPedometerConfig();
+  const modeLabel = mode === 'run' ? 'Correr' : 'Caminar';
+  profilePedometerHelp.textContent = `Modo actual: ${modeLabel}. Recomendado: alto ${config.upperThreshold.toFixed(1)} / bajo ${config.lowerThreshold.toFixed(1)}.`;
+}
+
+function applyRecommendedPedometerSettings(mode, { notify = true } = {}) {
+  if (!currentUser) return;
+  const safeMode = PEDOMETER_MODES.includes(mode) ? mode : 'walk';
+  const preset = getPedometerModePreset(safeMode);
+  currentUser.pedometerMode = safeMode;
+  currentUser.pedometerUpper = preset.upperThreshold;
+  currentUser.pedometerLower = preset.lowerThreshold;
+  saveUserData();
+  updateProfileModal();
+  if (notify) {
+    showToast(`Perfil ${safeMode === 'run' ? 'correr' : 'caminar'} aplicado al podómetro.`, 'success');
+  }
 }
 
 function getNativeStepCounterPlugin() {
   return window.Capacitor?.Plugins?.StepCounter || null;
 }
 
-function getIsoDateFromTimestamp(timestamp) {
-  if (!Number.isFinite(timestamp) || timestamp <= 0) return '';
-  return new Date(timestamp).toISOString().slice(0, 10);
+function getNativeHealthConnectPlugin() {
+  try {
+    return window.Capacitor?.Plugins?.HealthConnect || null;
+  } catch (e) {
+    console.warn('Error accessing HealthConnect plugin:', e);
+    return null;
+  }
 }
 
-function applyNativeStepCounterUpdate(snapshot) {
-  ensureHomeDailyData();
-  if (!snapshot) return false;
+function getCordovaHealthPlugin() {
+  try {
+    return window?.cordova?.plugins?.health || window?.plugins?.health || null;
+  } catch (e) {
+    console.warn('Error accessing cordova health plugin:', e);
+    return null;
+  }
+}
 
-  const totalSteps = Math.max(0, Math.floor(Number(snapshot.totalSteps) || 0));
-  const bootTimeMs = Math.max(0, Math.floor(Number(snapshot.bootTimeMs) || 0));
-  const bootDate = getIsoDateFromTimestamp(bootTimeMs);
-  const todayKey = homeDailyData.date;
-  const previousDisplayedSteps = Math.max(0, Math.floor(Number(homeDailyData.stepsSensor) || 0));
-  const previousRawTotal = Math.max(0, Math.floor(Number(homeDailyData.stepCounterLastTotal) || 0));
+function requestCordovaHealthAuthorization(plugin) {
+  return new Promise((resolve, reject) => {
+    plugin.requestAuthorization({ read: ['steps'], write: [] }, resolve, reject);
+  });
+}
 
-  let base = homeDailyData.stepCounterBase;
-  const storedBootTime = Math.max(0, Math.floor(Number(homeDailyData.stepCounterBootTime) || 0));
-  const bootChanged = storedBootTime && bootTimeMs && storedBootTime !== bootTimeMs;
-  const baseMissing = !Number.isFinite(base);
+function queryCordovaHealthStepsToday(plugin) {
+  const startDate = new Date();
+  startDate.setHours(0, 0, 0, 0);
+  const endDate = new Date();
+  return new Promise((resolve, reject) => {
+    plugin.queryAggregated(
+      {
+        startDate,
+        endDate,
+        dataType: 'steps'
+      },
+      resolve,
+      reject
+    );
+  });
+}
 
-  if (bootChanged || baseMissing || base > totalSteps) {
-    if (bootDate === todayKey) {
-      base = 0;
-    } else if (!baseMissing && !bootChanged) {
-      base = Math.min(base, totalSteps);
-    } else {
-      base = totalSteps;
+async function requestNativeHealthConnectAuthorization(plugin) {
+  return plugin.requestHealthPermissions({
+    read: ['Steps'],
+    write: []
+  });
+}
+
+async function queryNativeHealthConnectStepsToday(plugin) {
+  const { startTime, endTime } = getTodayTimeRangeMs();
+  return plugin.readRecords({
+    type: 'Steps',
+    timeRangeFilter: {
+      type: 'between',
+      startTime,
+      endTime
     }
+  });
+}
+
+function runWithTimeout(taskFactory, timeoutMs, label) {
+  return Promise.race([
+    Promise.resolve().then(taskFactory),
+    new Promise((_, reject) => {
+      setTimeout(() => reject(new Error(`${label} timeout`)), timeoutMs);
+    })
+  ]);
+}
+
+function getTodayTimeRangeMs() {
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+  const todayEnd = new Date();
+  todayEnd.setHours(23, 59, 59, 999);
+  return {
+    startTime: todayStart.toISOString(),
+    endTime: todayEnd.toISOString()
+  };
+}
+
+function applyNativeStepCounterUpdate(snapshot = {}) {
+  ensureHomeDailyData();
+
+  const total = Math.max(0, Math.floor(Number(snapshot?.totalSteps ?? snapshot?.steps ?? snapshot?.value ?? 0) || 0));
+  const bootTimeMs = Math.max(0, Math.floor(Number(snapshot?.bootTimeMs) || 0));
+  const eventTs = Math.max(0, Math.floor(Number(snapshot?.timestamp) || 0)) || Date.now();
+  const currentSteps = Math.max(0, Math.floor(Number(homeDailyData.stepsSensor) || 0));
+  const previousTotal = Math.max(0, Math.floor(Number(homeDailyData.stepCounterLastTotal) || 0));
+  const previousBootTime = Math.max(0, Math.floor(Number(homeDailyData.stepCounterBootTime) || 0));
+
+  let base = Number.isFinite(homeDailyData.stepCounterBase)
+    ? Number(homeDailyData.stepCounterBase)
+    : null;
+
+  const sensorReset = total < previousTotal;
+  const bootChanged = bootTimeMs > 0 && previousBootTime > 0 && bootTimeMs !== previousBootTime;
+
+  if (base == null || sensorReset || bootChanged) {
+    // Mantener el acumulado diario ya conocido cuando el sensor se reinicia o el móvil se reinicia.
+    base = total - currentSteps;
   }
 
-  const todaySteps = Math.max(0, totalSteps - base);
-  homeDailyData.stepCounterBase = base;
-  homeDailyData.stepCounterBootTime = bootTimeMs || storedBootTime || 0;
-  homeDailyData.stepCounterLastTotal = totalSteps;
-  homeDailyData.stepsSensor = todaySteps;
+  const dailySteps = Math.max(0, Math.floor(total - base));
+  const nextSteps = Math.max(currentSteps, dailySteps);
+  const deltaSteps = Math.max(0, nextSteps - currentSteps);
 
-  if (totalSteps > previousRawTotal || todaySteps > previousDisplayedSteps) {
-    homeLastStepTs = Date.now();
+  homeDailyData.stepCounterBase = base;
+  if (bootTimeMs > 0) {
+    homeDailyData.stepCounterBootTime = bootTimeMs;
+  }
+  homeDailyData.stepCounterLastTotal = total;
+  homeDailyData.stepsSensor = nextSteps;
+
+  if (deltaSteps > 0) {
+    homeLastStepTs = eventTs;
+    homeDailyData.stepActiveSeconds = (homeDailyData.stepActiveSeconds || 0) + deltaSteps;
+    homeDailyData.activeSeconds = (homeDailyData.gpsActiveSeconds || 0) + homeDailyData.stepActiveSeconds;
   }
 
   saveHomeDailyData();
   renderHomeDashboard();
   return true;
+}
+
+
+function applyHealthConnectDailySteps(dailyTotal) {
+  ensureHomeDailyData();
+  const total = Math.max(0, Math.floor(Number(dailyTotal) || 0));
+  if (!total) return false;
+
+  // Health Connect devuelve total diario: conservar siempre el mayor valor observado.
+  const currentSteps = Math.max(0, Math.floor(Number(homeDailyData.stepsSensor) || 0));
+  homeDailyData.stepsSensor = Math.max(currentSteps, total);
+  homeDailyData.stepCounterLastTotal = total;
+  homeLastStepTs = Date.now();
+  saveHomeDailyData();
+  renderHomeDashboard();
+  return true;
+}
+
+async function syncHealthConnectDailySteps({ requestPermissions = false } = {}) {
+  const todayKey = getTodayKey();
+  if (!requestPermissions && homeHealthConnectSyncDate === todayKey) return;
+
+  const plugin = getNativeHealthConnectPlugin();
+  if (!plugin || typeof plugin.readRecords !== 'function') return;
+
+  try {
+    if (requestPermissions && typeof plugin.requestHealthPermissions === 'function') {
+      await runWithTimeout(
+        () => requestNativeHealthConnectAuthorization(plugin),
+        20000,
+        'HealthConnect.requestHealthPermissions'
+      );
+    }
+
+    const recordsResult = await runWithTimeout(
+      () => queryNativeHealthConnectStepsToday(plugin),
+      6500,
+      'HealthConnect.readRecords'
+    );
+
+    const records = Array.isArray(recordsResult?.records) ? recordsResult.records : [];
+    const total = Math.max(0, Math.floor(records.reduce((sum, record) => sum + (Number(record?.count) || 0), 0)));
+    if (total <= 0) return;
+
+    if (applyHealthConnectDailySteps(total)) {
+      console.log(`Health Connect: Pasos diarios sincronizados = ${total}`);
+    }
+    homeHealthConnectSyncDate = todayKey;
+    stopHealthConnectCatchup();
+  } catch (err) {
+    console.warn('Health Connect no disponible o sin permisos:', err?.message || err);
+  }
+}
+
+function scheduleHealthConnectDailySync(options = {}) {
+  setTimeout(() => {
+    syncHealthConnectDailySteps(options).catch((err) => {
+      console.warn('Fallo en sincronizacion de Health Connect:', err?.message || err);
+    });
+  }, 0);
+}
+
+async function syncCordovaHealthDailySteps({ requestPermissions = false } = {}) {
+  const todayKey = getTodayKey();
+  if (!requestPermissions && homeCordovaHealthSyncDate === todayKey) return;
+
+  const plugin = getCordovaHealthPlugin();
+  if (!plugin || typeof plugin.queryAggregated !== 'function') return;
+
+  try {
+    if (requestPermissions && typeof plugin.requestAuthorization === 'function') {
+      await runWithTimeout(
+        () => requestCordovaHealthAuthorization(plugin),
+        20000,
+        'cordova.health.requestAuthorization'
+      );
+    }
+
+    const aggregated = await runWithTimeout(
+      () => queryCordovaHealthStepsToday(plugin),
+      6500,
+      'cordova.health.queryAggregated'
+    );
+
+    const total = Math.max(0, Math.floor(Number(aggregated?.value ?? aggregated?.steps ?? 0) || 0));
+    if (total <= 0) return;
+
+    if (applyHealthConnectDailySteps(total)) {
+      console.log(`Cordova Health: Pasos diarios sincronizados = ${total}`);
+    }
+    homeCordovaHealthSyncDate = todayKey;
+    stopHealthConnectCatchup();
+  } catch (err) {
+    console.warn('Cordova Health no disponible o sin permisos:', err?.message || err);
+  }
+}
+
+function scheduleCordovaHealthDailySync(options = {}) {
+  setTimeout(() => {
+    syncCordovaHealthDailySteps(options).catch((err) => {
+      console.warn('Fallo en sincronizacion de Cordova Health:', err?.message || err);
+    });
+  }, 0);
+}
+
+async function syncExternalDailySteps({ requestPermissions = false } = {}) {
+  if (!currentUser || homeHealthSyncInProgress) return;
+
+  homeHealthSyncInProgress = true;
+  try {
+    const shouldRequestPermissions = requestPermissions && !homeHealthPermissionPrompted;
+    if (shouldRequestPermissions) {
+      homeHealthPermissionPrompted = true;
+    }
+
+    await syncHealthConnectDailySteps({ requestPermissions: shouldRequestPermissions });
+    await syncCordovaHealthDailySteps({ requestPermissions: shouldRequestPermissions });
+  } catch (err) {
+    console.warn('Fallo en sincronizacion de pasos diarios del sistema:', err?.message || err);
+  } finally {
+    homeHealthSyncInProgress = false;
+  }
+}
+
+function stopHealthConnectCatchup() {
+  if (homeHealthConnectRetryTimer) {
+    clearInterval(homeHealthConnectRetryTimer);
+    homeHealthConnectRetryTimer = null;
+  }
+  homeHealthConnectRetryCount = 0;
+}
+
+function startHealthConnectCatchup() {
+  if (homeHealthConnectRetryTimer) return;
+  homeHealthConnectRetryCount = 0;
+
+  // Reintenta durante ~5 minutos para capturar datos que lleguen con retraso.
+  homeHealthConnectRetryTimer = setInterval(() => {
+    homeHealthConnectRetryCount += 1;
+    const total = getHomeTotalSteps();
+
+    if (total > 0 || homeHealthConnectRetryCount >= 10) {
+      stopHealthConnectCatchup();
+      return;
+    }
+
+    scheduleHealthConnectDailySync({ requestPermissions: false });
+    scheduleCordovaHealthDailySync({ requestPermissions: false });
+  }, 30000);
 }
 
 function ensureStepActiveTimer() {
@@ -707,14 +1086,43 @@ function ensureStepActiveTimer() {
   _stepActiveTimer = setInterval(() => {
     if (homeRouteIsRecording || !homeDailyData) return;
     const now = Date.now();
-    if (homeLastStepTs && now - homeLastStepTs < 90000) {
+    // Intervalo más generoso: 5 minutos (300 seg) para permitir actividad intermitente o lenta
+    // Este intervalo permite que se registre tiempo activo aunque haya pausas de hasta 5 minutos
+    const ACTIVITY_TIMEOUT = 5 * 60 * 1000; // 5 minutos
+    const MINUTES_PER_TICK = 1; // Incrementar 1 minuto cada tick
+    
+    if (homeLastStepTs && now - homeLastStepTs < ACTIVITY_TIMEOUT) {
       ensureHomeDailyData();
-      homeDailyData.stepActiveSeconds = (homeDailyData.stepActiveSeconds || 0) + 60;
-      homeDailyData.activeSeconds = (homeDailyData.gpsActiveSeconds || 0) + homeDailyData.stepActiveSeconds;
+      // Incrementar tiempo activo en minutos (60 segundos)
+      const newStepActiveSeconds = (homeDailyData.stepActiveSeconds || 0) + (MINUTES_PER_TICK * 60);
+      homeDailyData.stepActiveSeconds = newStepActiveSeconds;
+      homeDailyData.activeSeconds = (homeDailyData.gpsActiveSeconds || 0) + newStepActiveSeconds;
+      _lastStepActiveUpdateMs = now;
       saveHomeDailyData();
       renderHomeDashboard();
     }
-  }, 60000);
+  }, 60000); // Ejecutar cada 60 segundos (1 minuto)
+}
+
+function pushMotionCandidateTimestamp(ts) {
+  homeMotionCandidateTimestamps.push(ts);
+  if (homeMotionCandidateTimestamps.length > 7) {
+    homeMotionCandidateTimestamps.shift();
+  }
+}
+
+function getRecentCadenceSpm() {
+  if (homeMotionCandidateTimestamps.length < 2) return 0;
+
+  const intervals = [];
+  for (let i = 1; i < homeMotionCandidateTimestamps.length; i++) {
+    const delta = homeMotionCandidateTimestamps[i] - homeMotionCandidateTimestamps[i - 1];
+    if (delta >= 250 && delta <= 2000) intervals.push(delta);
+  }
+  if (!intervals.length) return 0;
+
+  const avg = intervals.reduce((acc, value) => acc + value, 0) / intervals.length;
+  return avg > 0 ? Math.round(60000 / avg) : 0;
 }
 
 function handleHomeMotion(event) {
@@ -728,45 +1136,149 @@ function handleHomeMotion(event) {
   const magnitude = Math.sqrt(x * x + y * y + z * z);
   const now = Date.now();
 
-  const { upperThreshold, lowerThreshold } = getPedometerThresholds();
-  const minStepIntervalMs = 280;
+  let dt = homeMotionLastSampleTs > 0 ? (now - homeMotionLastSampleTs) : 16;
+  homeMotionLastSampleTs = now;
+  if (!Number.isFinite(dt) || dt <= 0 || dt > 1200) dt = 16;
 
-  if (!homeMotionWasAboveThreshold && magnitude > upperThreshold && (now - homeLastStepTs) > minStepIntervalMs) {
+  const gravityAlpha = Math.exp(-dt / 700);
+  const magnitudeAlpha = Math.exp(-dt / 180);
+  const energyAlpha = Math.exp(-dt / 350);
+
+  homeMotionGravity = (homeMotionGravity * gravityAlpha) + (magnitude * (1 - gravityAlpha));
+  homeMotionSmoothedMagnitude = (homeMotionSmoothedMagnitude * magnitudeAlpha) + (magnitude * (1 - magnitudeAlpha));
+  const linearMagnitude = Math.abs(magnitude - homeMotionGravity);
+  homeMotionEnergy = (homeMotionEnergy * energyAlpha) + (linearMagnitude * (1 - energyAlpha));
+
+  const {
+    upperThreshold,
+    lowerThreshold,
+    minStepIntervalMs,
+    maxBurstGapMs,
+    minEnergy,
+    minCadenceSpm,
+    maxCadenceSpm
+  } = getPedometerConfig();
+
+  if (!homeMotionWasAboveThreshold && homeMotionSmoothedMagnitude > upperThreshold && (now - homeLastStepTs) > minStepIntervalMs) {
     homeMotionWasAboveThreshold = true;
+
+    if (homeMotionEnergy < minEnergy) return;
+
+    const candidateGap = homeMotionLastCandidateTs > 0 ? (now - homeMotionLastCandidateTs) : Number.POSITIVE_INFINITY;
+    if (candidateGap < minStepIntervalMs) return;
+
+    if (!Number.isFinite(candidateGap) || candidateGap > maxBurstGapMs) {
+      homeMotionPendingSteps = 0;
+      homeMotionCandidateTimestamps = [];
+    }
+
+    homeMotionLastCandidateTs = now;
+    homeMotionPendingSteps += 1;
+    pushMotionCandidateTimestamp(now);
+
+    const cadenceSpm = getRecentCadenceSpm();
+    if (cadenceSpm && (cadenceSpm < minCadenceSpm || cadenceSpm > maxCadenceSpm)) return;
+
+    if (homeMotionPendingSteps < 2) return;
+
+    const stepsToAdd = homeMotionPendingSteps === 2 ? 2 : 1;
+    homeMotionPendingSteps = Math.min(homeMotionPendingSteps, 3);
+
     homeLastStepTs = now;
-    homeDailyData.stepsSensor = (homeDailyData.stepsSensor || 0) + 1;
+    homeDailyData.stepsSensor = (homeDailyData.stepsSensor || 0) + stepsToAdd;
+    
+    // Incrementar tiempo activo: aproximadamente 1 segundo por cada paso detectado
+    // (ritmo normal de caminar/correr es ~2-3 pasos por segundo, así que esto es conservador)
+    if (stepsToAdd > 0) {
+      homeDailyData.stepActiveSeconds = (homeDailyData.stepActiveSeconds || 0) + stepsToAdd;
+      homeDailyData.activeSeconds = (homeDailyData.gpsActiveSeconds || 0) + homeDailyData.stepActiveSeconds;
+    }
+    
     updateHomeStepsUI();
-  } else if (homeMotionWasAboveThreshold && magnitude < lowerThreshold) {
+    saveHomeDailyData();
+    renderHomeDashboard();
+  } else if (homeMotionWasAboveThreshold && homeMotionSmoothedMagnitude < lowerThreshold) {
     homeMotionWasAboveThreshold = false;
   }
 }
 
 async function enableHomeMotionTracking({ silent = false } = {}) {
   if (homeMotionEnabled) return true;
-
-  const nativeStepCounter = getNativeStepCounterPlugin();
-  if (nativeStepCounter) {
-    try {
-      const availability = await nativeStepCounter.isAvailable();
-      if (availability?.available) {
-        homeNativeStepListener = await nativeStepCounter.addListener('stepUpdate', applyNativeStepCounterUpdate);
-        const initialSnapshot = await nativeStepCounter.startUpdates();
-        applyNativeStepCounterUpdate(initialSnapshot);
-        ensureStepActiveTimer();
-        homeMotionEnabled = true;
-        if (!silent) showToast('Contador de pasos activado.', 'success');
-        return true;
-      }
-    } catch (err) {
-      console.warn('No se pudo activar el contador de pasos nativo:', err);
-    }
-  }
+  if (_initMotionInProgress) return true;
+  _initMotionInProgress = true;
 
   try {
+    const nativeStepCounter = getNativeStepCounterPlugin();
+    if (nativeStepCounter) {
+      try {
+        const availability = await runWithTimeout(
+          () => nativeStepCounter.isAvailable(),
+          2500,
+          'StepCounter.isAvailable'
+        );
+
+        if (availability?.available) {
+          let nativePermissionGranted = availability?.permissionRequired === false || availability?.permissionGranted === true;
+
+          if (!nativePermissionGranted && !silent && typeof nativeStepCounter.requestPermission === 'function') {
+            try {
+              const permissionResult = await runWithTimeout(
+                () => nativeStepCounter.requestPermission(),
+                15000,
+                'StepCounter.requestPermission'
+              );
+              nativePermissionGranted = permissionResult?.granted === true;
+            } catch (permErr) {
+              console.warn('No se pudo solicitar permiso de actividad física:', permErr);
+            }
+          }
+
+          if (nativePermissionGranted) {
+            homeNativeStepListener = await runWithTimeout(
+              () => nativeStepCounter.addListener('stepUpdate', applyNativeStepCounterUpdate),
+              2500,
+              'StepCounter.addListener'
+            );
+
+            // startUpdates puede tardar hasta que llegue el primer evento real del sensor.
+            // No debemos abortar el modo nativo por timeout: si tarda, seguimos con el listener activo.
+            const initialSnapshot = await Promise.race([
+              nativeStepCounter.startUpdates(),
+              new Promise((resolve) => setTimeout(() => resolve(null), 3500))
+            ]);
+
+            if (initialSnapshot && typeof initialSnapshot === 'object') {
+              applyNativeStepCounterUpdate(initialSnapshot);
+            }
+
+            ensureStepActiveTimer();
+            homeMotionEnabled = true;
+
+            if (!silent) showToast('Contador de pasos (nativo) activado.', 'success');
+            return true;
+          }
+
+          // Evitar prompts nativos inestables: usar fallback hasta que el permiso se conceda por otro flujo.
+          if (!silent) {
+            showToast('Permiso de actividad física no disponible. Activando contador alternativo.', 'info');
+          }
+        }
+      } catch (err) {
+        console.warn('No se pudo activar el contador de pasos nativo:', err);
+        try {
+          await homeNativeStepListener?.remove?.();
+        } catch (_) {
+          // Ignorar errores de limpieza del listener.
+        }
+        homeNativeStepListener = null;
+      }
+    }
+
     if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
+      if (silent) return false;
       const permissionState = await DeviceMotionEvent.requestPermission();
       if (permissionState !== 'granted') {
-        if (!silent) showToast('Permiso de movimiento denegado.', 'error');
+        console.warn('Permiso de movimiento denegado por el usuario.');
         return false;
       }
     }
@@ -774,12 +1286,14 @@ async function enableHomeMotionTracking({ silent = false } = {}) {
     window.addEventListener('devicemotion', handleHomeMotion, { passive: true });
     homeMotionEnabled = true;
     ensureStepActiveTimer();
-    if (!silent) showToast('Contador de pasos activado.', 'success');
+    if (!silent) showToast('Contador de pasos (acelerometro) activado.', 'success');
     return true;
   } catch (err) {
-    console.warn('No se pudo activar el sensor de pasos:', err);
+    console.warn('No se pudo activar el sensor de pasos web:', err);
     if (!silent) showToast('No se pudo activar el sensor de pasos en este dispositivo.', 'error');
     return false;
+  } finally {
+    _initMotionInProgress = false;
   }
 }
 
@@ -820,14 +1334,236 @@ function setHomeGpsStatus(message = '', type = 'info') {
   homeGpsStatus.className = `home-gps-status active ${type}`;
 }
 
-function speakGpsMessage(message) {
+function normalizeCoachRate(value) {
+  const num = Number(value);
+  if (!Number.isFinite(num)) return COACH_RATE_DEFAULT;
+  return Math.max(0.85, Math.min(1.25, Number(num.toFixed(2))));
+}
+
+function normalizeCoachPitch(value) {
+  const num = Number(value);
+  if (!Number.isFinite(num)) return COACH_PITCH_DEFAULT;
+  return Math.max(0.85, Math.min(1.2, Number(num.toFixed(2))));
+}
+
+function getCoachSettings() {
+  const settings = currentUser?.coachVoiceSettings || {};
+  const style = COACH_STYLES.includes(settings.style) ? settings.style : 'pep';
+  return {
+    voiceName: settings.voiceName || 'auto',
+    style,
+    rate: normalizeCoachRate(settings.rate),
+    pitch: normalizeCoachPitch(settings.pitch),
+    enabled: settings.enabled !== false  // default true
+  };
+}
+
+function saveCoachSettings(partial = {}) {
+  if (!currentUser) return;
+  const current = getCoachSettings();
+  currentUser.coachVoiceSettings = {
+    ...current,
+    ...partial,
+    rate: normalizeCoachRate(partial.rate ?? current.rate),
+    pitch: normalizeCoachPitch(partial.pitch ?? current.pitch),
+    style: COACH_STYLES.includes(partial.style) ? partial.style : current.style,
+    enabled: partial.enabled !== undefined ? partial.enabled : current.enabled
+  };
+  saveUserData();
+}
+
+function formatCoachMessage(message, style = 'neutral') {
+  if (!message) return '';
+  if (style === 'neutral') return message;
+
+  // Detectar tipo de mensaje para personalizar la locución según contexto
+  const isKmSplit = /^kilometro\s+\d+/i.test(message);
+  const isOffRoute = /alejaste|volver al trazado/i.test(message);
+  const isTurn = /gira|sigue recto/i.test(message);
+  const isFinish = /ruta completada/i.test(message);
+
+  if (style === 'pep') {
+    if (isKmSplit) {
+      const boost = [
+        'Eso es, sigue empujando!',
+        'Ritmo perfecto, no pares!',
+        'Vas de lujo, a por el siguiente!',
+        'Un kilometro menos, muchos logros mas!',
+        'Maquina! Sigue asi!'
+      ];
+      const extra = boost[Math.floor(Math.random() * boost.length)];
+      return `${message}. ${extra}`;
+    }
+    if (isOffRoute) {
+      return `Sin problema! ${message} Tu puedes!`;
+    }
+    if (isTurn) {
+      const alerts = ['Atencion!', 'Oye!', 'Escucha!'];
+      const alert = alerts[Math.floor(Math.random() * alerts.length)];
+      return `${alert} ${message}`;
+    }
+    if (isFinish) {
+      const finales = [
+        'Increible, lo conseguiste! Ruta completada. Eres un crack!',
+        'Ruta completada! Entrenamiento de nivel. Descansa y recarga!',
+        'Ruta completada! Un dia mas que demuestra lo que vales!'
+      ];
+      return finales[Math.floor(Math.random() * finales.length)];
+    }
+    // Para mensajes de UI o generales, mantener texto exacto.
+    return message;
+  }
+
+  if (style === 'calm') {
+    if (isKmSplit) {
+      return `Progreso constante. ${message}. Mantente hidratado y sigue respirando.`;
+    }
+    if (isOffRoute) {
+      return `Sin prisa. ${message} Consulta el mapa y retoma el trazado cuando puedas.`;
+    }
+    if (isTurn) {
+      return `Preparate. ${message}`;
+    }
+    if (isFinish) {
+      return `Lo conseguiste. Ruta completada. Toma aire y disfruta el momento.`;
+    }
+    // Para mensajes de UI o generales, mantener texto exacto.
+    return message;
+  }
+
+  return message;
+}
+
+function getPreferredCoachVoices() {
+  if (!('speechSynthesis' in window)) return [];
+  const voices = window.speechSynthesis.getVoices() || [];
+  const spanish = voices.filter((voice) => /^es([-_]|$)/i.test(voice.lang || ''));
+  return spanish.length > 0 ? spanish : voices;
+}
+
+async function getPreferredNativeCoachVoices() {
+  const tts = getNativeTextToSpeechPlugin();
+  if (!tts?.getSupportedVoices) return [];
+
+  try {
+    const result = await tts.getSupportedVoices();
+    const voices = Array.isArray(result?.voices) ? result.voices : [];
+    const spanish = voices.filter((voice) => /^es([-_]|$)/i.test(voice?.lang || ''));
+    return spanish.length > 0 ? spanish : voices;
+  } catch (err) {
+    console.warn('No se pudieron leer las voces TTS nativas:', err);
+    return [];
+  }
+}
+
+async function populateCoachVoiceOptions() {
+  if (!gpsCoachVoiceSelect) return;
+
+  cachedCoachVoices = getPreferredCoachVoices();
+  cachedNativeCoachVoices = await getPreferredNativeCoachVoices();
+  const current = getCoachSettings();
+  const selectedName = current.voiceName || 'auto';
+
+  const availableVoices = cachedCoachVoices.length > 0
+    ? cachedCoachVoices
+    : cachedNativeCoachVoices;
+
+  const options = ['<option value="auto">Automatica (motor del sistema)</option>'];
+  availableVoices.forEach((voice) => {
+    const safeName = String(voice.name || '').replace(/"/g, '&quot;');
+    const safeLang = String(voice.lang || '').replace(/"/g, '&quot;');
+    options.push(`<option value="${safeName}">${safeName} (${safeLang})</option>`);
+  });
+
+  if (!availableVoices.length) {
+    options.push('<option value="" disabled>Sin voces detectadas; se usara voz nativa por defecto</option>');
+  }
+
+  gpsCoachVoiceSelect.innerHTML = options.join('');
+  if ([...gpsCoachVoiceSelect.options].some((option) => option.value === selectedName)) {
+    gpsCoachVoiceSelect.value = selectedName;
+  } else {
+    gpsCoachVoiceSelect.value = 'auto';
+    if (currentUser && selectedName !== 'auto') {
+      saveCoachSettings({ voiceName: 'auto' });
+    }
+  }
+}
+
+function updateCoachControlsFromSettings() {
+  if (!gpsCoachStyleSelect || !gpsCoachRateInput || !gpsCoachPitchInput) return;
+
+  const settings = getCoachSettings();
+  if (gpsCoachVoiceSelect) {
+    const desiredVoice = settings.voiceName || 'auto';
+    if ([...gpsCoachVoiceSelect.options].some((option) => option.value === desiredVoice)) {
+      gpsCoachVoiceSelect.value = desiredVoice;
+    } else {
+      gpsCoachVoiceSelect.value = 'auto';
+    }
+  }
+
+  gpsCoachStyleSelect.value = settings.style;
+  gpsCoachRateInput.value = String(settings.rate);
+  gpsCoachPitchInput.value = String(settings.pitch);
+  if (gpsCoachRateValue) gpsCoachRateValue.textContent = settings.rate.toFixed(2);
+  if (gpsCoachPitchValue) gpsCoachPitchValue.textContent = settings.pitch.toFixed(2);
+
+  if (gpsCoachToggleBtn) {
+    const enabled = settings.enabled !== false;
+    gpsCoachToggleBtn.setAttribute('aria-pressed', enabled ? 'true' : 'false');
+    gpsCoachToggleBtn.textContent = enabled ? '🔊 Voz activada' : '🔇 Voz desactivada';
+    gpsCoachToggleBtn.className = `btn btn-sm ${enabled ? 'btn-primary' : 'btn-secondary'}`;
+  }
+}
+
+function speakGpsMessage(message, options = {}) {
   if (!message || soundMode === 'off') return;
+
+  const settings = getCoachSettings();
+  if (settings.enabled === false) return;
+  const plain = options?.plain === true;
+  const text = plain ? message : formatCoachMessage(message, settings.style);
+
+  const nativeTts = getNativeTextToSpeechPlugin();
+  if (nativeTts?.speak) {
+    const nativeVoices = cachedNativeCoachVoices.length > 0
+      ? cachedNativeCoachVoices
+      : cachedCoachVoices;
+    const selectedVoiceIndex = settings.voiceName && settings.voiceName !== 'auto'
+      ? nativeVoices.findIndex((voice) => voice.name === settings.voiceName)
+      : -1;
+
+    const options = {
+      text,
+      lang: 'es-ES',
+      rate: settings.rate,
+      pitch: settings.pitch,
+      volume: 1,
+      queueStrategy: 0
+    };
+    if (selectedVoiceIndex >= 0) options.voice = selectedVoiceIndex;
+
+    nativeTts.stop?.().catch(() => {});
+    nativeTts.speak(options).catch((err) => {
+      console.warn('No se pudo reproducir voz nativa:', err);
+    });
+    return;
+  }
+
   if (!('speechSynthesis' in window)) return;
 
-  const utterance = new SpeechSynthesisUtterance(message);
+  const utterance = new SpeechSynthesisUtterance(text);
   utterance.lang = 'es-ES';
-  utterance.rate = 1;
-  utterance.pitch = 1;
+  utterance.rate = settings.rate;
+  utterance.pitch = settings.pitch;
+
+  const voices = cachedCoachVoices.length > 0 ? cachedCoachVoices : getPreferredCoachVoices();
+  if (settings.voiceName && settings.voiceName !== 'auto') {
+    const selectedVoice = voices.find((voice) => voice.name === settings.voiceName);
+    if (selectedVoice) utterance.voice = selectedVoice;
+  }
+
   window.speechSynthesis.cancel();
   window.speechSynthesis.speak(utterance);
 }
@@ -894,10 +1630,7 @@ function computeRouteCumulativeMeters(points = []) {
 function resetGpsProgressCard() {
   if (!homeGpsProgressCard) return;
   homeGpsProgressCard.hidden = true;
-  if (homeGpsProgressFill) homeGpsProgressFill.style.width = '0%';
-  if (homeGpsProgressPercent) homeGpsProgressPercent.textContent = '0%';
-  if (homeGpsCovered) homeGpsCovered.textContent = '0,00 km';
-  if (homeGpsRemaining) homeGpsRemaining.textContent = '0,00 km';
+  if (homeGpsProgressDistance) homeGpsProgressDistance.textContent = '0,00 km de 0,00 km';
 }
 
 function updateGpsProgressCard(progress) {
@@ -906,12 +1639,12 @@ function updateGpsProgressCard(progress) {
     return;
   }
 
+  const totalKm = (homeLoadedRouteTotalMeters / 1000).toFixed(2).replace('.', ',');
+  const coveredKm = (progress.coveredMeters / 1000).toFixed(2).replace('.', ',');
+
   homeGpsProgressCard.hidden = false;
   if (homeGpsProgressTitle) homeGpsProgressTitle.textContent = homeLoadedRoute?.name || 'Ruta activa';
-  if (homeGpsProgressPercent) homeGpsProgressPercent.textContent = `${Math.round(progress.percent)}%`;
-  if (homeGpsProgressFill) homeGpsProgressFill.style.width = `${Math.max(0, Math.min(100, progress.percent))}%`;
-  if (homeGpsCovered) homeGpsCovered.textContent = `${(progress.coveredMeters / 1000).toFixed(2).replace('.', ',')} km`;
-  if (homeGpsRemaining) homeGpsRemaining.textContent = `${(progress.remainingMeters / 1000).toFixed(2).replace('.', ',')} km`;
+  if (homeGpsProgressDistance) homeGpsProgressDistance.textContent = `${coveredKm} km de ${totalKm} km`;
 }
 
 function saveHomeRoutesStorage() {
@@ -1027,21 +1760,68 @@ function routeItemTemplate(route) {
   });
   const distance = `${route.distanceKm.toFixed(2).replace('.', ',')} km`;
   const points = `${(route.points || []).length} puntos`;
-  const activeTag = route.id === homeLoadedRouteId ? ' (activa)' : '';
+  const isActive = route.id === homeLoadedRouteId;
+  const activeClass = isActive ? ' home-route-item--active' : '';
+  const activeBadge = isActive ? '<span class="home-route-active-badge">GPS activa</span>' : '';
   return `
-    <div class="home-route-item" data-route-id="${route.id}">
-      <div>
-        <div class="home-route-item-title">${route.name}${activeTag}</div>
+    <div class="home-route-item${activeClass}" data-route-id="${route.id}">
+      <div class="home-route-item-info">
+        <div class="home-route-item-title">${route.name} ${activeBadge}</div>
         <div class="home-route-item-meta">${distance} · ${points}</div>
         <div class="home-route-item-meta">Guardada: ${created}</div>
       </div>
-      <div class="home-route-item-actions">
-        <button type="button" data-action="load">Cargar</button>
-        <button type="button" data-action="export">Exportar</button>
-        <button type="button" data-action="delete">Borrar</button>
+      <div class="home-route-item-gps-actions">
+        <button type="button" class="home-route-gps-btn home-route-gps-btn--load" data-action="load" title="Cargar en GPS">📍 Cargar en GPS</button>
+        ${isActive ? `<button type="button" class="home-route-gps-btn home-route-gps-btn--unload" data-action="unload" title="Quitar del GPS">❌ Quitar del GPS</button>` : ''}
       </div>
     </div>
   `;
+}
+
+function myRouteItemTemplate(route) {
+  const created = new Date(route.createdAt).toLocaleString('es-ES', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+  const distance = `${route.distanceKm.toFixed(2).replace('.', ',')} km`;
+  const points = `${(route.points || []).length} puntos`;
+  const isSelected = myRoutesSelectedIds.has(route.id) ? 'checked' : '';
+  return `
+    <div class="home-route-item my-routes-route-item" data-route-id="${route.id}">
+      <div class="home-route-item-info">
+        <div class="home-route-item-title">${route.name}</div>
+        <div class="home-route-item-meta">${distance} · ${points}</div>
+        <div class="home-route-item-meta">Guardada: ${created}</div>
+      </div>
+      <div class="my-routes-item-select">
+        <input
+          type="checkbox"
+          class="my-routes-select-checkbox"
+          data-route-id="${route.id}"
+          aria-label="Seleccionar ruta ${route.name}"
+          ${isSelected}
+        >
+      </div>
+    </div>
+  `;
+}
+
+function syncMyRoutesSelection() {
+  const available = new Set(homeSavedRoutes.map((r) => r.id));
+  myRoutesSelectedIds = new Set([...myRoutesSelectedIds].filter((id) => available.has(id)));
+}
+
+function updateMyRoutesActionButtons() {
+  const count = myRoutesSelectedIds.size;
+  if (myRoutesClearActiveBtn) {
+    myRoutesClearActiveBtn.textContent = count > 0 ? `Borrar (${count})` : 'Borrar';
+  }
+  if (myRoutesShareBtn) {
+    myRoutesShareBtn.textContent = count > 0 ? `Compartir (${count})` : 'Compartir';
+  }
 }
 
 function renderRoutesListIn(container) {
@@ -1051,7 +1831,14 @@ function renderRoutesListIn(container) {
     return;
   }
 
-  container.innerHTML = homeSavedRoutes.map(routeItemTemplate).join('');
+  // La ruta activa en GPS siempre va primera
+  const sorted = homeLoadedRouteId
+    ? [...homeSavedRoutes].sort((a, b) =>
+        a.id === homeLoadedRouteId ? -1 : b.id === homeLoadedRouteId ? 1 : 0
+      )
+    : homeSavedRoutes;
+
+  container.innerHTML = sorted.map(routeItemTemplate).join('');
 }
 
 function renderHomeRoutesList() {
@@ -1062,8 +1849,12 @@ function renderMyRoutesList(resetPage = false) {
   if (!myRoutesList) return;
   if (resetPage) {
     myRoutesPage = 1;
+    myRoutesSelectedIds.clear();
     if (myRoutesSearch) myRoutesSearch.value = '';
   }
+
+  syncMyRoutesSelection();
+  updateMyRoutesActionButtons();
 
   const query = myRoutesSearch ? myRoutesSearch.value.trim().toLowerCase() : '';
   const filtered = query
@@ -1071,6 +1862,7 @@ function renderMyRoutesList(resetPage = false) {
     : homeSavedRoutes;
 
   if (!filtered.length) {
+    updateMyRoutesActionButtons();
     myRoutesList.innerHTML = query
       ? '<div class="home-route-item-meta">No hay rutas que coincidan con la búsqueda.</div>'
       : '<div class="home-route-item-meta">No hay rutas guardadas todavia.</div>';
@@ -1080,7 +1872,7 @@ function renderMyRoutesList(resetPage = false) {
   const visible = filtered.slice(0, myRoutesPage * MY_ROUTES_PAGE_SIZE);
   const hasMore = visible.length < filtered.length;
 
-  myRoutesList.innerHTML = visible.map(routeItemTemplate).join('');
+  myRoutesList.innerHTML = visible.map(myRouteItemTemplate).join('');
 
   if (hasMore) {
     const loadMoreBtn = document.createElement('button');
@@ -1135,6 +1927,11 @@ function handleRoutesListClick(event, { closeMenuOnLoad = false } = {}) {
       closeHomeRoutesMenu();
     }
     showToast(`Ruta cargada: ${route.name}`, 'success');
+  } else if (action === 'unload') {
+    if (homeLoadedRouteId === routeId) {
+      setLoadedRoute(null);
+      showToast('Ruta retirada del GPS.', 'success');
+    }
   } else if (action === 'export') {
     exportRoute(route);
   } else if (action === 'delete') {
@@ -1145,6 +1942,20 @@ function handleRoutesListClick(event, { closeMenuOnLoad = false } = {}) {
     }
     renderAllRoutesLists();
   }
+}
+
+function handleMyRoutesListChange(event) {
+  const checkbox = event.target.closest('.my-routes-select-checkbox');
+  if (!checkbox) return;
+  const routeId = checkbox.dataset.routeId;
+  if (!routeId) return;
+
+  if (checkbox.checked) {
+    myRoutesSelectedIds.add(routeId);
+  } else {
+    myRoutesSelectedIds.delete(routeId);
+  }
+  updateMyRoutesActionButtons();
 }
 
 function openHomeRoutesMenu() {
@@ -1452,26 +2263,506 @@ function calendarTrainingItemTemplate(item) {
 
 function renderPerspectivas() {
   const list = document.getElementById('dailyHistoryList');
+  if (!list || !perspectiveSummaryEl || !perspectivesChartCanvas) return;
+
+  const metric = PERSPECTIVE_METRICS[perspectiveState.metric] ? perspectiveState.metric : 'steps';
+  const timeline = getPerspectiveTimeline(perspectiveState.periodDays);
+  const buckets = bucketPerspectiveEntries(timeline, perspectiveState.periodDays);
+
+  document.querySelectorAll('[data-perspective-metric]').forEach((button) => {
+    button.classList.toggle('active', button.dataset.perspectiveMetric === metric);
+  });
+  document.querySelectorAll('[data-perspective-period]').forEach((button) => {
+    button.classList.toggle('active', Number(button.dataset.perspectivePeriod) === perspectiveState.periodDays);
+  });
+
+  if (perspectiveChartTitleEl) {
+    perspectiveChartTitleEl.textContent = PERSPECTIVE_METRICS[metric].label;
+  }
+  if (perspectiveChartBadgeEl) {
+    perspectiveChartBadgeEl.textContent = formatPerspectivePeriodLabel(perspectiveState.periodDays);
+  }
+
+  renderPerspectiveSummary(metric, timeline, buckets);
+  renderPerspectiveHistoryList(buckets);
+  renderPerspectivesChart(metric, buckets);
+}
+
+function initPerspectivasControls() {
+  if (!calendarView || calendarView.dataset.perspectivesBound === '1') return;
+
+  calendarView.dataset.perspectivesBound = '1';
+  setPerspectiveDetailOpen(false);
+  calendarView.addEventListener('click', (event) => {
+    const metricButton = event.target.closest('[data-perspective-metric]');
+    if (metricButton) {
+      const nextMetric = metricButton.dataset.perspectiveMetric;
+      if (PERSPECTIVE_METRICS[nextMetric] && nextMetric !== perspectiveState.metric) {
+        perspectiveState.metric = nextMetric;
+        renderPerspectivas();
+      }
+      return;
+    }
+
+    const periodButton = event.target.closest('[data-perspective-period]');
+    if (!periodButton) return;
+    const nextPeriod = Number(periodButton.dataset.perspectivePeriod);
+    if (PERSPECTIVE_PERIODS.includes(nextPeriod) && nextPeriod !== perspectiveState.periodDays) {
+      perspectiveState.periodDays = nextPeriod;
+      renderPerspectivas();
+    }
+  });
+
+  if (perspectiveDetailToggleBtn && !perspectiveDetailToggleBtn.dataset.bound) {
+    perspectiveDetailToggleBtn.dataset.bound = '1';
+    perspectiveDetailToggleBtn.addEventListener('click', () => {
+      const isOpen = perspectiveDetailPanel && !perspectiveDetailPanel.classList.contains('hidden');
+      setPerspectiveDetailOpen(!isOpen);
+    });
+  }
+}
+
+function setPerspectiveDetailOpen(isOpen) {
+  if (perspectiveDetailPanel) {
+    perspectiveDetailPanel.classList.toggle('hidden', !isOpen);
+  }
+  if (perspectiveDetailToggleBtn) {
+    perspectiveDetailToggleBtn.classList.toggle('active', isOpen);
+    perspectiveDetailToggleBtn.textContent = isOpen ? 'Ocultar información' : 'Toda la Información';
+  }
+}
+
+function isPerspectiveEntryActive(entry) {
+  return (entry?.steps || 0) > 0
+    || (entry?.calories || 0) > 0
+    || (entry?.distanceKm || 0) > 0
+    || (entry?.activeSeconds || 0) > 0;
+}
+
+function toDateKey(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function normalizePerspectiveEntry(entry = {}) {
+  return {
+    date: entry.date || getTodayKey(),
+    steps: Math.max(0, Math.round(Number(entry.steps) || 0)),
+    calories: Math.max(0, Math.round(Number(entry.calories) || 0)),
+    distanceKm: Math.max(0, Number(entry.distanceKm) || 0),
+    activeSeconds: Math.max(0, Math.round(Number(entry.activeSeconds) || 0))
+  };
+}
+
+function getCurrentPerspectiveEntry() {
+  ensureHomeDailyData();
+  const steps = Math.max(0, getHomeTotalSteps());
+  const distanceKm = Math.max(Number(homeDailyData.distanceKm) || 0, steps * 0.0008);
+  const activeSeconds = Math.max(0, Math.round(Number(homeDailyData.activeSeconds) || 0));
+  const calories = calculateCalories(distanceKm, activeSeconds);
+
+  return normalizePerspectiveEntry({
+    date: homeDailyData.date || getTodayKey(),
+    steps,
+    calories,
+    distanceKm,
+    activeSeconds
+  });
+}
+
+function getPerspectiveTimeline(periodDays = perspectiveState.periodDays) {
+  const storedHistory = JSON.parse(localStorage.getItem(HOME_DAILY_HISTORY_KEY) || '[]')
+    .map(normalizePerspectiveEntry)
+    .filter((entry) => entry.date);
+  const byDate = new Map(storedHistory.map((entry) => [entry.date, entry]));
+  const currentEntry = getCurrentPerspectiveEntry();
+  byDate.set(currentEntry.date, currentEntry);
+
+  const today = new Date();
+  today.setHours(12, 0, 0, 0);
+
+  const timeline = [];
+  for (let offset = periodDays - 1; offset >= 0; offset--) {
+    const date = new Date(today);
+    date.setDate(today.getDate() - offset);
+    const key = toDateKey(date);
+    timeline.push(byDate.get(key) || normalizePerspectiveEntry({ date: key }));
+  }
+
+  return timeline;
+}
+
+function getPerspectiveDailyLabel(dateKey, full = false) {
+  return new Date(`${dateKey}T12:00:00`).toLocaleDateString('es-ES', full
+    ? { weekday: 'short', day: 'numeric', month: 'short' }
+    : { day: 'numeric', month: 'short' });
+}
+
+function bucketPerspectiveEntries(entries, periodDays = perspectiveState.periodDays) {
+  if (periodDays <= 30) {
+    return entries.map((entry) => ({
+      ...entry,
+      label: getPerspectiveDailyLabel(entry.date),
+      fullLabel: getPerspectiveDailyLabel(entry.date, true),
+      daysCount: 1,
+      activeDays: isPerspectiveEntryActive(entry) ? 1 : 0
+    }));
+  }
+
+  const buckets = new Map();
+  entries.forEach((entry) => {
+    const date = new Date(`${entry.date}T12:00:00`);
+    const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+    if (!buckets.has(key)) {
+      buckets.set(key, {
+        key,
+        label: date.toLocaleDateString('es-ES', { month: 'short', year: '2-digit' }),
+        fullLabel: date.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' }),
+        steps: 0,
+        calories: 0,
+        distanceKm: 0,
+        activeSeconds: 0,
+        daysCount: 0,
+        activeDays: 0
+      });
+    }
+
+    const bucket = buckets.get(key);
+    bucket.steps += entry.steps;
+    bucket.calories += entry.calories;
+    bucket.distanceKm += entry.distanceKm;
+    bucket.activeSeconds += entry.activeSeconds;
+    bucket.daysCount += 1;
+    if (isPerspectiveEntryActive(entry)) {
+      bucket.activeDays += 1;
+    }
+  });
+
+  return Array.from(buckets.values()).sort((left, right) => left.key.localeCompare(right.key));
+}
+
+function getPerspectiveActivityScores(buckets) {
+  if (!buckets.length) return [];
+
+  const maxSteps = Math.max(...buckets.map((bucket) => bucket.steps), 1);
+  const maxCalories = Math.max(...buckets.map((bucket) => bucket.calories), 1);
+  const maxDistance = Math.max(...buckets.map((bucket) => bucket.distanceKm), 1);
+  const maxActiveSeconds = Math.max(...buckets.map((bucket) => bucket.activeSeconds), 1);
+
+  return buckets.map((bucket) => {
+    if (!isPerspectiveEntryActive(bucket)) return 0;
+    const score = (bucket.steps / maxSteps) * 0.35
+      + (bucket.calories / maxCalories) * 0.15
+      + (bucket.distanceKm / maxDistance) * 0.25
+      + (bucket.activeSeconds / maxActiveSeconds) * 0.25;
+    return Math.round(score * 100);
+  });
+}
+
+function formatPerspectivePeriodLabel(days) {
+  switch (days) {
+    case 7:
+      return '7 Días';
+    case 30:
+      return '30 Días';
+    case 180:
+      return '6 Meses';
+    case 365:
+      return '1 Año';
+    default:
+      return `${days} Días`;
+  }
+}
+
+function formatPerspectiveValue(metric, value, { axis = false } = {}) {
+  const safeValue = Number(value) || 0;
+
+  switch (metric) {
+    case 'steps':
+      return axis
+        ? Math.round(safeValue).toLocaleString('es-ES')
+        : `${Math.round(safeValue).toLocaleString('es-ES')} pasos`;
+    case 'calories':
+      return axis
+        ? Math.round(safeValue).toLocaleString('es-ES')
+        : `${Math.round(safeValue).toLocaleString('es-ES')} kcal`;
+    case 'distance': {
+      const digits = axis ? (safeValue >= 10 ? 0 : 1) : 2;
+      return `${safeValue.toFixed(digits).replace('.', ',')} km`;
+    }
+    case 'activeTime':
+      if (axis) {
+        if (safeValue >= 3600) {
+          return `${(Math.round((safeValue / 3600) * 10) / 10).toString().replace('.', ',')} h`;
+        }
+        return `${Math.round(safeValue / 60)} m`;
+      }
+      return formatActiveTimeShort(safeValue);
+    default:
+      return Math.round(safeValue).toLocaleString('es-ES');
+  }
+}
+
+function formatPerspectiveHeadlineValue(metric, value) {
+  const safeValue = Number(value) || 0;
+
+  switch (metric) {
+    case 'steps':
+    case 'calories':
+      return Math.round(safeValue).toLocaleString('es-ES');
+    case 'distance':
+      return `${safeValue.toFixed(safeValue >= 100 ? 0 : 2).replace('.', ',')} km`;
+    case 'activeTime':
+      return formatActiveTimeShort(safeValue);
+    default:
+      return Math.round(safeValue).toLocaleString('es-ES');
+  }
+}
+
+function getPerspectiveSummaryMeta(metric, type) {
+  if (type === 'average') {
+    switch (metric) {
+      case 'steps':
+        return 'por dia';
+      case 'calories':
+        return 'por dia';
+      case 'distance':
+        return 'km por dia';
+      case 'activeTime':
+        return 'por dia';
+      default:
+        return '';
+    }
+  }
+
+  switch (metric) {
+    case 'steps':
+      return 'acumulado';
+    case 'calories':
+      return 'acumulado';
+    case 'distance':
+      return 'acumulado';
+    case 'activeTime':
+      return 'acumulado';
+    default:
+      return '';
+  }
+}
+
+function createPerspectiveSummaryCard(label, value, meta) {
+  return `<article class="perspective-summary-card">
+    <span class="perspective-summary-label">${label}</span>
+    <strong class="perspective-summary-value">${value}</strong>
+    <small class="perspective-summary-meta">${meta}</small>
+  </article>`;
+}
+
+function getBestPerspectiveBucket(metric, buckets) {
+  if (!buckets.length) return null;
+
+  const values = buckets.map((bucket) => Number(bucket[PERSPECTIVE_METRICS[metric].dataKey]) || 0);
+
+  let bestIndex = -1;
+  let bestValue = 0;
+  values.forEach((value, index) => {
+    if (value > bestValue) {
+      bestValue = value;
+      bestIndex = index;
+    }
+  });
+
+  if (bestIndex < 0) return null;
+  return {
+    bucket: buckets[bestIndex],
+    value: bestValue
+  };
+}
+
+function renderPerspectiveSummary(metric, timeline, buckets) {
+  const bestLabel = perspectiveState.periodDays > 30 ? 'Mejor mes' : 'Mejor día';
+
+  const metricConfig = PERSPECTIVE_METRICS[metric];
+  const totalValue = timeline.reduce((sum, entry) => sum + Number(entry[metricConfig.dataKey] || 0), 0);
+  const averageValue = totalValue / Math.max(1, timeline.length);
+  const bestBucket = getBestPerspectiveBucket(metric, buckets);
+  const activeMetricDays = timeline.filter((entry) => Number(entry[metricConfig.dataKey] || 0) > 0).length;
+  const daysOverGoal = metric === 'steps'
+    ? timeline.filter((entry) => entry.steps >= getHomeStepsGoal()).length
+    : 0;
+
+  perspectiveSummaryEl.innerHTML = [
+    createPerspectiveSummaryCard('Promedio', formatPerspectiveHeadlineValue(metric, averageValue), getPerspectiveSummaryMeta(metric, 'average')),
+    createPerspectiveSummaryCard('Total', formatPerspectiveHeadlineValue(metric, totalValue), getPerspectiveSummaryMeta(metric, 'total'))
+  ].join('');
+
+  if (perspectiveChartSummaryEl) {
+    const pills = [];
+    if (bestBucket) {
+      pills.push(`${bestLabel}: ${bestBucket.bucket.fullLabel} (${formatPerspectiveValue(metric, bestBucket.value)})`);
+    }
+    if (activeMetricDays > 0) {
+      pills.push(`Días con registro: ${activeMetricDays}/${timeline.length}`);
+    }
+    if (metric === 'steps' && daysOverGoal > 0) {
+      pills.push(`Días objetivo: ${daysOverGoal}/${timeline.length}`);
+    }
+
+    perspectiveChartSummaryEl.innerHTML = pills
+      .map((text) => `<span class="perspective-chart-pill">${text}</span>`)
+      .join('');
+  }
+}
+
+function renderPerspectiveHistoryList(buckets) {
+  const list = document.getElementById('dailyHistoryList');
   if (!list) return;
-  const history = JSON.parse(localStorage.getItem(HOME_DAILY_HISTORY_KEY) || '[]');
-  if (history.length === 0) {
+
+  const isMonthly = perspectiveState.periodDays > 30;
+  if (dailyHistoryTitleEl) {
+    dailyHistoryTitleEl.textContent = isMonthly ? 'Detalle mensual' : 'Detalle diario';
+  }
+  if (dailyHistoryPillEl) {
+    dailyHistoryPillEl.textContent = `${buckets.length} ${isMonthly ? (buckets.length === 1 ? 'mes' : 'meses') : (buckets.length === 1 ? 'día' : 'días')}`;
+  }
+
+  if (!buckets.some((bucket) => isPerspectiveEntryActive(bucket))) {
     list.innerHTML = '<p class="daily-history-empty">Sin registros todavía. Los datos se guardarán cada día automáticamente.</p>';
     return;
   }
-  list.innerHTML = history.map(entry => {
-    const dateStr = new Date(entry.date + 'T12:00:00').toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric', month: 'short' });
+
+  list.innerHTML = [...buckets].reverse().map((entry) => {
     const steps = (entry.steps || 0).toLocaleString('es-ES');
     const km = (entry.distanceKm || 0).toFixed(2).replace('.', ',');
     const time = formatActiveTimeShort(entry.activeSeconds || 0);
     const kcal = (entry.calories || 0).toLocaleString('es-ES');
     return `<div class="daily-history-row">
-      <span class="daily-history-date">${dateStr}</span>
+      <span class="daily-history-date">${entry.fullLabel}</span>
       <span class="daily-history-stat"><strong>${steps}</strong><small>pasos</small></span>
       <span class="daily-history-stat"><strong>${km}</strong><small>km</small></span>
       <span class="daily-history-stat"><strong>${time}</strong><small>activo</small></span>
       <span class="daily-history-stat"><strong>${kcal}</strong><small>kcal</small></span>
     </div>`;
   }).join('');
+}
+
+function hexToRgba(hex, alpha) {
+  const normalized = hex.replace('#', '');
+  const safeHex = normalized.length === 3
+    ? normalized.split('').map((char) => `${char}${char}`).join('')
+    : normalized;
+  const value = parseInt(safeHex, 16);
+  const red = (value >> 16) & 255;
+  const green = (value >> 8) & 255;
+  const blue = value & 255;
+  return `rgba(${red}, ${green}, ${blue}, ${alpha})`;
+}
+
+function getThemeColor(variableName, fallback) {
+  const source = document.body || document.documentElement;
+  const value = source ? getComputedStyle(source).getPropertyValue(variableName).trim() : '';
+  return value || fallback;
+}
+
+function renderPerspectivesChart(metric, buckets) {
+  if (!perspectivesChartCanvas || typeof Chart === 'undefined') return;
+
+  const ctx = perspectivesChartCanvas.getContext('2d');
+  const config = PERSPECTIVE_METRICS[metric] || PERSPECTIVE_METRICS.steps;
+  const labels = buckets.map((bucket) => bucket.label);
+  const values = buckets.map((bucket) => Number(bucket[config.dataKey] || 0));
+  const baseType = 'bar';
+  const textPrimary = getThemeColor('--text-primary', darkMode ? '#f8fafc' : '#0f172a');
+  const textSecondary = getThemeColor('--text-secondary', darkMode ? '#cbd5e1' : '#64748b');
+  const borderColor = getThemeColor('--border-color', darkMode ? '#334155' : '#e2e8f0');
+  const bgSecondary = getThemeColor('--bg-secondary', darkMode ? '#1e293b' : '#ffffff');
+  const emptyBarColor = hexToRgba(borderColor, darkMode ? 0.42 : 0.24);
+  const gridColor = hexToRgba(borderColor, darkMode ? 0.78 : 0.7);
+  const tooltipBackground = darkMode ? bgSecondary : '#0f172a';
+  const tooltipTitleColor = darkMode ? textPrimary : '#f8fafc';
+  const tooltipBodyColor = darkMode ? textSecondary : '#cbd5e1';
+
+  const gradient = ctx.createLinearGradient(0, 0, 0, 320);
+  gradient.addColorStop(0, hexToRgba(config.color, 0.95));
+  gradient.addColorStop(1, hexToRgba(config.color, 0.72));
+
+  const datasets = [{
+    type: baseType,
+    label: config.label,
+    data: values,
+    borderColor: config.color,
+    backgroundColor: values.map((value) => value > 0 ? gradient : emptyBarColor),
+    borderWidth: 0,
+    borderRadius: 10,
+    borderSkipped: false,
+    maxBarThickness: perspectiveState.periodDays === 7 ? 60 : (perspectiveState.periodDays === 30 ? 22 : 34),
+    categoryPercentage: perspectiveState.periodDays === 7 ? 0.72 : 0.84,
+    barPercentage: 0.86
+  }];
+
+  if (perspectivesChart) perspectivesChart.destroy();
+  perspectivesChart = new Chart(ctx, {
+    type: baseType,
+    data: {
+      labels,
+      datasets
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: {
+          display: false
+        },
+        tooltip: {
+          backgroundColor: tooltipBackground,
+          titleColor: tooltipTitleColor,
+          bodyColor: tooltipBodyColor,
+          borderColor,
+          borderWidth: darkMode ? 1 : 0,
+          padding: 12,
+          cornerRadius: 10,
+          callbacks: {
+            title(items) {
+              const index = items[0].dataIndex;
+              return buckets[index]?.fullLabel || labels[index] || '';
+            },
+            label(item) {
+              return `${item.dataset.label}: ${formatPerspectiveValue(metric, item.raw)}`;
+            }
+          }
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          grid: { color: gridColor, drawBorder: false },
+          border: { display: false },
+          ticks: {
+            color: textSecondary,
+            font: { size: 11, family: 'Inter' },
+            callback: (value) => formatPerspectiveValue(metric, value, { axis: true })
+          }
+        },
+        x: {
+          grid: { display: false },
+          border: { display: false },
+          ticks: {
+            color: textSecondary,
+            font: { size: 11, family: 'Inter' },
+            maxRotation: 0,
+            autoSkip: true
+          }
+        }
+      },
+      animation: {
+        duration: 650,
+        easing: 'easeOutQuart'
+      }
+    }
+  });
 }
 
 function renderCalendarTrainingLog() {
@@ -1585,6 +2876,79 @@ function exportRoute(route) {
   link.click();
   link.remove();
   URL.revokeObjectURL(url);
+}
+
+async function shareRoutesWithSystem(routes) {
+  if (!routes || !routes.length) return false;
+
+  const shareTitle = routes.length === 1 ? `Ruta: ${routes[0].name}` : `Rutas RunningTrainer (${routes.length})`;
+  const shareText = routes.map((route) => {
+    const dist = route.distance ? `${(route.distance / 1000).toFixed(2)} km` : '';
+    const date = route.date ? new Date(route.date).toLocaleDateString() : '';
+    const header = [route.name, dist, date].filter(Boolean).join(' · ');
+    const json = JSON.stringify(route);
+    return json.length <= 30720 ? `${header}\n${json}` : header;
+  }).join('\n\n---\n\n');
+
+  const nativeShare = getNativeSharePlugin();
+
+  if (nativeShare?.share) {
+    try {
+      await nativeShare.share({
+        title: shareTitle,
+        text: shareText,
+        dialogTitle: routes.length === 1 ? 'Compartir ruta' : 'Compartir rutas'
+      });
+      showToast(routes.length === 1 ? 'Ruta compartida.' : `${routes.length} rutas compartidas.`, 'success');
+      return true;
+    } catch (error) {
+      if (error?.message && /cancel/i.test(error.message)) {
+        showToast('Compartición cancelada.', 'info');
+        return false;
+      }
+      console.warn('No se pudo compartir con el plugin nativo de Capacitor', error);
+    }
+  }
+
+  if (!navigator?.share) {
+    showToast('Tu dispositivo no permite compartir desde la app. Se descargan los archivos.', 'info');
+    routes.forEach((route) => exportRoute(route));
+    return false;
+  }
+
+  const files = routes.map((route) => {
+    const payload = JSON.stringify(route, null, 2);
+    const safeName = route.name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+    return new File([payload], `${safeName || 'ruta'}.json`, { type: 'application/json' });
+  });
+
+  try {
+    const canShareFiles = typeof navigator.canShare === 'function' && navigator.canShare({ files });
+
+    if (canShareFiles) {
+      await navigator.share({
+        title: shareTitle,
+        text: routes.length === 1 ? 'Ruta exportada desde RunningTrainer' : `${routes.length} rutas exportadas desde RunningTrainer`,
+        files
+      });
+    } else {
+      // Fallback: compartir como texto cuando el sistema no acepta archivos.
+      await navigator.share({
+        title: shareTitle,
+        text: shareText
+      });
+    }
+
+    showToast(routes.length === 1 ? 'Ruta compartida.' : `${routes.length} rutas compartidas.`, 'success');
+    return true;
+  } catch (error) {
+    if (error?.name === 'AbortError') {
+      showToast('Compartición cancelada.', 'info');
+      return false;
+    }
+    showToast('No se pudo compartir la ruta.', 'error');
+    return false;
+  }
 }
 
 function routeToGpx(route) {
@@ -1812,6 +3176,111 @@ function closeHomeGpsPanel() {
   setHomeGpsStatus('');
 }
 
+async function requestHomeGpsPanelOpen() {
+  openHomeGpsPanel();
+  setHomeGpsStatus('Solicitando permiso GPS...', 'info');
+
+  const geoResult = await requestGeoPermissionOnce();
+  if (geoResult.coords) {
+    setHomeGpsStatus('');
+    openHomeGpsPanel(geoResult.coords);
+  } else {
+    setHomeGpsStatus(geoResult.message || 'No se pudo obtener la ubicacion.', 'error');
+  }
+
+  if (!homeMotionEnabled) {
+    setTimeout(() => {
+      void enableHomeMotionTracking({ silent: false });
+    }, 250);
+  }
+}
+
+function shouldIgnoreHomeGpsSwipeTarget(target) {
+  if (!(target instanceof Element)) return true;
+
+  return Boolean(
+    target.closest(
+      'button, a, input, select, textarea, label, summary, [role="button"], [role="link"], [contenteditable="true"], canvas, .home-route-map, .leaflet-container, [data-no-home-gps-swipe]'
+    )
+  );
+}
+
+function bindHomeGpsSwipeNavigation() {
+  const minHorizontalSwipe = 72;
+  const maxVerticalDrift = 48;
+
+  const bindSwipe = (element, resolveAction) => {
+    if (!element || element.dataset.swipeNavBound) return;
+
+    let startX = 0;
+    let startY = 0;
+    let startTarget = null;
+    let trackingTouch = false;
+
+    element.dataset.swipeNavBound = '1';
+
+    element.addEventListener('touchstart', (event) => {
+      if (!event.touches || event.touches.length !== 1) {
+        trackingTouch = false;
+        startTarget = null;
+        return;
+      }
+
+      const touch = event.touches[0];
+      startX = touch.clientX;
+      startY = touch.clientY;
+      startTarget = event.target;
+      trackingTouch = true;
+    }, { passive: true });
+
+    element.addEventListener('touchend', (event) => {
+      if (!trackingTouch) return;
+      trackingTouch = false;
+
+      const touch = event.changedTouches && event.changedTouches[0];
+      if (!touch || shouldIgnoreHomeGpsSwipeTarget(startTarget)) {
+        startTarget = null;
+        return;
+      }
+
+      const diffX = touch.clientX - startX;
+      const diffY = touch.clientY - startY;
+      startTarget = null;
+
+      if (Math.abs(diffY) > maxVerticalDrift) return;
+      if (Math.abs(diffX) < minHorizontalSwipe) return;
+      if (Math.abs(diffX) <= Math.abs(diffY)) return;
+
+      const action = resolveAction(diffX);
+      if (typeof action === 'function') {
+        action();
+      }
+    }, { passive: true });
+
+    element.addEventListener('touchcancel', () => {
+      trackingTouch = false;
+      startTarget = null;
+    }, { passive: true });
+  };
+
+  bindSwipe(homeView, (diffX) => {
+    if (diffX >= 0) return null;
+    if (!currentUser) return null;
+    if (!homeView || !homeView.classList.contains('active')) return null;
+    if (document.body.classList.contains('home-gps-open')) return null;
+    return () => {
+      void requestHomeGpsPanelOpen();
+    };
+  });
+
+  bindSwipe(homeGpsPanel, (diffX) => {
+    if (diffX <= 0) return null;
+    if (!homeGpsPanel || !homeGpsPanel.classList.contains('active')) return null;
+    if (homeGpsPanel.classList.contains('overlay-open')) return null;
+    return closeHomeGpsPanel;
+  });
+}
+
 function renderHomeRouteOnMap(shouldFitBounds = false) {
   if (!homeMap || !homeRoutePolyline) return;
   ensureHomeDailyData();
@@ -1934,6 +3403,7 @@ async function startHomeRouteRecording() {
   homeCurrentSplitSeconds = [];
   setHomeRouteButtonsState();
   showToast(homeLoadedRoute ? `Guiado iniciado: ${homeLoadedRoute.name}` : 'Grabación de ruta iniciada.', 'success');
+  speakGpsMessage(homeLoadedRoute ? `Comenzando. Ruta ${homeLoadedRoute.name}. ¡Vamos!` : 'Comenzando grabación de ruta. ¡Adelante!');
 
   if (homeTimerTickInterval) clearInterval(homeTimerTickInterval);
   homeTimerTickInterval = setInterval(() => {
@@ -1969,6 +3439,7 @@ function stopHomeRouteRecording() {
   }
 
   showToast('Ruta detenida.', 'success');
+  speakGpsMessage('Ruta detenida. ¡Buen trabajo!');
 }
 
 function centerHomeMap() {
@@ -2000,23 +3471,18 @@ function initHomeDashboard() {
   ensureHomeDailyData();
   renderHomeDashboard();
   setHomeRouteButtonsState();
-  enableHomeMotionTracking({ silent: true });
+  if (currentUser) {
+    enableHomeMotionTracking({ silent: true });
+  }
 
   if (homeOpenGpsPanelBtn && !homeOpenGpsPanelBtn.dataset.bound) {
     homeOpenGpsPanelBtn.dataset.bound = '1';
-    homeOpenGpsPanelBtn.addEventListener('click', async () => {
-      openHomeGpsPanel();
-      setHomeGpsStatus('Solicitando permiso GPS...', 'info');
-
-      const geoResult = await requestGeoPermissionOnce();
-      if (geoResult.coords) {
-        setHomeGpsStatus('');
-        openHomeGpsPanel(geoResult.coords);
-      } else {
-        setHomeGpsStatus(geoResult.message || 'No se pudo obtener la ubicacion.', 'error');
-      }
+    homeOpenGpsPanelBtn.addEventListener('click', () => {
+      void requestHomeGpsPanelOpen();
     });
   }
+
+  bindHomeGpsSwipeNavigation();
 
   if (homeCloseGpsPanelBtn && !homeCloseGpsPanelBtn.dataset.bound) {
     homeCloseGpsPanelBtn.dataset.bound = '1';
@@ -2065,6 +3531,71 @@ function initHomeDashboard() {
     });
   }
   refreshHomeMapTypeButtons();
+
+  populateCoachVoiceOptions().then(() => {
+    updateCoachControlsFromSettings();
+  });
+
+  if ('speechSynthesis' in window && !window.__coachVoicesBound) {
+    window.__coachVoicesBound = true;
+    window.speechSynthesis.addEventListener('voiceschanged', () => {
+      populateCoachVoiceOptions().then(() => {
+        updateCoachControlsFromSettings();
+      });
+    });
+  }
+
+  if (gpsCoachVoiceSelect && !gpsCoachVoiceSelect.dataset.bound) {
+    gpsCoachVoiceSelect.dataset.bound = '1';
+    gpsCoachVoiceSelect.addEventListener('change', () => {
+      saveCoachSettings({ voiceName: gpsCoachVoiceSelect.value || 'auto' });
+    });
+  }
+
+  if (gpsCoachStyleSelect && !gpsCoachStyleSelect.dataset.bound) {
+    gpsCoachStyleSelect.dataset.bound = '1';
+    gpsCoachStyleSelect.addEventListener('change', () => {
+      saveCoachSettings({ style: gpsCoachStyleSelect.value || 'pep' });
+    });
+  }
+
+  if (gpsCoachRateInput && !gpsCoachRateInput.dataset.bound) {
+    gpsCoachRateInput.dataset.bound = '1';
+    gpsCoachRateInput.addEventListener('input', () => {
+      const rate = normalizeCoachRate(gpsCoachRateInput.value);
+      if (gpsCoachRateValue) gpsCoachRateValue.textContent = rate.toFixed(2);
+      saveCoachSettings({ rate });
+    });
+  }
+
+  if (gpsCoachPitchInput && !gpsCoachPitchInput.dataset.bound) {
+    gpsCoachPitchInput.dataset.bound = '1';
+    gpsCoachPitchInput.addEventListener('input', () => {
+      const pitch = normalizeCoachPitch(gpsCoachPitchInput.value);
+      if (gpsCoachPitchValue) gpsCoachPitchValue.textContent = pitch.toFixed(2);
+      saveCoachSettings({ pitch });
+    });
+  }
+
+  if (gpsCoachToggleBtn && !gpsCoachToggleBtn.dataset.bound) {
+    gpsCoachToggleBtn.dataset.bound = '1';
+    gpsCoachToggleBtn.addEventListener('click', () => {
+      const current = getCoachSettings();
+      const newEnabled = !current.enabled;
+      saveCoachSettings({ enabled: newEnabled });
+      updateCoachControlsFromSettings();
+      if (newEnabled) {
+        speakGpsMessage('Voz del entrenador activada.');
+      }
+    });
+  }
+
+  if (gpsCoachTestBtn && !gpsCoachTestBtn.dataset.bound) {
+    gpsCoachTestBtn.dataset.bound = '1';
+    gpsCoachTestBtn.addEventListener('click', () => {
+      speakGpsMessage('Kilometro de prueba completado. Buen trabajo, a por el siguiente!');
+    });
+  }
 
   if (homeGpsAudioBtn && !homeGpsAudioBtn.dataset.bound) {
     homeGpsAudioBtn.dataset.bound = '1';
@@ -2175,8 +3706,86 @@ function initHomeDashboard() {
   if (myRoutesClearActiveBtn && !myRoutesClearActiveBtn.dataset.bound) {
     myRoutesClearActiveBtn.dataset.bound = '1';
     myRoutesClearActiveBtn.addEventListener('click', () => {
-      setLoadedRoute(null);
-      showToast('Ruta activa eliminada.', 'success');
+      const selectedIds = [...myRoutesSelectedIds];
+      if (!selectedIds.length) {
+        showToast('Selecciona una o varias rutas para borrar.', 'error');
+        return;
+      }
+      const selectedSet = new Set(selectedIds);
+      const removedCount = homeSavedRoutes.filter((route) => selectedSet.has(route.id)).length;
+      if (!removedCount) {
+        myRoutesSelectedIds.clear();
+        renderMyRoutesList();
+        return;
+      }
+      if (myRoutesDeleteModalMsg) {
+        myRoutesDeleteModalMsg.textContent = removedCount === 1
+          ? '¿Seguro que quieres borrar la ruta seleccionada? Esta acción no se puede deshacer.'
+          : `¿Seguro que quieres borrar ${removedCount} rutas seleccionadas? Esta acción no se puede deshacer.`;
+      }
+      if (myRoutesDeleteModal) {
+        myRoutesDeleteModal.classList.add('active');
+        myRoutesDeleteConfirmBtn?.focus();
+      }
+      myRoutesDeleteConfirmBtn._pendingAction = () => {
+        homeSavedRoutes = homeSavedRoutes.filter((route) => !selectedSet.has(route.id));
+        const removedLoadedRoute = selectedSet.has(homeLoadedRouteId);
+        saveHomeRoutesStorage();
+        myRoutesSelectedIds.clear();
+        if (removedLoadedRoute) {
+          setLoadedRoute(null);
+        } else {
+          renderAllRoutesLists();
+        }
+        showToast(`${removedCount} ${removedCount === 1 ? 'ruta eliminada.' : 'rutas eliminadas.'}`, 'success');
+      };
+    });
+  }
+
+  if (myRoutesShareBtn && !myRoutesShareBtn.dataset.bound) {
+    myRoutesShareBtn.dataset.bound = '1';
+    myRoutesShareBtn.addEventListener('click', async () => {
+      const selectedIds = [...myRoutesSelectedIds];
+      if (!selectedIds.length) {
+        showToast('Selecciona una o varias rutas para compartir.', 'error');
+        return;
+      }
+      const selectedSet = new Set(selectedIds);
+      const routes = homeSavedRoutes.filter((r) => selectedSet.has(r.id));
+      const shared = await shareRoutesWithSystem(routes);
+      if (shared) {
+        myRoutesSelectedIds.clear();
+        renderMyRoutesList();
+      }
+    });
+  }
+
+  if (myRoutesDeleteConfirmBtn && !myRoutesDeleteConfirmBtn.dataset.bound) {
+    myRoutesDeleteConfirmBtn.dataset.bound = '1';
+    myRoutesDeleteConfirmBtn.addEventListener('click', () => {
+      if (typeof myRoutesDeleteConfirmBtn._pendingAction === 'function') {
+        myRoutesDeleteConfirmBtn._pendingAction();
+        myRoutesDeleteConfirmBtn._pendingAction = null;
+      }
+      myRoutesDeleteModal?.classList.remove('active');
+    });
+  }
+
+  if (myRoutesDeleteCancelBtn && !myRoutesDeleteCancelBtn.dataset.bound) {
+    myRoutesDeleteCancelBtn.dataset.bound = '1';
+    myRoutesDeleteCancelBtn.addEventListener('click', () => {
+      myRoutesDeleteModal?.classList.remove('active');
+      if (myRoutesDeleteConfirmBtn) myRoutesDeleteConfirmBtn._pendingAction = null;
+    });
+  }
+
+  if (myRoutesDeleteModal && !myRoutesDeleteModal.dataset.bound) {
+    myRoutesDeleteModal.dataset.bound = '1';
+    myRoutesDeleteModal.addEventListener('click', (e) => {
+      if (e.target === myRoutesDeleteModal) {
+        myRoutesDeleteModal.classList.remove('active');
+        if (myRoutesDeleteConfirmBtn) myRoutesDeleteConfirmBtn._pendingAction = null;
+      }
     });
   }
 
@@ -2221,9 +3830,7 @@ function initHomeDashboard() {
 
   if (myRoutesList && !myRoutesList.dataset.bound) {
     myRoutesList.dataset.bound = '1';
-    myRoutesList.addEventListener('click', (event) => {
-      handleRoutesListClick(event, { closeMenuOnLoad: false });
-    });
+    myRoutesList.addEventListener('change', handleMyRoutesListChange);
   }
 
   if (myRoutesSearch) {
@@ -2268,6 +3875,8 @@ function initEventListeners() {
     registerForm.classList.add('active');
     loginForm.classList.remove('active');
   });
+
+  initPerspectivasControls();
 
   // Dark Mode Toggle
   if (darkModeToggle) {
@@ -2323,6 +3932,7 @@ function initEventListeners() {
     currentUser.pedometerUpper = upper;
     currentUser.pedometerLower = lower;
     saveUserData();
+    updatePedometerHelpText();
     showToast('Sensibilidad del pedómetro guardada.', 'success');
   }
 
@@ -2334,6 +3944,26 @@ function initEventListeners() {
   if (profilePedometerLower && !profilePedometerLower.dataset.bound) {
     profilePedometerLower.dataset.bound = '1';
     profilePedometerLower.addEventListener('change', savePedometerIfValid);
+  }
+
+  if (profilePedometerModeSelect && !profilePedometerModeSelect.dataset.bound) {
+    profilePedometerModeSelect.dataset.bound = '1';
+    profilePedometerModeSelect.addEventListener('change', () => {
+      if (!currentUser) return;
+      const mode = PEDOMETER_MODES.includes(profilePedometerModeSelect.value) ? profilePedometerModeSelect.value : 'walk';
+      applyRecommendedPedometerSettings(mode);
+    });
+  }
+
+  if (profilePedometerRecommendedBtn && !profilePedometerRecommendedBtn.dataset.bound) {
+    profilePedometerRecommendedBtn.dataset.bound = '1';
+    profilePedometerRecommendedBtn.addEventListener('click', () => {
+      if (!currentUser) return;
+      const selectedMode = PEDOMETER_MODES.includes(profilePedometerModeSelect?.value)
+        ? profilePedometerModeSelect.value
+        : getPedometerMode();
+      applyRecommendedPedometerSettings(selectedMode);
+    });
   }
 
   // Controles de sonido mejorados
@@ -2412,7 +4042,6 @@ function initEventListeners() {
       
       showToast(`¡Bienvenido/a, ${name}! Tu cuenta ha sido creada`, 'success');
       activateWakeLockIfNeeded();
-      setTimeout(() => { if (window.STRAVA) STRAVA.init(); }, 200);
     } catch (err) {
       console.error('Error durante el registro:', err);
       showToast('Error al crear la cuenta. Inténtalo de nuevo.', 'error');
@@ -2510,7 +4139,6 @@ function initEventListeners() {
 
   window.addEventListener('resize', handleWeeksContainerPlacement);
   window.addEventListener('orientationchange', updateHomeFitHeight, { passive: true });
-  initHomeDashboard();
   updateHomeFitHeight();
   initBottomNavigation();
 }
@@ -2558,11 +4186,25 @@ function initBottomNavigation() {
       section.classList.toggle('active', isActive);
     });
 
+    // Anunciar sección navegada por voz
+    const NAV_LABELS = {
+      inicio: 'Inicio',
+      entrenamientos: 'Entrenamientos',
+      'mis-rutas': 'Mis rutas',
+      calendario: 'Perspectivas',
+      yo: 'Tu perfil'
+    };
+    if (NAV_LABELS[navKey]) speakGpsMessage(NAV_LABELS[navKey], { plain: true });
+
     if (navKey === 'inicio') {
       document.body.classList.add('home-fit-lock');
       updateHomeFitHeight();
     } else {
       document.body.classList.remove('home-fit-lock');
+      // Si el panel GPS estaba abierto, cerrarlo para que la barra inferior vuelva a ser visible
+      if (document.body.classList.contains('home-gps-open')) {
+        closeHomeGpsPanel();
+      }
     }
 
     setActiveBottomNav(navKey);
@@ -2663,6 +4305,18 @@ function applyDarkMode() {
     darkModeToggle.textContent = darkMode ? '☀️ Modo claro' : '🌙 Modo oscuro';
     darkModeToggle.title = darkMode ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro';
     darkModeToggle.setAttribute('aria-label', darkModeToggle.title);
+  }
+
+  if (chart || calendarView?.classList.contains('active')) {
+    requestAnimationFrame(() => {
+      updateChart();
+    });
+  }
+
+  if ((perspectivesChart || calendarView?.classList.contains('active')) && perspectiveSummaryEl && perspectivesChartCanvas) {
+    requestAnimationFrame(() => {
+      renderPerspectivas();
+    });
   }
 }
 
@@ -2802,7 +4456,7 @@ function getPlanCompletionPercentage(plan) {
   if (!currentUser || !currentUser.progressData[plan] || !planes[plan]) return 0;
   const planData = currentUser.progressData[plan];
   const totalDays = planes[plan].length * 7;
-  const completedDays = Object.values(planData).flat().filter(v => v).length;
+  const completedDays = Object.values(planData).flat().filter(Boolean).length;
   return totalDays > 0 ? Math.round((completedDays / totalDays) * 100) : 0;
 }
 
@@ -3232,9 +4886,6 @@ async function loginUser(email, password) {
   
   showToast(`¡Bienvenido/a de nuevo, ${user.name}!`, 'success');
   activateWakeLockIfNeeded();
-
-  // Inicializar Strava si ya había sesión conectada
-  setTimeout(() => { if (window.STRAVA) STRAVA.init(); }, 200);
 }
 // Verificar si hay una sesión activa al cargar la página
 function checkAuthStatus() {
@@ -3252,9 +4903,6 @@ function checkAuthStatus() {
     updateUserInterface();
     initApp();
     activateWakeLockIfNeeded();
-
-    // Restaurar widget de Strava si había sesión activa
-    setTimeout(() => { if (window.STRAVA) STRAVA.init(); }, 200);
     return true;
   }
   
@@ -3394,6 +5042,7 @@ function updateProfileModal() {
   if (!currentUser) return;
 
   currentUser.homeStepsGoal = normalizeHomeStepsGoal(currentUser.homeStepsGoal, HOME_STEPS_GOAL_DEFAULT);
+  currentUser.coachVoiceSettings = getCoachSettings();
   
   profileName.textContent = currentUser.name;
   
@@ -3428,6 +5077,12 @@ function updateProfileModal() {
   const { upperThreshold, lowerThreshold } = getPedometerThresholds();
   if (profilePedometerUpper) profilePedometerUpper.value = String(upperThreshold);
   if (profilePedometerLower) profilePedometerLower.value = String(lowerThreshold);
+  if (profilePedometerModeSelect) profilePedometerModeSelect.value = getPedometerMode();
+  updatePedometerHelpText();
+
+  populateCoachVoiceOptions().then(() => {
+    updateCoachControlsFromSettings();
+  });
   
   // Actualizar información de XP
   const currentXP = currentUser.xp || 0;
@@ -3519,8 +5174,10 @@ function cambiarPlan(tipo, { showMotivationalBubble = true } = {}) {
   planActual = tipo;
   const nombre = getPlanDisplayName(tipo);
 
-  // Actualizar widget de Strava con el nuevo plan
-  setTimeout(() => { if (window.STRAVA?.isConnected()) STRAVA.renderWidget(); }, 300);
+  // Anunciar plan seleccionado por voz (solo cuando el usuario cambia manualmente)
+  if (showMotivationalBubble) {
+    speakGpsMessage(`Plan seleccionado: ${nombre}.`);
+  }
 
   // Actualizar clases activas de las tarjetas
   document.querySelectorAll('.plan-card').forEach(card => {
@@ -3604,6 +5261,10 @@ function renderWeeks() {
     const isExpanded = weekDetailsDiv.classList.toggle('active');
     weekButton.classList.toggle('active');
     weekButton.setAttribute("aria-expanded", isExpanded ? "true" : "false");
+    if (isExpanded) {
+      const trainingCount = diasSemana.filter(([, d]) => !isRestDay(d)).length;
+      speakGpsMessage(`Semana ${weekIndex + 1} de ${totalWeeks}. ${trainingCount} entrenamientos.`);
+    }
   };
 
   diasSemana.forEach(([day, description], dayIndex) => {
@@ -3635,6 +5296,7 @@ function renderWeeks() {
         timerButton.innerHTML = '⏱️ Temporizador';
         timerButton.onclick = (e) => {
             e.stopPropagation();
+            speakGpsMessage(`${day}. ${description}`);
             openTimerModal(description);
         };
       } else {
@@ -3642,6 +5304,7 @@ function renderWeeks() {
         timerButton.innerHTML = '📍 Iniciar Entrenamiento';
         timerButton.onclick = (e) => {
             e.stopPropagation();
+            speakGpsMessage(`${day}. ${description}`);
             openDistanceModal(description, weekIndex, dayIndex);
         };
       }
@@ -3734,22 +5397,6 @@ function toggleDayComplete(weekIndex, dayIndex, button, weekButton) {
   // Mostrar notificación
   if (!currentStatus) {
     showToast(`¡Entrenamiento completado! +${XP_POR_PLAN[planActual] || 15} XP 🌟`, "success");
-    
-    // Ofrecer subir a Strava si está conectado
-    if (window.STRAVA && STRAVA.isConnected()) {
-      setTimeout(() => {
-        STRAVA.showUploadModal({
-          planText: dayDescription,
-          planType: planActual,
-          weekIndex,
-          dayIndex,
-          timerSeconds: lastTimerElapsedSeconds || 0,
-          gpsData: lastGpsData || null,
-        });
-        lastTimerElapsedSeconds = null;
-        lastGpsData = null;
-      }, 500);
-    }
   } else {
     showToast("Entrenamiento marcado como pendiente.", "error");
   }
@@ -3814,6 +5461,13 @@ function updateChart() {
   if (!currentUser) return;
 
   const totalWeeks = planes[planActual].length;
+  const textPrimary = getThemeColor('--text-primary', darkMode ? '#f8fafc' : '#0f172a');
+  const textSecondary = getThemeColor('--text-secondary', darkMode ? '#cbd5e1' : '#64748b');
+  const borderColor = getThemeColor('--border-color', darkMode ? '#334155' : '#e2e8f0');
+  const bgSecondary = getThemeColor('--bg-secondary', darkMode ? '#1e293b' : '#ffffff');
+  const gridColor = hexToRgba(borderColor, darkMode ? 0.78 : 0.7);
+  const currentWeekLineColor = hexToRgba(textSecondary, darkMode ? 0.58 : 0.4);
+  const inactivePointColor = hexToRgba(borderColor, darkMode ? 0.9 : 1);
 
   // ── Datos reales por semana ──────────────────────────────────────────────
   const realData = planes[planActual].map((_, wi) => {
@@ -3876,7 +5530,7 @@ function updateChart() {
   const pointStyles = realData.map(v => v === 100 ? 'star' : 'circle');
   const pointRadii  = realData.map(v => v === 100 ? 8 : (v > 0 ? 5 : 3));
   const pointColors = realData.map(v =>
-    v === 100 ? '#f59e0b' : (v > 0 ? '#3b82f6' : '#e2e8f0')
+    v === 100 ? '#f59e0b' : (v > 0 ? '#3b82f6' : inactivePointColor)
   );
 
   const labels = planes[planActual].map((_, i) => `S${i + 1}`);
@@ -3930,13 +5584,15 @@ function updateChart() {
             boxWidth: 12, boxHeight: 12, borderRadius: 6,
             usePointStyle: false,
             font: { size: 12, family: 'Inter' },
-            color: '#64748b'
+            color: textSecondary
           }
         },
         tooltip: {
-          backgroundColor: '#1e293b',
-          titleColor: '#f8fafc',
-          bodyColor: '#cbd5e1',
+          backgroundColor: bgSecondary,
+          titleColor: textPrimary,
+          bodyColor: textSecondary,
+          borderColor,
+          borderWidth: 1,
           padding: 12,
           cornerRadius: 10,
           displayColors: true,
@@ -3970,11 +5626,11 @@ function updateChart() {
         y: {
           beginAtZero: true,
           max: 100,
-          grid: { color: 'rgba(0,0,0,0.05)' },
+          grid: { color: gridColor },
           ticks: {
             callback: v => v + '%',
             font: { size: 11, family: 'Inter' },
-            color: '#94a3b8',
+            color: textSecondary,
             stepSize: 25
           },
           border: { display: false }
@@ -3983,7 +5639,7 @@ function updateChart() {
           grid: { display: false },
           ticks: {
             font: { size: 11, family: 'Inter' },
-            color: '#94a3b8'
+            color: textSecondary
           },
           border: { display: false }
         }
@@ -4005,7 +5661,7 @@ function updateChart() {
           const { ctx: c } = ch;
           c.save();
           c.setLineDash([4, 3]);
-          c.strokeStyle = 'rgba(100,116,139,0.4)';
+          c.strokeStyle = currentWeekLineColor;
           c.lineWidth = 1.5;
           c.beginPath();
           c.moveTo(x, top);
@@ -4013,7 +5669,7 @@ function updateChart() {
           c.stroke();
           // Etiqueta "Hoy"
           c.setLineDash([]);
-          c.fillStyle = '#64748b';
+          c.fillStyle = textSecondary;
           c.font = '500 10px Inter, sans-serif';
           c.textAlign = 'center';
           c.fillText('Hoy', x, top - 4);
@@ -4062,14 +5718,20 @@ function updateMotivationalMessage({ showBubble = false } = {}) {
   }
 }
 
-// ── Globo motivacional flotante ───────────────────────────────────────────────
 let _bubbleEl = null;
 let _bubbleDismissHandlers = [];
+let _bubbleAutoHideTimer = null;
+let _bubbleLastText = '';
+let _bubbleLastShownAt = 0;
 
 function _dismissBubble() {
   if (!_bubbleEl) return;
   const el = _bubbleEl;
   _bubbleEl = null;
+  if (_bubbleAutoHideTimer) {
+    clearTimeout(_bubbleAutoHideTimer);
+    _bubbleAutoHideTimer = null;
+  }
   _bubbleDismissHandlers.forEach(({ target, type, fn }) => target.removeEventListener(type, fn));
   _bubbleDismissHandlers = [];
   el.classList.add('bubble-out');
@@ -4077,7 +5739,16 @@ function _dismissBubble() {
 }
 
 function _showMotivationalBubble(text, levelClass) {
+  const now = Date.now();
+  if (text === _bubbleLastText && (now - _bubbleLastShownAt) < 8000) {
+    return;
+  }
+
   if (_bubbleEl) {
+    if (_bubbleAutoHideTimer) {
+      clearTimeout(_bubbleAutoHideTimer);
+      _bubbleAutoHideTimer = null;
+    }
     _bubbleDismissHandlers.forEach(({ target, type, fn }) => target.removeEventListener(type, fn));
     _bubbleDismissHandlers = [];
     _bubbleEl.remove();
@@ -4099,6 +5770,12 @@ function _showMotivationalBubble(text, levelClass) {
 
   document.body.appendChild(bubble);
   _bubbleEl = bubble;
+  _bubbleLastText = text;
+  _bubbleLastShownAt = now;
+
+  _bubbleAutoHideTimer = setTimeout(() => {
+    _dismissBubble();
+  }, 4000);
 
   const onTouch = () => _dismissBubble();
 
@@ -4546,6 +6223,7 @@ function startTimer() {
   // Iniciar GPS tracking
   startGpsTracking();
 
+  speakGpsMessage(`Comenzando entrenamiento. ${currentDayWorkout.title}. ${currentDayWorkout.reps} series.`);
   nextPhase();
 }
 
@@ -4606,6 +6284,7 @@ function nextPhase() {
         createCompletionSound();
       }
 
+      speakGpsMessage('¡Entrenamiento completado! ¡Excelente trabajo!');
       showToast('¡Entrenamiento completado! 🎉', 'success');
       return;
     }
@@ -4618,6 +6297,8 @@ function nextPhase() {
     timerLabel.className = 'exercise';
     timerPhaseHint.textContent = `Serie ${currentRep} de ${totalReps}`;
 
+    speakGpsMessage(`Serie ${currentRep} de ${totalReps}. ¡${currentDayWorkout.exerciseLabel}!`);
+
     if (soundMode === 'on' || soundMode === 'motivation') {
       createBellSound();
     }
@@ -4627,6 +6308,8 @@ function nextPhase() {
     timerLabel.textContent = `¡${currentDayWorkout.restLabel}!`;
     timerLabel.className = 'rest';
     timerPhaseHint.textContent = `Preparando serie ${Math.min(currentRep + 1, totalReps)}`;
+
+    speakGpsMessage(`${currentDayWorkout.restLabel}. ${currentDayWorkout.restTime} segundos.`);
 
     if (soundMode === 'on' || soundMode === 'motivation') {
       createBellSound();
@@ -5080,7 +6763,7 @@ function mmssToSecs(str) {
 function calcular20KPaces(pace5kSecs) {
   // Ritmo por km en 5K
   const pace5kPerKm = pace5kSecs / 5;
-  // Ritmo objetivo 20K (Riegel: t2 = t1 * (d2/d1)^1.06)
+  // Ritmo objetivo 20K (Riegel: t2 = t1 * (42.195/10)^1.06)
   const target20kTotal = pace5kSecs * Math.pow(4, 1.06);
   const targetPerKm   = target20kTotal / 20;
   // Z2 suave: +25% sobre ritmo objetivo
@@ -5169,18 +6852,18 @@ function generate20KPlan(paces) {
       ["Miércoles",`3×1 km a ritmo carrera • ${target}`],
       ["Jueves",   `5 km suaves • Ritmo ${easy}`],
       ["Viernes",  "Descanso"],
-      ["Sábado",   `10 km suave • Ritmo ${easy}`],
-      ["Domingo",  "Descanso"]
+      ["Sábado",   `4 km muy suaves • ${easy}`],
+      ["Domingo",  `12 km muy suave Z2 • ${easy}`]
     ],
     // S8 - Semana de carrera
     [
       ["Lunes",    "Descanso"],
       ["Martes",   `4 km suaves • Ritmo ${easy}`],
-      ["Miércoles","3×400 m a ritmo carrera + estiramientos"],
+      ["Miércoles","3×400 m a ritmo carrera + estiramientos completos"],
       ["Jueves",   "Descanso completo"],
-      ["Viernes",  "20 min caminata o yoga"],
-      ["Sábado",   "Descanso total — descansa bien"],
-      ["Domingo",  "🏆 ¡CARRERA 21K! — Disfruta cada kilómetro"]
+      ["Viernes",  "20 min caminata + movilidad articular"],
+      ["Sábado",   "Descanso total — hidratación y sueño"],
+      ["Domingo",  "🏆 ¡CARRERA 21K! — Disfruta cada kilómetro. ¡Lo tienes!"]
     ]
   ];
 }

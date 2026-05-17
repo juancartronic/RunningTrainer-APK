@@ -10,7 +10,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css?v=20260517a">
 </head>
 <body>
   
@@ -226,50 +226,62 @@
     </section>
 
     <section id="calendarSection" class="app-view">
-    <div class="chart-container">
-      <div class="chart-header">
-        <div class="chart-title-row">
-          <span class="chart-main-title">📈 Progresión del plan</span>
-          <span id="chartWeekBadge" class="chart-week-badge"></span>
+      <div class="perspectives-shell">
+        <div class="perspectives-tabs" aria-label="Métricas de perspectivas">
+          <button type="button" class="perspectives-tab active" data-perspective-metric="steps">Pasos</button>
+          <button type="button" class="perspectives-tab" data-perspective-metric="calories">Calorías</button>
+          <button type="button" class="perspectives-tab" data-perspective-metric="distance">Distancia</button>
+          <button type="button" class="perspectives-tab" data-perspective-metric="activeTime">Tiempo Activo</button>
         </div>
-        <div id="chartSummary" class="chart-summary"></div>
-      </div>
-      <canvas id="progressChart" width="400" height="220"></canvas>
-    </div>
 
-    <section class="calendar-log-card" aria-label="Registro de entrenamientos">
-      <div class="calendar-log-header">
-        <h3>Registro de entrenamientos</h3>
-        <span class="calendar-log-pill">Planes + libres</span>
-      </div>
-      <div id="calendarTrainingLogList" class="calendar-log-list"></div>
-    </section>
+        <div class="perspectives-periods" aria-label="Periodo de análisis">
+          <button type="button" class="perspectives-period active" data-perspective-period="7">7 Días</button>
+          <button type="button" class="perspectives-period" data-perspective-period="30">30 Días</button>
+          <button type="button" class="perspectives-period" data-perspective-period="180">6 Meses</button>
+          <button type="button" class="perspectives-period" data-perspective-period="365">1 Año</button>
+        </div>
 
-    <h2 class="section-title strava-section-header">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="#FC4C02" style="vertical-align:middle; margin-right:6px; flex-shrink:0;">
-        <path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7 13.828h4.169"/>
-      </svg>
-      Strava · Sincronización
-    </h2>
-    <div id="stravaWidget" class="strava-container"></div>
+        <div id="perspectiveSummary" class="perspective-summary-grid"></div>
 
-    <section class="daily-history-card" aria-label="Historial diario de actividad">
-      <div class="daily-history-header">
-        <h3>📅 Historial diario</h3>
-        <span class="daily-history-pill">Últimos 90 días</span>
+        <div id="perspectiveChartSummary" class="perspective-chart-summary"></div>
+
+        <div class="perspective-chart-card">
+          <canvas id="perspectivesChart" width="400" height="220"></canvas>
+        </div>
+
+        <div class="perspective-detail-actions">
+          <button id="perspectiveDetailToggleBtn" type="button" class="perspective-detail-toggle">Toda la Información</button>
+        </div>
+
+        <div id="perspectiveDetailPanel" class="daily-history-card perspective-detail-panel hidden">
+          <div class="daily-history-header">
+            <h3 id="dailyHistoryTitle">Detalle diario</h3>
+            <span id="dailyHistoryPill" class="daily-history-pill">0 días</span>
+          </div>
+          <div id="dailyHistoryList" class="daily-history-list"></div>
+        </div>
       </div>
-      <div id="dailyHistoryList" class="daily-history-list"></div>
-    </section>
+
+      <div class="chart-container">
+        <div class="chart-header">
+          <div class="chart-title-row">
+            <span class="chart-main-title">Progresión del plan</span>
+            <span id="chartWeekBadge" class="chart-week-badge"></span>
+          </div>
+          <div id="chartSummary" class="chart-summary"></div>
+        </div>
+        <canvas id="progressChart" width="400" height="220"></canvas>
+      </div>
     </section>
 
     <section id="myRoutesSection" class="app-view my-routes-view">
       <div class="my-routes-card">
         <h2 class="section-title">Mis rutas</h2>
-        <p class="my-routes-subtitle">Lista detallada de rutas guardadas. Puedes cargar una ruta activa o importar más.</p>
 
         <div class="my-routes-actions">
-          <button id="myRoutesImportBtn" type="button" class="btn btn-primary">Cargar mas rutas</button>
-          <button id="myRoutesClearActiveBtn" type="button" class="btn btn-secondary">Quitar ruta activa</button>
+          <button id="myRoutesImportBtn" type="button" class="btn btn-primary my-routes-btn">Añadir</button>
+          <button id="myRoutesClearActiveBtn" type="button" class="btn btn-secondary my-routes-btn">Borrar</button>
+          <button id="myRoutesShareBtn" type="button" class="btn btn-secondary my-routes-btn">Compartir</button>
           <input id="myRoutesImportInput" type="file" accept=".json,.gpx,application/json,text/xml,application/gpx+xml" hidden>
         </div>
 
@@ -594,6 +606,18 @@
 
   <div id="toast" class="toast"></div>
 
+  <!-- Modal confirmación borrado rutas -->
+  <div id="myRoutesDeleteModal" class="profile-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="myRoutesDeleteModalTitle">
+    <div class="profile-modal-content" style="max-width:380px;">
+      <h2 class="section-title" id="myRoutesDeleteModalTitle" style="font-size:1.2rem;margin-bottom:0.6rem;">🗑️ Borrar rutas</h2>
+      <p id="myRoutesDeleteModalMsg" style="color:var(--text-secondary);font-size:0.92rem;margin-bottom:1.4rem;"></p>
+      <div style="display:flex;gap:0.6rem;justify-content:flex-end;">
+        <button id="myRoutesDeleteCancelBtn" type="button" class="btn btn-secondary btn-sm">Cancelar</button>
+        <button id="myRoutesDeleteConfirmBtn" type="button" class="btn btn-danger btn-sm">Borrar</button>
+      </div>
+    </div>
+  </div>
+
   <aside id="homeGpsPanel" class="home-gps-panel" aria-hidden="true">
     <div class="home-gps-screen">
       <header class="home-gps-topbar">
@@ -607,25 +631,11 @@
         </button>
       </header>
 
-      <div class="home-gps-activity-tabs" role="tablist" aria-label="Tipo de actividad">
-        <button type="button" class="home-gps-activity-tab active" data-gps-activity="caminar">Caminar</button>
-        <button type="button" class="home-gps-activity-tab" data-gps-activity="correr">Correr</button>
-      </div>
-
       <div id="homeGpsStatus" class="home-gps-status" aria-live="polite"></div>
 
       <div id="homeGpsProgressCard" class="home-gps-progress-card" hidden>
-        <div class="home-gps-progress-head">
-          <span id="homeGpsProgressTitle">Ruta activa</span>
-          <span id="homeGpsProgressPercent">0%</span>
-        </div>
-        <div class="home-gps-progress-bar">
-          <div id="homeGpsProgressFill" class="home-gps-progress-fill"></div>
-        </div>
-        <div class="home-gps-progress-metrics">
-          <span>Recorrido: <strong id="homeGpsCovered">0,00 km</strong></span>
-          <span>Restante: <strong id="homeGpsRemaining">0,00 km</strong></span>
-        </div>
+        <span id="homeGpsProgressTitle" class="home-gps-progress-name">Ruta activa</span>
+        <span id="homeGpsProgressDistance" class="home-gps-progress-dist">0,00 km de 0,00 km</span>
       </div>
 
       <div class="home-gps-stage">
@@ -710,10 +720,45 @@
               <span class="home-gps-setting-desc">Ajusta si el contador detecta pocos o demasiados pasos. Valores por defecto: alto 12.2 / bajo 10.5.</span>
             </div>
             <div class="home-gps-setting-controls">
+              <label class="home-gps-setting-sublabel" for="profilePedometerModeSelect">Modo</label>
+              <select id="profilePedometerModeSelect" class="home-gps-setting-input home-gps-setting-input--sm">
+                <option value="walk">Caminar</option>
+                <option value="run">Correr</option>
+              </select>
               <label class="home-gps-setting-sublabel">Umbral alto</label>
               <input id="profilePedometerUpper" type="number" min="8" max="20" step="0.1" inputmode="decimal" placeholder="12.2" class="home-gps-setting-input home-gps-setting-input--sm">
               <label class="home-gps-setting-sublabel">Umbral bajo</label>
               <input id="profilePedometerLower" type="number" min="6" max="18" step="0.1" inputmode="decimal" placeholder="10.5" class="home-gps-setting-input home-gps-setting-input--sm">
+              <button id="profilePedometerRecommendedBtn" type="button" class="btn btn-secondary btn-sm">Aplicar valores recomendados</button>
+            </div>
+            <div id="profilePedometerHelp" class="home-gps-setting-desc" style="margin-top:4px;"></div>
+          </div>
+
+          <div class="home-gps-setting-row home-gps-setting-row--col">
+            <div class="home-gps-setting-info">
+              <span class="home-gps-setting-label">Voz del entrenador</span>
+              <span class="home-gps-setting-desc">Activa la voz para que la app te guíe y lea cada acción en voz alta.</span>
+            </div>
+            <div class="home-gps-setting-controls home-gps-setting-controls--col">
+              <button id="gpsCoachToggleBtn" type="button" class="btn btn-primary btn-sm" aria-pressed="true">🔊 Voz activada</button>
+
+              <label class="home-gps-setting-sublabel" for="gpsCoachVoiceSelect">Voz disponible</label>
+              <select id="gpsCoachVoiceSelect" class="home-gps-setting-input"></select>
+
+              <label class="home-gps-setting-sublabel" for="gpsCoachStyleSelect">Estilo</label>
+              <select id="gpsCoachStyleSelect" class="home-gps-setting-input">
+                <option value="pep">Pep (motivador)</option>
+                <option value="calm">Calmado</option>
+                <option value="neutral">Neutro</option>
+              </select>
+
+              <label class="home-gps-setting-sublabel" for="gpsCoachRateInput">Velocidad <span id="gpsCoachRateValue">1.00</span></label>
+              <input id="gpsCoachRateInput" type="range" min="0.85" max="1.25" step="0.05" value="1" class="home-gps-setting-range">
+
+              <label class="home-gps-setting-sublabel" for="gpsCoachPitchInput">Tono <span id="gpsCoachPitchValue">1.00</span></label>
+              <input id="gpsCoachPitchInput" type="range" min="0.85" max="1.20" step="0.05" value="1" class="home-gps-setting-range">
+
+              <button id="gpsCoachTestBtn" type="button" class="btn btn-secondary btn-sm">Probar voz</button>
             </div>
           </div>
 
@@ -754,8 +799,7 @@
 
   <script src="data.js"></script>
   <script src="gps.js"></script>
-  <script src="app.js"></script>
+  <script src="app.js?v=20260517a"></script>
   <script src="runningtrainer.config.js"></script>
-  <script src="strava.js"></script>
 </body>
 </html>
