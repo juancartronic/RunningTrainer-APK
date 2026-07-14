@@ -2,7 +2,7 @@
 
 **RunningTrainer** es una aplicación web progresiva diseñada para ayudar a corredores de todos los niveles a alcanzar sus objetivos de running mediante planes de entrenamiento estructurados, seguimiento de progreso y un sistema de gamificación con experiencia (XP) y niveles.
 
-![Version](https://img.shields.io/badge/version-1.2.1-blue.svg)
+![Version](https://img.shields.io/badge/version-1.3.0-blue.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 ![HTML5](https://img.shields.io/badge/HTML5-E34F26?logo=html5&logoColor=white)
 ![CSS3](https://img.shields.io/badge/CSS3-1572B6?logo=css3&logoColor=white)
@@ -35,7 +35,7 @@
 - Persistencia de datos en localStorage
 - Gestión de sesiones activas
 ###  **Planes de Entrenamiento**
-- **9 planes especializados** adaptados a diferentes objetivos y niveles:
+- **10 planes especializados** adaptados a diferentes objetivos y niveles:
   -  Principiantes con Sobrepeso (6 semanas)
   -  Corre 30 Minutos (8 semanas)
   -  5K (8 semanas)
@@ -45,6 +45,7 @@
   -  Trail Running (8 semanas)
   -  HIIT - Alta intensidad (8 semanas)
   -  Fartlek - Cambios de ritmo (6 semanas)
+  -  Ejercicios de Fuerza (6 semanas)
 - **Variedad diaria**: Cada día de la semana tiene un tipo de sesión diferente (fuerza, carrera suave, intervalos, progresivo, tirada larga)
 - Cálculo automático de ritmos personalizados para 1/2 Maratón (desde marca 5K)
 - Cálculo automático de ritmos personalizados para Maratón (desde marca 10K)
@@ -53,7 +54,8 @@
 - Barra de progreso visual en tiempo real
 - Gráficos interactivos por semana (Chart.js)
 - Contadores de días completados vs totales
-- Descarga de reportes semanales en PDF
+- **Perspectivas**: análisis de pasos, calorías, distancia y tiempo activo con periodos de 7, 30, 180 y 365 días
+- Cabecera dinámica en la gráfica que muestra métrica y periodo activos
 
 ###  **Temporizador Inteligente de Intervalos**
 - **Detección automática de configuración** desde la descripción del entrenamiento
@@ -65,11 +67,15 @@
 - Sin necesidad de configuración manual
 
 ###  **Seguimiento GPS en Vivo**
-- Tracking GPS para entrenamientos de distancia y fuerza
-- Distancia recorrida, ritmo y tiempo en tiempo real
-- Detección automática de objetivo de distancia (km)
+- Panel GPS lateral con mapa interactivo (Leaflet.js)
+- Grabación de rutas GPS con distancia, ritmo y tiempo en tiempo real
+- **3 tipos de mapa**: Calles, Satélite y Relieve
+- Historial de rutas grabadas con posibilidad de importar/exportar GPX y JSON
+- **Mis Rutas**: gestión completa de rutas guardadas (buscar, añadir, borrar, compartir), accesible desde Ajustes GPS
+- Voz del entrenador configurable (velocidad, tono, estilo)
+- Pantalla siempre encendida durante el GPS (Wake Lock)
 - Filtro de precisión GPS y anti-teletransportación
-- Integración con Strava para subir actividades
+- Conteo de pasos con podómetro de movimiento (acelerómetro) y sincronización con Health Connect / Cordova Health
 
 ###  **Sistema de Gamificación**
 - **4 niveles de progresión**:
@@ -93,12 +99,26 @@
 - Feedback háptico en dispositivos móviles
 - Controles táctiles optimizados
 
+###  **Navegación Principal**
+- Barra inferior con 5 pestañas: **Inicio**, **Entrenamientos**, **Dietas**, **Perspectivas**, **Yo**
+- Indicador deslizante animado en la barra inferior
+- Acceso directo a Dietas desde la barra inferior sin pasar por el perfil
+
+###  **Dietas y Nutrición**
+- Plan nutricional diario adaptado al objetivo del usuario (mantener, perder grasa, ganar músculo, etc.)
+- Ciclos de 4 semanas con menús por día de la semana
+- Seguimiento de hidratación diaria (vasos de agua)
+- Macros calculados por peso corporal (proteína, carbohidratos, grasas)
+- Panel de 30 días siguientes
+- Porcentaje de comidas completadas en el día
+
 ###  **Interfaz de Usuario**
 - Splash screen animado al inicio
-- Barra de usuario deslizable con scroll
-- Modales elegantes para perfil y temporizador
-- Tarjetas de planes con iconos visuales
+- Barra de usuario superior con nivel, XP y foto de perfil
+- Modo oscuro / modo claro con persistencia
+- Modales elegantes para temporizador y distancia GPS
 - Sistema de notificaciones toast
+- Animaciones suaves y transiciones elegantes
 
 ---
 
@@ -334,6 +354,15 @@ Para cada día de entrenamiento:
 - Mejora de resistencia anaeróbica
 - Variación de intensidad constante
 
+### 10. **Ejercicios de Fuerza** (6 semanas)
+**Objetivo**: Fuerza funcional para corredores  
+**Nivel**: Todos los niveles  
+**XP por día**: 20
+
+- Rutinas de fuerza para pierna, core y tren superior
+- Ejercicios con peso corporal (sentadillas búlgara, peso muerto, fondos)
+- Progresión de 2 semanas de base a semanas de intensidad creciente
+
 ---
 
 ##  Sistema de Progresión
@@ -380,7 +409,7 @@ RunningTrainer/
 │
 ├── index.html              # Página principal HTML
 ├── styles.css              # Estilos CSS personalizados
-├── app.js                  # Lógica JavaScript principal
+├── app.js                  # Lógica JavaScript principal (~9.000 líneas)
 ├── data.js                 # Datos de planes de entrenamiento
 ├── gps.js                  # Módulo de tracking GPS
 ├── callback.html           # Callback OAuth de Strava
@@ -389,6 +418,9 @@ RunningTrainer/
 ├── vercel.json             # Configuración de despliegue Vercel
 ├── package.json            # Dependencias y scripts
 ├── README.md               # Este archivo
+├── CHANGELOG.md            # Historial de cambios
+├── DATA_STRUCTURE.md       # Documentación de estructura de datos
+├── CONTRIBUTING.md         # Guía para colaboradores
 ├── LICENSE                 # Licencia MIT
 ├── api/                    # API serverless (Strava token)
 ├── android/                # Proyecto Android (Capacitor)
@@ -412,10 +444,18 @@ RunningTrainer/
 - Sistema de grid para planes
 
 #### `app.js`
-- Sistema de autenticación y usuarios
-- Gestión de planes y progreso
-- 9 planes disponibles (incluye planes personalizados 10K/20K/Maratón)
-- Cálculo de XP y niveles
+- Sistema de autenticación y usuarios (PBKDF2-SHA256, bloqueo tras 5 intentos)
+- Gestión de planes y progreso por usuario
+- **10 planes** disponibles (7 estáticos + 3 personalizados)
+- Cálculo de XP, niveles e insignias
+- Panel GPS con mapa Leaflet, grabación de rutas, historial y Mis Rutas
+- Podómetro por acelerómetro + sincronización Health Connect / Cordova Health
+- Sistema de dietas y nutrición por ciclos de 4 semanas
+- Módulo de Perspectivas con gráficas de pasos, calorías, distancia y tiempo activo
+- Voz del entrenador (TTS nativo Capacitor o Web Speech API)
+- Modo oscuro/claro con persistencia
+- Navegación por barra inferior con 5 pestañas
+- Exportación e importación de datos de usuario (JSON)
 #### `data.js`
 - Objeto `planes` con todos los entrenamientos
 - Estructura: `plan -> semanas -> [día, descripción]`

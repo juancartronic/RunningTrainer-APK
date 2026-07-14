@@ -5,6 +5,52 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/),
 y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.3.0] - 2026-07-14
+
+### ✨ Agregado
+
+#### Navegación y UI
+- Nuevo botón **Dietas** en la barra de navegación inferior (posición central), con acceso directo sin pasar por el perfil.
+- Icono de cubiertos (tenedor y cuchillo) para el botón Dietas, coherente con la función.
+- Sección **Mis Rutas** movida al interior del panel GPS → Ajustes GPS → botón "Abrir Mis rutas", con botón X para volver a Ajustes GPS.
+- La pantalla Mis Rutas oculta cabecera, barra inferior y footer mientras está activa para mayor espacio de visualización.
+
+#### Perspectivas
+- Cabecera dinámica encima de la gráfica que muestra la **métrica activa** (Pasos, Calorías, Distancia, Tiempo Activo) y el **periodo seleccionado** (7 Días, 30 Días, 6 Meses, 1 Año).
+- Los valores se actualizan automáticamente al cambiar filtros. Por defecto arrancan en "Pasos · 7 Días".
+
+### 🔄 Cambiado
+
+#### Navegación
+- Barra inferior reorganizada: **Inicio · Entrenamientos · Dietas · Perspectivas · Yo** (5 pestañas).
+- El indicador deslizante de la barra inferior recalcula posición para 5 pestañas.
+- Sección Mis Rutas eliminada de la barra inferior principal.
+
+#### Dietas
+- Eliminado el bloque "Abrir Dietas" y el título/subtítulo redundante de la pantalla de Dietas (ya accesible desde la barra inferior).
+- Eliminado el botón "Volver a Yo" de la pantalla de Dietas.
+
+#### Ajustes GPS
+- Eliminada la opción "Sensibilidad del pedómetro" del panel de Ajustes GPS (ajuste automático, no necesita configuración manual).
+
+### 🛠 Corregido
+
+#### Código muerto eliminado
+- Eliminadas referencias JS a `openDietViewBtn`, `dietScreenBackBtn` y `window.closeDietView` (elementos HTML borrados en versiones previas).
+- Eliminada declaración `closeProfileModalBtn` (botón de modal de perfil que ya no existe en el HTML).
+- Corregido `setActiveBottomNav`: el alias `'dieta' → 'yo'` eliminado al tener Dietas su propio botón en la barra.
+
+#### Android / Build
+- Corregida ruta de `JAVA_HOME` para build con JDK Eclipse Adoptium 17 (`jdk-17.0.17.10-hotspot`).
+- Primera APK debug generada y verificada (6,7 MB, `assembleDebug` exitoso en 6m 24s).
+
+### 📦 Android
+
+- APK debug generada: `android/app/build/outputs/apk/debug/app-debug.apk`
+- Todos los plugins Capacitor sincronizados: TextToSpeech, Geolocation, Share, HealthConnect.
+
+---
+
 ## [1.2.1] - 2026-05-17
 
 ### 🔄 Cambiado
@@ -198,5 +244,7 @@ Primer lanzamiento público de RunningTrainer con todas las funcionalidades core
 
 [1.0.0]: https://github.com/juancartronic/RunningTrainer-APK/releases/tag/v1.0.0
 [1.1.0]: https://github.com/juancartronic/RunningTrainer-APK/releases/tag/v1.1.0
+[1.2.1]: https://github.com/juancartronic/RunningTrainer-APK/releases/tag/v1.2.1
+[1.3.0]: https://github.com/juancartronic/RunningTrainer-APK/releases/tag/v1.3.0
 [1.2.1]: https://github.com/juancartronic/RunningTrainer-APK/releases/tag/v1.2.1
 [Unreleased]: https://github.com/juancartronic/RunningTrainer-APK/compare/v1.2.1...HEAD
