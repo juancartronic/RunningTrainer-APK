@@ -11,11 +11,16 @@ const filesToCopy = [
   'app.js',
   'data.js',
   'gps.js',
-  'runningtrainer.config.js'
+  'runningtrainer.config.js',
+  'icon.svg'
 ];
 
 if (existsSync(webDir)) {
-  rmSync(webDir, { recursive: true, force: true });
+  try {
+    rmSync(webDir, { recursive: true, force: true });
+  } catch (err) {
+    console.warn('No se pudo eliminar www, continuando...', err.message);
+  }
 }
 mkdirSync(webDir, { recursive: true });
 

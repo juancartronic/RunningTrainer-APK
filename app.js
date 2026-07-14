@@ -48,7 +48,6 @@ const logoutBtn = document.getElementById('logoutBtn');
 const profileBtn = document.getElementById('profileBtn');
 const darkModeToggle = document.getElementById('darkModeToggle');
 const profileModal = document.getElementById('profileSection');
-const closeProfileModalBtn = document.getElementById('closeProfileModalBtn');
 const soundStatus = document.getElementById('soundStatus');
 const profileName = document.getElementById('profileName');
 const profileAvatar = document.getElementById('profileAvatar');
@@ -59,11 +58,6 @@ const profileTotal = document.getElementById('profileTotal');
 const profileProgress = document.getElementById('profileProgress');
 const profileMinStepsInput = document.getElementById('profileMinStepsInput');
 const profileMinStepsHelp = document.getElementById('profileMinStepsHelp');
-const profilePedometerUpper = document.getElementById('profilePedometerUpper');
-const profilePedometerLower = document.getElementById('profilePedometerLower');
-const profilePedometerModeSelect = document.getElementById('profilePedometerModeSelect');
-const profilePedometerRecommendedBtn = document.getElementById('profilePedometerRecommendedBtn');
-const profilePedometerHelp = document.getElementById('profilePedometerHelp');
 const levelProgressDetails = document.getElementById('levelProgressDetails');
 const profilePhotoInput = document.getElementById('profilePhotoInput');
 const badgesGrid = document.getElementById('badgesGrid');
@@ -74,6 +68,8 @@ const homeView = document.getElementById('homeView');
 const trainingView = document.getElementById('trainingSection');
 const calendarView = document.getElementById('calendarSection');
 const myRoutesView = document.getElementById('myRoutesSection');
+const dietView = document.getElementById('dietSection');
+
 const myRoutesImportBtn = document.getElementById('myRoutesImportBtn');
 const myRoutesClearActiveBtn = document.getElementById('myRoutesClearActiveBtn');
 const myRoutesShareBtn = document.getElementById('myRoutesShareBtn');
@@ -84,9 +80,41 @@ const myRoutesDeleteCancelBtn = document.getElementById('myRoutesDeleteCancelBtn
 const myRoutesImportInput = document.getElementById('myRoutesImportInput');
 const myRoutesList = document.getElementById('myRoutesList');
 const myRoutesSearch = document.getElementById('myRoutesSearch');
+const myRoutesBackBtn = document.getElementById('myRoutesBackBtn');
 const profileExportBtn = document.getElementById('profileExportBtn');
 const profileImportBtn = document.getElementById('profileImportBtn');
 const profileImportInput = document.getElementById('profileImportInput');
+const profileDietGoalSelect = document.getElementById('profileDietGoalSelect');
+const profileDietPreferenceSelect = document.getElementById('profileDietPreferenceSelect');
+const profileDietKcalTarget = document.getElementById('profileDietKcalTarget');
+const profileDietWeight = document.getElementById('profileDietWeight');
+const dietGramSummaryMode = document.getElementById('dietGramSummaryMode');
+const dietWaterMinusBtn = document.getElementById('dietWaterMinusBtn');
+const dietWaterPlusBtn = document.getElementById('dietWaterPlusBtn');
+const dietWaterValue = document.getElementById('dietWaterValue');
+const dietWaterGoalValue = document.getElementById('dietWaterGoalValue');
+const dietWaterGoalInput = document.getElementById('dietWaterGoalInput');
+const dietMonthWeekInfo = document.getElementById('dietMonthWeekInfo');
+const dietMealList = document.getElementById('dietMealList');
+const dietCompletionPct = document.getElementById('dietCompletionPct');
+const dietCompletionBar = document.getElementById('dietCompletionBar');
+const dietResetDayBtn = document.getElementById('dietResetDayBtn');
+const dietShow30DaysBtn = document.getElementById('dietShow30DaysBtn');
+const dietNext30DaysPanel = document.getElementById('dietNext30DaysPanel');
+const dietNext30DaysList = document.getElementById('dietNext30DaysList');
+const dietOverviewCalories = document.getElementById('dietOverviewCalories');
+const dietOverviewProtein = document.getElementById('dietOverviewProtein');
+const dietOverviewCarbs = document.getElementById('dietOverviewCarbs');
+const dietOverviewFats = document.getElementById('dietOverviewFats');
+const dietOverviewHydration = document.getElementById('dietOverviewHydration');
+const dietOverviewFocus = document.getElementById('dietOverviewFocus');
+const dietOverviewStrategy = document.getElementById('dietOverviewStrategy');
+const dietOverviewPre = document.getElementById('dietOverviewPre');
+const dietOverviewPost = document.getElementById('dietOverviewPost');
+const dietOverviewMicros = document.getElementById('dietOverviewMicros');
+const dietOverviewGramSummary = document.getElementById('dietOverviewGramSummary');
+const dietOverviewWeekSummary = document.getElementById('dietOverviewWeekSummary');
+let dietNext30Open = false;
 const homeStepsEl = document.getElementById('homeSteps');
 const homeCaloriesEl = document.getElementById('homeCalories');
 const homeActiveTimeEl = document.getElementById('homeActiveTime');
@@ -105,6 +133,7 @@ const homeGpsTopGpsBtn = document.getElementById('homeGpsTopGpsBtn');
 const homeGpsSettingsBtn = document.getElementById('homeGpsSettingsBtn');
 const homeGpsAudioBtn = document.getElementById('homeGpsAudioBtn');
 const homeGpsHistoryBtn = document.getElementById('homeGpsHistoryBtn');
+const homeGpsMyRoutesBtn = document.getElementById('homeGpsMyRoutesBtn');
 const homeGpsFabStartBtn = document.getElementById('homeGpsFabStartBtn');
 const homeGpsActivityTabs = document.querySelectorAll('.home-gps-activity-tab');
 const homeGpsStatus = document.getElementById('homeGpsStatus');
@@ -154,9 +183,20 @@ let gpsScreenAlwaysOn = localStorage.getItem('gpsScreenAlwaysOn') !== 'false'; /
 const HOME_DAILY_KEY = 'runningTrainerHomeDaily';
 const HOME_DAILY_HISTORY_KEY = 'runningTrainerDailyHistory';
 const HOME_DAILY_HISTORY_LIMIT = 365;
+const HOME_HEALTH_HISTORY_SYNC_KEY = 'runningTrainerHealthHistorySync';
 const HOME_SAVED_ROUTES_KEY = 'runningTrainerSavedRoutes';
 const HOME_ROUTE_HISTORY_KEY = 'runningTrainerRouteHistory';
 const HOME_MAP_TYPE_KEY = 'runningTrainerHomeMapType';
+const STEP_DEBUG_STORAGE_KEY = 'runningTrainerStepDebugOverlay';
+const STEP_DEBUG_DEFAULT_ENABLED = false;
+const STEP_NATIVE_GUARD_KEY = 'runningTrainerNativeStepGuard';
+const STEP_NATIVE_GUARD_DEFAULT_ENABLED = false;
+const STEP_HEALTH_ACTIVE_SECONDS_PER_STEP = 0.6;
+const STEP_HEALTH_ACTIVE_SECONDS_SYNC_CAP = 7200;
+const STEP_FORCE_NATIVE_ONLY = false;
+const STEP_HEALTH_SYNC_FORCE_DISABLED = false;
+const STEP_HEALTH_SYNC_DISABLE_REASON = '';
+const STEP_STARTUP_EXTERNAL_SYNC_ENABLED = true;
 const HOME_STEPS_GOAL_DEFAULT = 5800;
 const HOME_STEPS_RING_RADIUS = 94;
 const MY_ROUTES_PAGE_SIZE = 10;
@@ -166,27 +206,15 @@ const HOME_MAP_TYPES = ['streets', 'satellite', 'terrain'];
 const COACH_STYLES = ['pep', 'calm', 'neutral'];
 const COACH_RATE_DEFAULT = 1;
 const COACH_PITCH_DEFAULT = 1;
-const PEDOMETER_MODES = ['walk', 'run'];
-const PEDOMETER_MODE_PRESETS = {
-  walk: {
-    upperThreshold: 12.0,
-    lowerThreshold: 10.3,
-    minStepIntervalMs: 300,
-    maxBurstGapMs: 2200,
-    minEnergy: 0.62,
-    minCadenceSpm: 55,
-    maxCadenceSpm: 150
-  },
-  run: {
-    upperThreshold: 12.6,
-    lowerThreshold: 10.8,
-    minStepIntervalMs: 220,
-    maxBurstGapMs: 1300,
-    minEnergy: 0.82,
-    minCadenceSpm: 110,
-    maxCadenceSpm: 220
-  }
-};
+const PEDOMETER_FALLBACK_CONFIG = Object.freeze({
+  upperThreshold: 11.35,
+  lowerThreshold: 10.2,
+  minStepIntervalMs: 260,
+  maxBurstGapMs: 2200,
+  minEnergy: 0.34,
+  minCadenceSpm: 45,
+  maxCadenceSpm: 150
+});
 let homeMapType = localStorage.getItem(HOME_MAP_TYPE_KEY) || 'streets';
 let homeMapTileLayers = null;
 let homeCurrentMapTileLayer = null;
@@ -255,6 +283,7 @@ let homeMotionPendingSteps = 0;
 let homeMotionCandidateTimestamps = [];
 let homeHealthPermissionPrompted = false;
 let homeHealthSyncInProgress = false;
+let homeHistorySyncInProgress = false;
 let homeSavedRoutes = [];
 let homeLoadedRouteId = null;
 let homeLoadedRoute = null;
@@ -271,6 +300,141 @@ let homeRouteHistory = [];
 let homeCurrentSplitSeconds = [];
 let myRoutesPage = 1;
 let myRoutesSelectedIds = new Set();
+let homeStepDebugOverlayEl = null;
+const homeStepDebugState = {
+  status: 'init',
+  source: '-',
+  mode: '-',
+  totalSteps: 0,
+  deltaSteps: 0,
+  sensorValue: 0,
+  appSteps: 0,
+  dailySensor: 0,
+  cached: false,
+  permission: '-',
+  hcPermission: '-',
+  hcRecords: 0,
+  hcSources: '-',
+  chActivitySeconds: 0,
+  chDistanceKm: 0,
+  historyDaysScanned: 0,
+  historyDaysUpdated: 0,
+  historyLastSyncTs: 0,
+  timestamp: 0,
+  note: ''
+};
+
+function isStepDebugEnabled() {
+  const stored = localStorage.getItem(STEP_DEBUG_STORAGE_KEY);
+  if (stored === null) return STEP_DEBUG_DEFAULT_ENABLED;
+  return stored === 'true' || stored === '1';
+}
+
+function setStepDebugEnabled(enabled) {
+  if (enabled) {
+    localStorage.setItem(STEP_DEBUG_STORAGE_KEY, 'true');
+  } else {
+    localStorage.removeItem(STEP_DEBUG_STORAGE_KEY);
+  }
+  if (homeStepDebugOverlayEl) {
+    homeStepDebugOverlayEl.remove();
+    homeStepDebugOverlayEl = null;
+  }
+  const existingOverlay = document.getElementById('stepDebugOverlay');
+  if (existingOverlay) existingOverlay.remove();
+  if (enabled) ensureStepDebugOverlay();
+  return enabled;
+}
+
+function isNativeStepGuardEnabled() {
+  const raw = localStorage.getItem(STEP_NATIVE_GUARD_KEY);
+  if (raw == null) return STEP_NATIVE_GUARD_DEFAULT_ENABLED;
+  return raw === '1' || raw === 'true';
+}
+
+function setNativeStepGuard(enabled) {
+  if (enabled) {
+    localStorage.setItem(STEP_NATIVE_GUARD_KEY, '1');
+  } else {
+    localStorage.removeItem(STEP_NATIVE_GUARD_KEY);
+  }
+}
+
+function formatStepDebugTime(ts) {
+  if (!ts) return '--:--:--';
+  try {
+    return new Date(ts).toLocaleTimeString('es-ES');
+  } catch (_) {
+    return '--:--:--';
+  }
+}
+
+function ensureStepDebugOverlay() {
+  if (!isStepDebugEnabled()) return;
+  if (homeStepDebugOverlayEl && document.body.contains(homeStepDebugOverlayEl)) return;
+
+  const panel = document.createElement('div');
+  panel.id = 'stepDebugOverlay';
+  Object.assign(panel.style, {
+    position: 'fixed',
+    right: '10px',
+    bottom: '76px',
+    zIndex: '99999',
+    maxWidth: 'calc(100vw - 20px)',
+    width: '340px',
+    background: 'rgba(12, 14, 20, 0.92)',
+    color: '#d9f2ff',
+    border: '1px solid rgba(14, 165, 233, 0.45)',
+    borderRadius: '12px',
+    padding: '10px 12px',
+    boxShadow: '0 12px 32px rgba(2, 6, 23, 0.45)',
+    fontSize: '11px',
+    lineHeight: '1.35',
+    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, monospace',
+    whiteSpace: 'pre-wrap',
+    pointerEvents: 'auto'
+  });
+
+  panel.addEventListener('dblclick', () => {
+    setStepDebugEnabled(false);
+  });
+
+  panel.textContent = 'Step Debug inicializando...';
+  document.body.appendChild(panel);
+  homeStepDebugOverlayEl = panel;
+}
+
+function renderStepDebugOverlay() {
+  if (!isStepDebugEnabled()) return;
+  ensureStepDebugOverlay();
+  if (!homeStepDebugOverlayEl) return;
+
+  const s = homeStepDebugState;
+  homeStepDebugOverlayEl.textContent = [
+    'STEP DEBUG (doble click para ocultar)',
+    `status: ${s.status}`,
+    `source/mode: ${s.source} | ${s.mode}`,
+    `total/delta: ${s.totalSteps} / ${s.deltaSteps}`,
+    `sensorValue: ${s.sensorValue}`,
+    `appSteps/dailySensor: ${s.appSteps} / ${s.dailySensor}`,
+    `cached/perm: ${String(s.cached)} / ${s.permission}`,
+    `hcPerm/records: ${s.hcPermission} / ${s.hcRecords}`,
+    `hcSources: ${s.hcSources || '-'}`,
+    `cordova act/km: ${s.chActivitySeconds}s / ${(Number(s.chDistanceKm) || 0).toFixed(2)}`,
+    `hist days/upd: ${s.historyDaysScanned} / ${s.historyDaysUpdated}`,
+    `hist last: ${formatStepDebugTime(s.historyLastSyncTs)}`,
+    `time: ${formatStepDebugTime(s.timestamp)}`,
+    `note: ${s.note || '-'}`
+  ].join('\n');
+}
+
+function updateStepDebugState(partial = {}) {
+  Object.assign(homeStepDebugState, partial);
+  renderStepDebugOverlay();
+}
+
+window.toggleStepDebugOverlay = setStepDebugEnabled;
+window.toggleNativeStepGuard = setNativeStepGuard;
 
 // Elementos del temporizador
 const timerModal = document.getElementById('timerModal');
@@ -498,6 +662,7 @@ const XP_POR_PLAN = {
   'sobrepeso': 10,    // Principiantes: 10 XP por día
   '30min': 15,        // Básico: 15 XP
   '5k': 20,           // Intermedio: 20 XP
+  'ejercicios': 18,   // Fuerza y core
   'fartlek': 25,      // Avanzado: 25 XP
   '10k': 30,          // Avanzado: 30 XP
   'trail': 35,        // Experto: 35 XP
@@ -553,6 +718,338 @@ const mensajesMotivadores = {
     { min: 91, max: 99, mensaje: "¡Último refinamiento! 🏁 Pulir estos detalles te llevará la cima." },
     { min: 100, max: 100, mensaje: "¡MAESTRÍA ALCANZADA! 🎉🏆 Has demostrado pericia total. ¡Eres una inspiración!" }
   ]
+};
+
+const DIET_WEEKDAYS = ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo'];
+const DIET_ROTATION_OFFSETS = [0, 2, 4, 1];
+const HIIT_LEVEL_ADJUSTMENTS = {
+  beginner: { volumeFactor: 0.75, restFactor: 1.2, minRestSeconds: 10, maxRestSeconds: 90, minRestMinutes: 0.5, maxRestMinutes: 3 },
+  intermediate: { volumeFactor: 0.9, restFactor: 1.1, minRestSeconds: 10, maxRestSeconds: 75, minRestMinutes: 0.5, maxRestMinutes: 2.5 },
+  advanced: { volumeFactor: 1, restFactor: 1, minRestSeconds: 8, maxRestSeconds: 60, minRestMinutes: 0.5, maxRestMinutes: 2 },
+  expert: { volumeFactor: 1.1, restFactor: 0.9, minRestSeconds: 8, maxRestSeconds: 45, minRestMinutes: 0.5, maxRestMinutes: 2 }
+};
+const DIET_WEEK_VARIATIONS = [
+  { desayuno: '', comida: '', merienda: '', cena: '' },
+  { desayuno: ' + fruta cítrica', comida: ' + ensalada crujiente', merienda: ' + semillas', cena: ' + verduras al vapor' },
+  { desayuno: ' + canela o cacao puro', comida: ' + aceite de oliva extra', merienda: ' + fruta de temporada', cena: ' + verduras de hoja verde' },
+  { desayuno: ' + infusión', comida: ' + legumbre ligera', merienda: ' + hidratación extra', cena: ' + caldo o crema vegetal' }
+];
+
+const DIET_BASE_STANDARD = {
+  cut: {
+    lunes: {
+      desayuno: 'Tortilla de claras con espinacas + 1 tostada integral',
+      comida: 'Pollo a la plancha con arroz integral y ensalada verde',
+      merienda: 'Yogur natural con frutos rojos',
+      cena: 'Merluza al horno con verduras salteadas'
+    },
+    martes: {
+      desayuno: 'Avena con canela, manzana y proteína',
+      comida: 'Pavo salteado con quinoa y brócoli',
+      merienda: 'Fruta + puñado pequeño de frutos secos',
+      cena: 'Ensalada completa con atún y huevo'
+    },
+    miercoles: {
+      desayuno: 'Yogur griego 0% con avena y semillas',
+      comida: 'Lentejas con verduras y pechuga de pollo',
+      merienda: 'Queso fresco batido + canela',
+      cena: 'Tortilla francesa con champiñones'
+    },
+    jueves: {
+      desayuno: 'Pan integral con aguacate y pavo',
+      comida: 'Salmón con patata cocida y ensalada',
+      merienda: 'Batido ligero de proteína',
+      cena: 'Crema de verduras + filete de pavo'
+    },
+    viernes: {
+      desayuno: 'Avena con plátano pequeño y cacao puro',
+      comida: 'Ternera magra con arroz y verduras',
+      merienda: 'Yogur natural + fruta',
+      cena: 'Pescado blanco con espárragos'
+    },
+    sabado: {
+      desayuno: 'Huevos revueltos con tostada integral',
+      comida: 'Paella fit de marisco y verduras',
+      merienda: 'Fruta de temporada',
+      cena: 'Ensalada proteica con pollo'
+    },
+    domingo: {
+      desayuno: 'Pancakes de avena y claras',
+      comida: 'Bowl equilibrado: arroz integral + pollo o legumbre + ensalada + aceite de oliva',
+      merienda: 'Infusión + yogur',
+      cena: 'Verduras a la plancha + proteína magra'
+    }
+  },
+  maintain: {
+    lunes: {
+      desayuno: 'Avena con fruta y yogur griego',
+      comida: 'Arroz integral con pollo y verduras',
+      merienda: 'Tostada integral con crema de cacahuete',
+      cena: 'Salmón con ensalada y boniato'
+    },
+    martes: {
+      desayuno: 'Tostadas integrales con huevo y tomate',
+      comida: 'Pasta integral con atún y verduras',
+      merienda: 'Yogur + frutos secos',
+      cena: 'Tortilla de verduras + ensalada'
+    },
+    miercoles: {
+      desayuno: 'Smoothie de avena, plátano y leche',
+      comida: 'Legumbres con arroz y ensalada',
+      merienda: 'Fruta + queso fresco',
+      cena: 'Pavo con verduras al horno'
+    },
+    jueves: {
+      desayuno: 'Yogur natural con granola casera',
+      comida: 'Quinoa con salmón y aguacate',
+      merienda: 'Sandwich integral de pavo',
+      cena: 'Crema de verduras + huevo'
+    },
+    viernes: {
+      desayuno: 'Pan integral con aguacate y queso fresco',
+      comida: 'Ternera con patata cocida y ensalada',
+      merienda: 'Batido de proteína + fruta',
+      cena: 'Merluza con arroz y verduras'
+    },
+    sabado: {
+      desayuno: 'Tortilla de 2 huevos + tostada',
+      comida: 'Arroz con pollo estilo casero',
+      merienda: 'Yogur natural + semillas',
+      cena: 'Ensalada completa con legumbres'
+    },
+    domingo: {
+      desayuno: 'Avena con canela y fruta',
+      comida: 'Comida social equilibrada',
+      merienda: 'Fruta de temporada',
+      cena: 'Proteína magra con verduras'
+    }
+  },
+  bulk: {
+    lunes: {
+      desayuno: 'Avena abundante con plátano, crema de cacahuete y leche',
+      comida: 'Arroz basmati con pollo, aceite de oliva y verduras',
+      merienda: 'Batido de proteína + tostadas integrales',
+      cena: 'Salmón con boniato y ensalada'
+    },
+    martes: {
+      desayuno: 'Huevos revueltos + pan integral + fruta',
+      comida: 'Pasta integral con ternera magra y tomate',
+      merienda: 'Yogur griego + frutos secos + miel',
+      cena: 'Pavo con quinoa y verduras'
+    },
+    miercoles: {
+      desayuno: 'Tortitas de avena con yogur y fruta',
+      comida: 'Lentejas con arroz y huevo',
+      merienda: 'Sandwich integral de atún y aguacate',
+      cena: 'Merluza con patata y aceite de oliva'
+    },
+    jueves: {
+      desayuno: 'Smoothie alto en calorías con avena y fruta',
+      comida: 'Pollo al horno con arroz y verduras',
+      merienda: 'Fruta + frutos secos + queso fresco',
+      cena: 'Tortilla de 3 huevos con ensalada'
+    },
+    viernes: {
+      desayuno: 'Avena + proteína + plátano',
+      comida: 'Ternera con pasta y verduras',
+      merienda: 'Batido de proteína + tostada con crema de cacahuete',
+      cena: 'Salmón con arroz y verduras'
+    },
+    sabado: {
+      desayuno: 'Pan integral con huevo y aguacate',
+      comida: 'Arroz con pollo y legumbres',
+      merienda: 'Yogur griego con granola',
+      cena: 'Pavo con patata y verduras'
+    },
+    domingo: {
+      desayuno: 'Tortitas de avena y fruta',
+      comida: 'Plato energético: pasta integral + ternera magra o legumbre + verduras',
+      merienda: 'Batido + fruta',
+      cena: 'Proteína magra + hidratos complejos + verduras'
+    }
+  }
+};
+
+const DIET_BASE_VEGAN = {
+  cut: {
+    lunes: {
+      desayuno: 'Tofu revuelto con espinacas + tostada integral',
+      comida: 'Tempeh a la plancha con arroz integral y ensalada verde',
+      merienda: 'Yogur vegetal sin azúcar con frutos rojos',
+      cena: 'Seitán con verduras salteadas'
+    },
+    martes: {
+      desayuno: 'Avena con manzana, canela y proteína vegetal',
+      comida: 'Garbanzos con quinoa y brócoli',
+      merienda: 'Fruta + nueces',
+      cena: 'Ensalada completa con tofu y legumbres'
+    },
+    miercoles: {
+      desayuno: 'Porridge de avena con semillas de chía',
+      comida: 'Lentejas guisadas con verduras',
+      merienda: 'Hummus con bastones de zanahoria',
+      cena: 'Hamburguesa vegetal con ensalada'
+    },
+    jueves: {
+      desayuno: 'Pan integral con aguacate y tofu ahumado',
+      comida: 'Edamame y arroz con verduras',
+      merienda: 'Batido vegetal de proteína',
+      cena: 'Crema de verduras + seitán a la plancha'
+    },
+    viernes: {
+      desayuno: 'Avena con plátano pequeño y cacao puro',
+      comida: 'Soja texturizada con arroz y verduras',
+      merienda: 'Yogur vegetal + fruta',
+      cena: 'Tofu al horno con espárragos'
+    },
+    sabado: {
+      desayuno: 'Tostadas integrales con crema de cacahuete',
+      comida: 'Paella vegetal con guisantes y setas',
+      merienda: 'Fruta de temporada',
+      cena: 'Ensalada proteica vegana con legumbres'
+    },
+    domingo: {
+      desayuno: 'Pancakes veganos de avena',
+      comida: 'Bowl vegano equilibrado: arroz integral + tofu o garbanzos + ensalada + AOVE',
+      merienda: 'Infusión + yogur vegetal',
+      cena: 'Verduras a la plancha + tofu marinado'
+    }
+  },
+  maintain: {
+    lunes: {
+      desayuno: 'Avena con fruta y bebida vegetal enriquecida',
+      comida: 'Arroz integral con tofu y verduras',
+      merienda: 'Tostada integral con tahini',
+      cena: 'Tempeh con ensalada y boniato'
+    },
+    martes: {
+      desayuno: 'Tostadas integrales con hummus y tomate',
+      comida: 'Pasta integral con soja texturizada y verduras',
+      merienda: 'Yogur vegetal + frutos secos',
+      cena: 'Tortilla vegana de garbanzo con ensalada'
+    },
+    miercoles: {
+      desayuno: 'Smoothie de avena, plátano y proteína vegetal',
+      comida: 'Legumbres con arroz y ensalada',
+      merienda: 'Fruta + crema de cacahuete',
+      cena: 'Seitán con verduras al horno'
+    },
+    jueves: {
+      desayuno: 'Yogur vegetal con granola casera',
+      comida: 'Quinoa con tofu y aguacate',
+      merienda: 'Sandwich integral de hummus y pimientos',
+      cena: 'Crema de verduras + tempeh'
+    },
+    viernes: {
+      desayuno: 'Pan integral con aguacate y semillas',
+      comida: 'Heura con patata cocida y ensalada',
+      merienda: 'Batido vegetal + fruta',
+      cena: 'Tofu con arroz y verduras'
+    },
+    sabado: {
+      desayuno: 'Tortitas veganas + tostada',
+      comida: 'Arroz con legumbres estilo casero',
+      merienda: 'Yogur vegetal + semillas',
+      cena: 'Ensalada completa con lentejas'
+    },
+    domingo: {
+      desayuno: 'Avena con canela y fruta',
+      comida: 'Comida social vegana equilibrada',
+      merienda: 'Fruta de temporada',
+      cena: 'Proteína vegetal con verduras'
+    }
+  },
+  bulk: {
+    lunes: {
+      desayuno: 'Avena abundante con plátano, crema de cacahuete y bebida de soja',
+      comida: 'Arroz basmati con tempeh y verduras',
+      merienda: 'Batido vegetal + tostadas integrales',
+      cena: 'Tofu con boniato y ensalada'
+    },
+    martes: {
+      desayuno: 'Tostadas integrales con hummus + fruta',
+      comida: 'Pasta integral con soja texturizada y tomate',
+      merienda: 'Yogur vegetal + frutos secos + dátiles',
+      cena: 'Seitán con quinoa y verduras'
+    },
+    miercoles: {
+      desayuno: 'Tortitas veganas de avena y fruta',
+      comida: 'Lentejas con arroz',
+      merienda: 'Sandwich integral de tofu y aguacate',
+      cena: 'Tempeh con patata y aceite de oliva'
+    },
+    jueves: {
+      desayuno: 'Smoothie alto en calorías con avena y fruta',
+      comida: 'Tofu al horno con arroz y verduras',
+      merienda: 'Fruta + frutos secos + yogur vegetal',
+      cena: 'Tortilla vegana de garbanzo con ensalada'
+    },
+    viernes: {
+      desayuno: 'Avena + proteína vegetal + plátano',
+      comida: 'Heura con pasta y verduras',
+      merienda: 'Batido vegetal + tostada con crema de cacahuete',
+      cena: 'Tempeh con arroz y verduras'
+    },
+    sabado: {
+      desayuno: 'Pan integral con crema de cacahuete y fruta',
+      comida: 'Arroz con soja texturizada y legumbres',
+      merienda: 'Yogur vegetal con granola',
+      cena: 'Tofu con patata y verduras'
+    },
+    domingo: {
+      desayuno: 'Pancakes veganos de avena y fruta',
+      comida: 'Plato vegano energético: pasta integral + soja texturizada + verduras + AOVE',
+      merienda: 'Batido vegetal + fruta',
+      cena: 'Proteína vegetal + hidratos complejos + verduras'
+    }
+  }
+};
+
+function buildMonthlyDietWeeks(baseDays) {
+  return DIET_ROTATION_OFFSETS.map((offset, weekIndex) => {
+    const variation = DIET_WEEK_VARIATIONS[weekIndex] || DIET_WEEK_VARIATIONS[0];
+    const weekDays = {};
+
+    DIET_WEEKDAYS.forEach((dayKey, idx) => {
+      const sourceDay = DIET_WEEKDAYS[(idx + offset) % DIET_WEEKDAYS.length];
+      const sourceMeals = baseDays[sourceDay] || {};
+      weekDays[dayKey] = {
+        desayuno: `${sourceMeals.desayuno || ''}${variation.desayuno || ''}`,
+        comida: `${sourceMeals.comida || ''}${variation.comida || ''}`,
+        merienda: `${sourceMeals.merienda || ''}${variation.merienda || ''}`,
+        cena: `${sourceMeals.cena || ''}${variation.cena || ''}`
+      };
+    });
+
+    return weekDays;
+  });
+}
+
+const DIET_LIBRARY = {
+  cut: {
+    label: 'Definición',
+    kcalDefault: 2000,
+    monthWeeks: {
+      standard: buildMonthlyDietWeeks(DIET_BASE_STANDARD.cut),
+      vegan: buildMonthlyDietWeeks(DIET_BASE_VEGAN.cut)
+    }
+  },
+  maintain: {
+    label: 'Mantenimiento',
+    kcalDefault: 2400,
+    monthWeeks: {
+      standard: buildMonthlyDietWeeks(DIET_BASE_STANDARD.maintain),
+      vegan: buildMonthlyDietWeeks(DIET_BASE_VEGAN.maintain)
+    }
+  },
+  bulk: {
+    label: 'Ganancia muscular',
+    kcalDefault: 2900,
+    monthWeeks: {
+      standard: buildMonthlyDietWeeks(DIET_BASE_STANDARD.bulk),
+      vegan: buildMonthlyDietWeeks(DIET_BASE_VEGAN.bulk)
+    }
+  }
 };
 
 // ===========================================
@@ -612,7 +1109,536 @@ function getTodayKey() {
   return `${y}-${m}-${d}`;
 }
 
+function getDietWeekdayKey(date = new Date()) {
+  const day = date.getDay();
+  // JS: 0=domingo ... 6=sabado
+  const mapped = day === 0 ? 6 : day - 1;
+  return DIET_WEEKDAYS[mapped];
+}
+
+function getDefaultDietProfile(goal = 'maintain') {
+  const safeGoal = DIET_LIBRARY[goal] ? goal : 'maintain';
+  return {
+    goal: safeGoal,
+    preference: 'standard',
+    kcalTarget: DIET_LIBRARY[safeGoal].kcalDefault,
+    weightKg: 70,
+    gramSummaryMode: 'daily',
+    waterGoalMl: 2000,
+    waterIntakeMl: 0,
+    waterDate: getTodayKey(),
+    cycleStartDate: getTodayKey(),
+    checksByDate: {}
+  };
+}
+
+function normalizeDietPreference(value) {
+  return value === 'vegan' ? 'vegan' : 'standard';
+}
+
+function getDietCycleWeekIndex(profile, date = new Date()) {
+  const startRaw = profile?.cycleStartDate || getTodayKey();
+  const startDate = new Date(`${startRaw}T00:00:00`);
+  const nowDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  if (Number.isNaN(startDate.getTime())) return 0;
+  const diffMs = nowDate.getTime() - startDate.getTime();
+  const diffDays = Math.max(0, Math.floor(diffMs / 86400000));
+  return Math.floor(diffDays / 7) % 4;
+}
+
+function getDietDayPlan(profile, date = new Date()) {
+  const safeGoal = DIET_LIBRARY[profile?.goal] ? profile.goal : 'maintain';
+  const preference = normalizeDietPreference(profile?.preference);
+  const weekIndex = getDietCycleWeekIndex(profile, date);
+  const weekdayKey = getDietWeekdayKey(date);
+  const monthWeeks = DIET_LIBRARY[safeGoal]?.monthWeeks?.[preference] || [];
+  const weekPlan = monthWeeks[weekIndex] || {};
+  const dayMeals = weekPlan[weekdayKey] || {};
+  return { weekIndex, weekdayKey, dayMeals, preference };
+}
+
+function getWeekdayIndexFromDate(date = new Date()) {
+  const day = date.getDay();
+  return day === 0 ? 6 : day - 1;
+}
+
+function getTrainingSessionByDate(date = new Date(), planKey = planActual) {
+  const plan = planes?.[planKey];
+  if (!Array.isArray(plan) || plan.length === 0) {
+    return { planKey, weekIndex: 0, dayIndex: getWeekdayIndexFromDate(date), dayName: '', description: '' };
+  }
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const target = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  const diffDays = Math.floor((target.getTime() - today.getTime()) / 86400000);
+
+  const todayDayIndex = getWeekdayIndexFromDate(today);
+  const visibleWeekIndex = getVisibleWeekIndex(planKey);
+  const globalDay = todayDayIndex + diffDays;
+  const weekOffset = Math.floor(globalDay / 7);
+  const dayIndex = ((globalDay % 7) + 7) % 7;
+  const weekIndex = Math.min(plan.length - 1, Math.max(0, visibleWeekIndex + weekOffset));
+
+  const week = plan[weekIndex] || [];
+  const dayTuple = week[dayIndex] || [];
+  return {
+    planKey,
+    weekIndex,
+    dayIndex,
+    dayName: dayTuple[0] || '',
+    description: dayTuple[1] || ''
+  };
+}
+
+function getTrainingLoadLevel(description = '', planKey = planActual) {
+  const text = String(description || '').toLowerCase();
+  if (!text || isRestDay(text)) return 'rest';
+
+  const hardKeywords = /hiit|tabata|series|sprint|ritmo fuerte|ritmo alto|test|cuestas|fartlek/;
+  if (hardKeywords.test(text)) return 'high';
+
+  if (planKey === 'hiit' || planKey === 'fartlek') return 'high';
+
+  const kmMatches = [...text.matchAll(/(\d+(?:[.,]\d+)?)\s*km/gi)];
+  const totalKm = kmMatches.reduce((sum, match) => sum + Number.parseFloat(match[1].replace(',', '.')), 0);
+  if (totalKm >= 8 || /largo|simulacro|marat[oó]n|medio marat[oó]n/.test(text)) return 'high';
+
+  return 'moderate';
+}
+
+function applyTrainingLoadToMeals(dayMeals = {}, loadLevel = 'moderate') {
+  const meals = {
+    desayuno: dayMeals.desayuno || '',
+    comida: dayMeals.comida || '',
+    merienda: dayMeals.merienda || '',
+    cena: dayMeals.cena || ''
+  };
+
+  if (loadLevel === 'high') {
+    meals.desayuno = `${meals.desayuno} (añade carbohidrato extra pre-entreno)`;
+    meals.comida = `${meals.comida} (prioriza recuperación: carbos + proteína)`;
+    meals.merienda = `${meals.merienda} (snack pre/post entreno)`;
+    meals.cena = `${meals.cena} (incluye ración completa de carbohidrato)`;
+    return meals;
+  }
+
+  if (loadLevel === 'rest') {
+    meals.desayuno = `${meals.desayuno} (día suave: prioriza saciedad)`;
+    meals.comida = `${meals.comida} (reduce carbohidrato 15-20%)`;
+    meals.merienda = `${meals.merienda} (opción ligera)`;
+    meals.cena = `${meals.cena} (más verdura y proteína, menos carbohidrato)`;
+    return meals;
+  }
+
+  meals.comida = `${meals.comida} (balanceado para carga moderada)`;
+  meals.cena = `${meals.cena} (recuperación moderada)`;
+  return meals;
+}
+
+function getTrainingLoadLabel(loadLevel) {
+  if (loadLevel === 'high') return 'Carga alta';
+  if (loadLevel === 'rest') return 'Descanso/descarga';
+  return 'Carga moderada';
+}
+
+function ensureDietProfile() {
+  if (!currentUser) return null;
+
+  const profile = currentUser.dietProfile && typeof currentUser.dietProfile === 'object'
+    ? currentUser.dietProfile
+    : getDefaultDietProfile('maintain');
+
+  const safeGoal = DIET_LIBRARY[profile.goal] ? profile.goal : 'maintain';
+  profile.goal = safeGoal;
+  profile.preference = normalizeDietPreference(profile.preference);
+  profile.kcalTarget = Math.max(1200, Math.min(4500, Number(profile.kcalTarget) || DIET_LIBRARY[safeGoal].kcalDefault));
+  profile.weightKg = Math.max(40, Math.min(180, Number(profile.weightKg) || 70));
+  profile.gramSummaryMode = profile.gramSummaryMode === 'perMeal' ? 'perMeal' : 'daily';
+  profile.waterGoalMl = Math.max(1000, Math.min(5000, Number(profile.waterGoalMl) || 2000));
+  profile.waterIntakeMl = Math.max(0, Math.min(profile.waterGoalMl, Number(profile.waterIntakeMl) || 0));
+  profile.waterDate = profile.waterDate || getTodayKey();
+  profile.cycleStartDate = profile.cycleStartDate || getTodayKey();
+  profile.checksByDate = profile.checksByDate && typeof profile.checksByDate === 'object' ? profile.checksByDate : {};
+
+  const todayKey = getTodayKey();
+  const { dayMeals } = getDietDayPlan(profile);
+  const meals = dayMeals || {};
+  const mealKeys = Object.keys(meals);
+
+  if (profile.waterDate !== todayKey) {
+    profile.waterDate = todayKey;
+    profile.waterIntakeMl = 0;
+  }
+
+  if (!profile.checksByDate[todayKey] || typeof profile.checksByDate[todayKey] !== 'object') {
+    profile.checksByDate[todayKey] = {};
+  }
+
+  mealKeys.forEach((mealKey) => {
+    if (typeof profile.checksByDate[todayKey][mealKey] !== 'boolean') {
+      profile.checksByDate[todayKey][mealKey] = false;
+    }
+  });
+
+  currentUser.dietProfile = profile;
+  return profile;
+}
+
+function getCurrentDietDayData() {
+  const profile = ensureDietProfile();
+  if (!profile) return null;
+
+  const { weekIndex, weekdayKey, dayMeals, preference } = getDietDayPlan(profile);
+  const meals = Object.entries(dayMeals);
+  return { profile, meals, weekdayKey, weekIndex, preference };
+}
+
+function getDietOverviewByGoal(goal, kcalTarget, waterGoalMl, preference = 'standard', weightKg = 70) {
+  const safeGoal = DIET_LIBRARY[goal] ? goal : 'maintain';
+  const safePreference = normalizeDietPreference(preference);
+  const kcal = Math.max(1200, Math.min(4500, Number(kcalTarget) || DIET_LIBRARY[safeGoal].kcalDefault));
+  const safeWeight = Math.max(40, Math.min(180, Number(weightKg) || 70));
+  const ratios = {
+    cut: { p: 0.35, c: 0.35, f: 0.30 },
+    maintain: { p: 0.30, c: 0.40, f: 0.30 },
+    bulk: { p: 0.28, c: 0.47, f: 0.25 }
+  }[safeGoal];
+
+  const proteinPerKgByGoal = {
+    cut: 1.8,
+    maintain: 1.6,
+    bulk: 1.8
+  };
+  const proteinPerKg = proteinPerKgByGoal[safeGoal] + (safePreference === 'vegan' ? 0.2 : 0);
+  const proteinFromWeight = Math.round(safeWeight * proteinPerKg);
+
+  let protein = Math.max(Math.round((kcal * ratios.p) / 4), proteinFromWeight);
+  const proteinMaxSafe = Math.round(safeWeight * 2.4);
+  protein = Math.min(protein, proteinMaxSafe);
+
+  const remainingKcal = Math.max(600, kcal - (protein * 4));
+  const remainSplit = {
+    cut: { c: 0.58, f: 0.42 },
+    maintain: { c: 0.62, f: 0.38 },
+    bulk: { c: 0.68, f: 0.32 }
+  }[safeGoal];
+
+  let carbs = Math.round((remainingKcal * remainSplit.c) / 4);
+  let fats = Math.round((remainingKcal * remainSplit.f) / 9);
+
+  const minFatByWeight = Math.round(safeWeight * 0.6);
+  if (fats < minFatByWeight) {
+    fats = minFatByWeight;
+    const kcalAfterProteinAndFat = Math.max(400, kcal - (protein * 4) - (fats * 9));
+    carbs = Math.round(kcalAfterProteinAndFat / 4);
+  }
+
+  const copy = {
+    cut: {
+      focus: 'Déficit controlado para bajar grasa sin perder músculo.',
+      strategy: 'Prioriza proteína alta, verduras y carbohidrato alrededor del entrenamiento.',
+      pre: 'Pre-entreno: fruta + proteína ligera 60-90 min antes.',
+      post: 'Post-entreno: proteína magra + carbohidrato de absorción media.',
+      micros: 'Micronutrientes clave: incluye 2-3 raciones de verdura y 2 frutas al día.'
+    },
+    maintain: {
+      focus: 'Equilibrio energético para mantener rendimiento y composición corporal.',
+      strategy: 'Distribuye calorías de forma uniforme entre comidas principales.',
+      pre: 'Pre-entreno: carbohidrato moderado + proteína ligera.',
+      post: 'Post-entreno: comida completa con proteína, carbohidrato y verduras.',
+      micros: 'Micronutrientes clave: rota fuentes de proteína, legumbres y verduras de distintos colores.'
+    },
+    bulk: {
+      focus: 'Superávit moderado para ganar masa muscular con mínimo exceso graso.',
+      strategy: 'Aumenta carbohidratos complejos y reparte proteína en 4 comidas.',
+      pre: 'Pre-entreno: carbohidrato principal + pequeña fuente de proteína.',
+      post: 'Post-entreno: proteína completa + carbohidrato abundante + hidratación.',
+      micros: 'Micronutrientes clave: no sacrifiques verduras/fruta por subir calorías.'
+    }
+  }[safeGoal];
+
+  if (safePreference === 'vegan') {
+    copy.focus = `${copy.focus} Versión vegana alta en proteína vegetal.`;
+    copy.strategy = 'Combina legumbres + cereales y alterna tofu, tempeh, seitán y soja texturizada.';
+    copy.pre = 'Pre-entreno: fruta + bebida vegetal con proteína o yogur vegetal.';
+    copy.post = 'Post-entreno: tofu/tempeh + carbohidrato complejo + verdura.';
+    copy.micros = 'Vegana: prioriza B12 regular, hierro (legumbres + vitamina C), calcio/yodo y omega-3 (chía/linaza/nueces).';
+  }
+
+  return {
+    kcal,
+    protein,
+    carbs,
+    fats,
+    proteinPerKg: proteinPerKg.toFixed(1),
+    hydrationLiters: (Math.max(1000, Math.min(5000, Number(waterGoalMl) || 2000)) / 1000).toFixed(1),
+    ...copy
+  };
+}
+
+function getDietPortionHint(goal, mealKey, preference = 'standard') {
+  const safeGoal = DIET_LIBRARY[goal] ? goal : 'maintain';
+  const safePreference = normalizeDietPreference(preference);
+  const hints = {
+    cut: {
+      desayuno: 'porción: proteína 1 palma + carbo 0.5-1 puño (ej. 40-50g avena)',
+      comida: 'porción: proteína 1.5 palmas + carbo 1 puño + verduras 2 puños',
+      merienda: 'porción: proteína ligera + fruta 1 unidad (ej. yogur 150g)',
+      cena: 'porción: proteína 1-1.5 palmas + verduras 2 puños (carbo opcional 0.5 puño)'
+    },
+    maintain: {
+      desayuno: 'porción: proteína 1 palma + carbo 1 puño (ej. 60g avena)',
+      comida: 'porción: proteína 1.5 palmas + carbo 1-1.5 puños + verduras',
+      merienda: 'porción: proteína ligera + fruta o frutos secos (20-30g)',
+      cena: 'porción: proteína 1.5 palmas + carbo 0.5-1 puño + verduras'
+    },
+    bulk: {
+      desayuno: 'porción: proteína 1 palma + carbo 1.5 puños (ej. 70-90g avena)',
+      comida: 'porción: proteína 1.5-2 palmas + carbo 1.5-2 puños + verduras',
+      merienda: 'porción: proteína + carbo rápido/moderado (ej. batido + fruta)',
+      cena: 'porción: proteína 1.5 palmas + carbo 1-1.5 puños + verduras'
+    }
+  };
+
+  const veganEquivalents = {
+    desayuno: 'equiv vegana: 150-200g tofu o yogur de soja alto en proteína',
+    comida: 'equiv vegana: 180-220g tofu/tempeh o 70-90g soja texturizada en seco',
+    merienda: 'equiv vegana: 200ml bebida vegetal proteica o 30g proteína vegetal',
+    cena: 'equiv vegana: 160-220g tofu/tempeh + legumbre'
+  };
+
+  const standardEquivalents = {
+    desayuno: 'equiv estándar: 2 huevos + claras o yogur alto en proteína',
+    comida: 'equiv estándar: 150-200g pollo/pavo/pescado',
+    merienda: 'equiv estándar: yogur/proteína + fruta',
+    cena: 'equiv estándar: 150-200g proteína magra'
+  };
+
+  const base = hints[safeGoal]?.[mealKey] || 'porción orientativa: ajusta según hambre y rendimiento';
+  const equivalent = safePreference === 'vegan'
+    ? veganEquivalents[mealKey]
+    : standardEquivalents[mealKey];
+  return equivalent ? `${base}. ${equivalent}.` : base;
+}
+
+function getAdjustedHiitDescriptionByLevel(description, userLevel = 'beginner') {
+  const cfg = HIIT_LEVEL_ADJUSTMENTS[userLevel] || HIIT_LEVEL_ADJUSTMENTS.beginner;
+  const factor = cfg.volumeFactor || 1;
+  const restFactor = cfg.restFactor || 1;
+  if (factor === 1 && restFactor === 1) return description;
+
+  const scaleCount = (value) => {
+    const num = Number(value);
+    if (!Number.isFinite(num)) return value;
+    return String(Math.max(1, Math.round(num * factor)));
+  };
+
+  let adjusted = description;
+  adjusted = adjusted.replace(/(\d+)\s*rondas?/gi, (_, count) => `${scaleCount(count)} rondas`);
+  adjusted = adjusted.replace(/(\d+)x(\d+)\s*min/gi, (_, reps, mins) => `${scaleCount(reps)}x${mins} min`);
+  adjusted = adjusted.replace(/(\s)x(\d+)\b(?!\s*min)/gi, (_, lead, reps) => `${lead}x${scaleCount(reps)}`);
+
+  const scaleRestSeconds = (value) => {
+    const num = Number(value);
+    if (!Number.isFinite(num)) return value;
+    const scaledBase = (num * restFactor) / 5;
+    const rounded = restFactor >= 1 ? Math.ceil(scaledBase) * 5 : Math.floor(scaledBase) * 5;
+    const minValue = cfg.minRestSeconds || 8;
+    const maxValue = cfg.maxRestSeconds || 90;
+    return String(Math.min(maxValue, Math.max(minValue, rounded)));
+  };
+  const scaleRestMinutes = (value) => {
+    const num = Number(value);
+    if (!Number.isFinite(num)) return value;
+    const minValue = cfg.minRestMinutes || 0.5;
+    const maxValue = cfg.maxRestMinutes || 3;
+    const scaledRaw = Math.round((num * restFactor) * 2) / 2;
+    const scaled = Math.min(maxValue, Math.max(minValue, scaledRaw));
+    return Number.isInteger(scaled) ? String(scaled) : String(scaled).replace('.', ',');
+  };
+
+  adjusted = adjusted.replace(/(\d+)\s*(?:s|seg)\s*(desc|descanso|recuperaci[oó]n)/gi, (_, s, word) => `${scaleRestSeconds(s)} seg ${word}`);
+  adjusted = adjusted.replace(/(\d+)\s*min\s*(desc|descanso|recuperaci[oó]n)/gi, (_, m, word) => `${scaleRestMinutes(m)} min ${word}`);
+  adjusted = adjusted.replace(/(\d+)\s*min\s*pausa/gi, (_, m) => `${scaleRestMinutes(m)} min pausa`);
+  adjusted = adjusted.replace(/(\d+)\s*seg\s*(caminando|trote suave|recuperaci[oó]n activa|bajar caminando)/gi, (_, s, word) => `${scaleRestSeconds(s)} seg ${word}`);
+  adjusted = adjusted.replace(/(\d+)\s*min\s*(caminando|trote suave|recuperaci[oó]n activa|bajar caminando)/gi, (_, m, word) => `${scaleRestMinutes(m)} min ${word}`);
+
+  return adjusted;
+}
+
+function getTrainingDescriptionForDisplay(planKey, description, userLevel = 'beginner') {
+  if (planKey !== 'hiit') return description;
+
+  const levelAdvice = {
+    beginner: 'Ajuste nivel principiante: reduce 20-30% volumen o ronda.',
+    intermediate: 'Ajuste nivel intermedio: mantiene técnica y deja 1-2 repeticiones en reserva.',
+    advanced: 'Ajuste nivel avanzado: completa la sesión prescrita con técnica estable.',
+    expert: 'Ajuste nivel experto: completa sesión y prioriza calidad en intervalos máximos.'
+  };
+
+  const adjustedDescription = getAdjustedHiitDescriptionByLevel(description, userLevel);
+
+  return `${adjustedDescription} | ${levelAdvice[userLevel] || levelAdvice.beginner}`;
+}
+
+function renderDietOverview() {
+  if (!dietOverviewCalories) return;
+  const profile = ensureDietProfile();
+  if (!profile) return;
+
+  const overview = getDietOverviewByGoal(profile.goal, profile.kcalTarget, profile.waterGoalMl, profile.preference, profile.weightKg);
+  if (dietOverviewCalories) dietOverviewCalories.textContent = `${overview.kcal} kcal/día`;
+  if (dietOverviewProtein) dietOverviewProtein.textContent = `${overview.protein}g`;
+  if (dietOverviewCarbs) dietOverviewCarbs.textContent = `${overview.carbs}g`;
+  if (dietOverviewFats) dietOverviewFats.textContent = `${overview.fats}g`;
+  if (dietOverviewHydration) dietOverviewHydration.textContent = `Hidratación recomendada: ${overview.hydrationLiters} L`;
+  if (dietOverviewFocus) dietOverviewFocus.textContent = overview.focus;
+  if (dietOverviewStrategy) dietOverviewStrategy.textContent = `${overview.strategy} Proteína objetivo aproximada: ${overview.proteinPerKg} g/kg.`;
+  if (dietOverviewPre) dietOverviewPre.textContent = overview.pre;
+  if (dietOverviewPost) dietOverviewPost.textContent = overview.post;
+  if (dietOverviewMicros) dietOverviewMicros.textContent = overview.micros;
+
+  const mode = profile.gramSummaryMode === 'perMeal' ? 'perMeal' : 'daily';
+  if (dietOverviewGramSummary) {
+    if (mode === 'daily') {
+      dietOverviewGramSummary.textContent = `Totales diarios: Proteína ${overview.protein}g | Carbohidratos ${overview.carbs}g | Grasas ${overview.fats}g.`;
+    } else {
+      const split = {
+        desayuno: { p: 0.25, c: 0.25, f: 0.25 },
+        comida: { p: 0.35, c: 0.35, f: 0.35 },
+        merienda: { p: 0.15, c: 0.15, f: 0.15 },
+        cena: { p: 0.25, c: 0.25, f: 0.25 }
+      };
+      const bP = Math.round(overview.protein * split.desayuno.p);
+      const bC = Math.round(overview.carbs * split.desayuno.c);
+      const bF = Math.round(overview.fats * split.desayuno.f);
+      const lP = Math.round(overview.protein * split.comida.p);
+      const lC = Math.round(overview.carbs * split.comida.c);
+      const lF = Math.round(overview.fats * split.comida.f);
+      dietOverviewGramSummary.textContent = `Por comida aprox: Desayuno ${bP}/${bC}/${bF}g (P/C/G), Comida ${lP}/${lC}/${lF}g (P/C/G).`;
+    }
+  }
+
+  if (dietOverviewWeekSummary) {
+    const weekKcal = overview.kcal * 7;
+    const weekProtein = overview.protein * 7;
+    const weekCarbs = overview.carbs * 7;
+    const weekFats = overview.fats * 7;
+    const weekWater = (Number(overview.hydrationLiters) * 7).toFixed(1);
+    const proteinServingSize = profile.preference === 'vegan' ? 25 : 30;
+    const servingsPerDay = (overview.protein / proteinServingSize).toFixed(1);
+    dietOverviewWeekSummary.textContent = `Próximos 7 días (estimado): ${weekKcal} kcal | P ${weekProtein}g | C ${weekCarbs}g | G ${weekFats}g | Agua ${weekWater} L | Raciones proteína/día: ${servingsPerDay}.`;
+  }
+}
+
+function formatDietDateLabel(date) {
+  return date.toLocaleDateString('es-ES', {
+    weekday: 'long',
+    day: '2-digit',
+    month: '2-digit'
+  });
+}
+
+function renderDietNext30Days(profile) {
+  if (!dietNext30DaysPanel || !dietNext30DaysList || !dietShow30DaysBtn) return;
+
+  if (!dietNext30Open) {
+    dietNext30DaysPanel.classList.add('hidden');
+    dietShow30DaysBtn.textContent = 'Ver próximos 30 días';
+    return;
+  }
+
+  const rows = [];
+  const start = new Date();
+  start.setHours(0, 0, 0, 0);
+
+  for (let i = 0; i < 30; i += 1) {
+    const date = new Date(start);
+    date.setDate(start.getDate() + i);
+    const { weekIndex, dayMeals } = getDietDayPlan(profile, date);
+    const training = getTrainingSessionByDate(date, planActual);
+    const loadLevel = getTrainingLoadLevel(training.description, training.planKey);
+    const adjustedMeals = applyTrainingLoadToMeals(dayMeals, loadLevel);
+    const trainingDescription = training.description || 'Sin sesión definida';
+    const trainingDisplay = planActual === 'hiit'
+      ? getAdjustedHiitDescriptionByLevel(trainingDescription, currentUser?.level)
+      : trainingDescription;
+    const loadLabel = getTrainingLoadLabel(loadLevel);
+
+    rows.push(`
+      <article class="diet-next30-day">
+        <header class="diet-next30-day-head">
+          <strong>${i + 1}. ${formatDietDateLabel(date)}</strong>
+          <span>Semana ${weekIndex + 1}/4</span>
+        </header>
+        <p class="diet-overview-line"><b>${loadLabel}</b> · Sesión (${getPlanDisplayName(training.planKey)}): ${training.dayName || '-'} - ${trainingDisplay}</p>
+        <ul class="diet-next30-meals">
+          <li><b>Desayuno:</b> ${adjustedMeals.desayuno || '-'}</li>
+          <li><b>Comida:</b> ${adjustedMeals.comida || '-'}</li>
+          <li><b>Merienda:</b> ${adjustedMeals.merienda || '-'}</li>
+          <li><b>Cena:</b> ${adjustedMeals.cena || '-'}</li>
+        </ul>
+      </article>
+    `);
+  }
+
+  dietNext30DaysList.innerHTML = rows.join('');
+  dietNext30DaysPanel.classList.remove('hidden');
+  dietShow30DaysBtn.textContent = 'Ocultar próximos 30 días';
+}
+
+function renderDietCard() {
+  if (!profileDietGoalSelect || !profileDietKcalTarget || !dietMealList) return;
+  const data = getCurrentDietDayData();
+  if (!data) return;
+
+  const { profile, meals, weekIndex, preference } = data;
+  const todayKey = getTodayKey();
+  const checks = profile.checksByDate[todayKey] || {};
+
+  profileDietGoalSelect.value = profile.goal;
+  if (profileDietPreferenceSelect) profileDietPreferenceSelect.value = preference;
+  profileDietKcalTarget.value = String(Math.round(profile.kcalTarget));
+  if (profileDietWeight) profileDietWeight.value = String(profile.weightKg);
+  if (dietGramSummaryMode) dietGramSummaryMode.value = profile.gramSummaryMode;
+  if (dietMonthWeekInfo) dietMonthWeekInfo.textContent = `Semana ${weekIndex + 1} de 4`;
+
+  if (dietWaterValue) dietWaterValue.textContent = String(Math.round(profile.waterIntakeMl));
+  if (dietWaterGoalValue) dietWaterGoalValue.textContent = String(Math.round(profile.waterGoalMl));
+  if (dietWaterGoalInput) dietWaterGoalInput.value = String(Math.round(profile.waterGoalMl));
+
+  const mealRows = meals.map(([mealKey, mealText]) => {
+    const checked = checks[mealKey] === true;
+    const portionHint = getDietPortionHint(profile.goal, mealKey, profile.preference);
+    const finalMealText = `${mealText}. ${portionHint}`;
+    return `
+      <label class="diet-meal-item">
+        <input type="checkbox" class="diet-meal-check" data-meal-key="${mealKey}" ${checked ? 'checked' : ''}>
+        <span class="diet-meal-content">
+          <strong>${mealKey.charAt(0).toUpperCase()}${mealKey.slice(1)}</strong>
+          <small>${finalMealText}</small>
+        </span>
+      </label>
+    `;
+  }).join('');
+
+  dietMealList.innerHTML = mealRows || '<div class="diet-empty">No hay comidas configuradas para hoy.</div>';
+
+  const total = meals.length;
+  const done = meals.filter(([mealKey]) => checks[mealKey] === true).length;
+  const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+  if (dietCompletionPct) dietCompletionPct.textContent = `${pct}%`;
+  if (dietCompletionBar) dietCompletionBar.style.width = `${pct}%`;
+
+  renderDietOverview();
+  renderDietNext30Days(profile);
+}
+
 function createEmptyHomeDailyData(previousData = null) {
+  // Preservar todos los metadatos del sensor del día anterior para continuidad
+  const lastTotal = Number.isFinite(previousData?.stepCounterLastTotal) ? previousData.stepCounterLastTotal : null;
+  const lastBootTime = Number.isFinite(previousData?.stepCounterBootTime) ? previousData.stepCounterBootTime : 0;
   return {
     date: getTodayKey(),
     stepsSensor: 0,
@@ -623,9 +1649,13 @@ function createEmptyHomeDailyData(previousData = null) {
     stepActiveSeconds: 0,
     distanceKm: 0,
     routePositions: [],
-    stepCounterBase: Number.isFinite(previousData?.stepCounterLastTotal) ? previousData.stepCounterLastTotal : null,
-    stepCounterBootTime: Number.isFinite(previousData?.stepCounterBootTime) ? previousData.stepCounterBootTime : 0,
-    stepCounterLastTotal: Number.isFinite(previousData?.stepCounterLastTotal) ? previousData.stepCounterLastTotal : 0
+    // La base del nuevo día es el último total del sensor del día anterior
+    stepCounterBase: lastTotal,
+    stepCounterBootTime: lastBootTime,
+    stepCounterLastTotal: lastTotal ?? 0,
+    // Guardar referencia al día anterior para debug
+    _prevDate: previousData?.date || null,
+    _prevSteps: previousData?.stepsSensor || 0
   };
 }
 
@@ -651,15 +1681,31 @@ function archiveDailyData(data) {
 
 function ensureHomeDailyData() {
   const todayKey = getTodayKey();
+  const previousDate = homeDailyData?.date || null;
   if (!homeDailyData || homeDailyData.date !== todayKey) {
     const saved = JSON.parse(localStorage.getItem(HOME_DAILY_KEY) || 'null');
     if (saved && saved.date === todayKey) {
       homeDailyData = saved;
     } else {
-      if (saved && saved.date !== todayKey) archiveDailyData(saved);
+      // Archivar el día anterior solo si tiene actividad real
+      if (saved && saved.date !== todayKey) {
+        archiveDailyData(saved);
+        // Guardar backup de los metadatos del sensor antes de limpiar
+        if (saved.stepCounterLastTotal || saved.stepCounterBootTime) {
+          localStorage.setItem('runningTrainerStepCounterMeta', JSON.stringify({
+            date: saved.date,
+            lastTotal: saved.stepCounterLastTotal || 0,
+            bootTime: saved.stepCounterBootTime || 0
+          }));
+        }
+      }
       homeDailyData = createEmptyHomeDailyData(saved);
       localStorage.setItem(HOME_DAILY_KEY, JSON.stringify(homeDailyData));
     }
+  }
+
+  if (!Number.isFinite(_lastStepActiveUpdateMs) || _lastStepActiveUpdateMs <= 0 || previousDate !== homeDailyData.date) {
+    _lastStepActiveUpdateMs = Date.now();
   }
 }
 
@@ -690,17 +1736,72 @@ function formatActiveTimeShort(totalSeconds) {
   return `${m}m`;
 }
 
+function addStepActiveSecondsFromMovement(eventTimestampMs = Date.now()) {
+  ensureHomeDailyData();
+
+  const now = Math.max(0, Math.floor(Number(eventTimestampMs) || 0)) || Date.now();
+  if (!Number.isFinite(_lastStepActiveUpdateMs) || _lastStepActiveUpdateMs <= 0) {
+    _lastStepActiveUpdateMs = now;
+    return 0;
+  }
+
+  const elapsedSeconds = Math.max(0, Math.floor((now - _lastStepActiveUpdateMs) / 1000));
+  const deltaSeconds = Math.min(30, elapsedSeconds);
+  _lastStepActiveUpdateMs = now;
+
+  if (deltaSeconds <= 0) return 0;
+
+  homeDailyData.stepActiveSeconds = (homeDailyData.stepActiveSeconds || 0) + deltaSeconds;
+  homeDailyData.activeSeconds = (homeDailyData.gpsActiveSeconds || 0) + homeDailyData.stepActiveSeconds;
+  return deltaSeconds;
+}
+
+function estimateRecoveredActiveSeconds(stepDelta) {
+  const safeDelta = Math.max(0, Math.floor(Number(stepDelta) || 0));
+  if (safeDelta <= 0) return 0;
+  return Math.min(
+    STEP_HEALTH_ACTIVE_SECONDS_SYNC_CAP,
+    Math.max(0, Math.round(safeDelta * STEP_HEALTH_ACTIVE_SECONDS_PER_STEP))
+  );
+}
+
+function addRecoveredActiveSecondsFromSteps(stepDelta, eventTimestampMs = Date.now()) {
+  ensureHomeDailyData();
+
+  const deltaSeconds = estimateRecoveredActiveSeconds(stepDelta);
+  if (deltaSeconds <= 0) return 0;
+
+  homeDailyData.stepActiveSeconds = (homeDailyData.stepActiveSeconds || 0) + deltaSeconds;
+  homeDailyData.activeSeconds = (homeDailyData.gpsActiveSeconds || 0) + homeDailyData.stepActiveSeconds;
+  _lastStepActiveUpdateMs = Math.max(0, Math.floor(Number(eventTimestampMs) || 0)) || Date.now();
+  return deltaSeconds;
+}
+
+let _lastRenderDashboardMs = 0;
+
 function renderHomeDashboard() {
   ensureHomeDailyData();
 
   if (!homeStepsEl || !homeCaloriesEl || !homeActiveTimeEl || !homeDistanceEl) return;
 
+  const now = Date.now();
   const totalSteps = getHomeTotalSteps();
   const stepsBasedKm = totalSteps * 0.0008;
   const distanceKm = Math.max(homeDailyData.distanceKm || 0, stepsBasedKm);
   const activeSeconds = homeDailyData.activeSeconds || 0;
-  const calories = calculateCalories(distanceKm, activeSeconds);
-  homeDailyData.calories = calories;
+
+  // Persistir stepsDistance como fallback si el sensor falla
+  if (totalSteps > 0) {
+    homeDailyData.stepsDistance = totalSteps;
+  }
+
+  // Throttle de cálculo de calorías: máximo una vez cada 5 segundos
+  if (now - _lastRenderDashboardMs >= 5000) {
+    const calories = calculateCalories(distanceKm, activeSeconds);
+    homeDailyData.calories = calories;
+    _lastRenderDashboardMs = now;
+  }
+  const calories = homeDailyData.calories || 0;
 
   homeStepsEl.textContent = totalSteps.toLocaleString('es-ES');
   homeCaloriesEl.textContent = calories.toLocaleString('es-ES');
@@ -725,6 +1826,11 @@ function renderHomeDashboard() {
     homeStepsRingProgressEl.style.stroke = progress >= 100 ? '#22c55e' : '#0ea5e9';
   }
 
+  updateStepDebugState({
+    appSteps: totalSteps,
+    dailySensor: Math.max(0, Math.floor(Number(homeDailyData.stepsSensor) || 0))
+  });
+
   saveHomeDailyData();
 }
 
@@ -747,61 +1853,25 @@ function updateHomeStepsUI() {
   }
 }
 
-function getPedometerThresholds() {
-  const config = getPedometerConfig();
-  return {
-    upperThreshold: config.upperThreshold,
-    lowerThreshold: config.lowerThreshold,
-  };
-}
-
-function getPedometerMode() {
-  const mode = String(currentUser?.pedometerMode || '').toLowerCase();
-  return PEDOMETER_MODES.includes(mode) ? mode : 'walk';
-}
-
-function getPedometerModePreset(mode = getPedometerMode()) {
-  return PEDOMETER_MODE_PRESETS[mode] || PEDOMETER_MODE_PRESETS.walk;
-}
-
 function getPedometerConfig() {
-  const mode = getPedometerMode();
-  const preset = getPedometerModePreset(mode);
-  const upper = Number(currentUser?.pedometerUpper);
-  const lower = Number(currentUser?.pedometerLower);
-
-  return {
-    mode,
-    upperThreshold: Number.isFinite(upper) && upper > 0 ? upper : preset.upperThreshold,
-    lowerThreshold: Number.isFinite(lower) && lower > 0 ? lower : preset.lowerThreshold,
-    minStepIntervalMs: preset.minStepIntervalMs,
-    maxBurstGapMs: preset.maxBurstGapMs,
-    minEnergy: preset.minEnergy,
-    minCadenceSpm: preset.minCadenceSpm,
-    maxCadenceSpm: preset.maxCadenceSpm
-  };
+  return PEDOMETER_FALLBACK_CONFIG;
 }
 
-function updatePedometerHelpText() {
-  if (!profilePedometerHelp) return;
-  const mode = getPedometerMode();
-  const config = getPedometerConfig();
-  const modeLabel = mode === 'run' ? 'Correr' : 'Caminar';
-  profilePedometerHelp.textContent = `Modo actual: ${modeLabel}. Recomendado: alto ${config.upperThreshold.toFixed(1)} / bajo ${config.lowerThreshold.toFixed(1)}.`;
-}
-
-function applyRecommendedPedometerSettings(mode, { notify = true } = {}) {
-  if (!currentUser) return;
-  const safeMode = PEDOMETER_MODES.includes(mode) ? mode : 'walk';
-  const preset = getPedometerModePreset(safeMode);
-  currentUser.pedometerMode = safeMode;
-  currentUser.pedometerUpper = preset.upperThreshold;
-  currentUser.pedometerLower = preset.lowerThreshold;
-  saveUserData();
-  updateProfileModal();
-  if (notify) {
-    showToast(`Perfil ${safeMode === 'run' ? 'correr' : 'caminar'} aplicado al podómetro.`, 'success');
+function getStepHealthSyncCompatibility() {
+  if (STEP_HEALTH_SYNC_FORCE_DISABLED) {
+    return { compatible: false, reason: STEP_HEALTH_SYNC_DISABLE_REASON };
   }
+
+  const healthConnect = window.Capacitor?.Plugins?.HealthConnect || null;
+  const cordovaHealth = window?.cordova?.plugins?.health || window?.plugins?.health || null;
+  const hasHealthConnectApi = !!healthConnect && typeof healthConnect.readRecords === 'function';
+  const hasCordovaApi = !!cordovaHealth && typeof cordovaHealth.queryAggregated === 'function';
+
+  if (hasHealthConnectApi || hasCordovaApi) {
+    return { compatible: true, reason: 'ok' };
+  }
+
+  return { compatible: false, reason: 'plugins-unavailable' };
 }
 
 function getNativeStepCounterPlugin() {
@@ -810,6 +1880,8 @@ function getNativeStepCounterPlugin() {
 
 function getNativeHealthConnectPlugin() {
   try {
+    const compatibility = getStepHealthSyncCompatibility();
+    if (!compatibility.compatible) return null;
     return window.Capacitor?.Plugins?.HealthConnect || null;
   } catch (e) {
     console.warn('Error accessing HealthConnect plugin:', e);
@@ -819,6 +1891,8 @@ function getNativeHealthConnectPlugin() {
 
 function getCordovaHealthPlugin() {
   try {
+    const compatibility = getStepHealthSyncCompatibility();
+    if (!compatibility.compatible) return null;
     return window?.cordova?.plugins?.health || window?.plugins?.health || null;
   } catch (e) {
     console.warn('Error accessing cordova health plugin:', e);
@@ -828,7 +1902,7 @@ function getCordovaHealthPlugin() {
 
 function requestCordovaHealthAuthorization(plugin) {
   return new Promise((resolve, reject) => {
-    plugin.requestAuthorization({ read: ['steps'], write: [] }, resolve, reject);
+    plugin.requestAuthorization({ read: ['steps', 'activity', 'distance'], write: [] }, resolve, reject);
   });
 }
 
@@ -849,8 +1923,279 @@ function queryCordovaHealthStepsToday(plugin) {
   });
 }
 
+function queryCordovaHealthActivityToday(plugin) {
+  const startDate = new Date();
+  startDate.setHours(0, 0, 0, 0);
+  const endDate = new Date();
+  return new Promise((resolve, reject) => {
+    plugin.queryAggregated(
+      {
+        startDate,
+        endDate,
+        dataType: 'activity'
+      },
+      resolve,
+      reject
+    );
+  });
+}
+
+function queryCordovaHealthDistanceToday(plugin) {
+  const startDate = new Date();
+  startDate.setHours(0, 0, 0, 0);
+  const endDate = new Date();
+  return new Promise((resolve, reject) => {
+    plugin.queryAggregated(
+      {
+        startDate,
+        endDate,
+        dataType: 'distance'
+      },
+      resolve,
+      reject
+    );
+  });
+}
+
+function queryCordovaHealthAggregated(plugin, dataType, startDate, endDate) {
+  return new Promise((resolve, reject) => {
+    plugin.queryAggregated(
+      {
+        startDate,
+        endDate,
+        dataType
+      },
+      resolve,
+      reject
+    );
+  });
+}
+
+function extractAggregatedNumericValue(result) {
+  if (result == null) return 0;
+  if (typeof result === 'number') {
+    return Number.isFinite(result) ? result : 0;
+  }
+
+  if (Array.isArray(result)) {
+    return result.reduce((sum, item) => sum + extractAggregatedNumericValue(item), 0);
+  }
+
+  if (typeof result === 'object') {
+    const candidates = [
+      result.value,
+      result.steps,
+      result.count,
+      result.distance,
+      result.duration,
+      result.activeSeconds
+    ];
+
+    for (const value of candidates) {
+      const n = Number(value);
+      if (Number.isFinite(n)) return n;
+    }
+  }
+
+  return 0;
+}
+
+function extractAggregatedUnit(result) {
+  if (!result) return '';
+  if (Array.isArray(result)) {
+    return extractAggregatedUnit(result[0]);
+  }
+
+  const unit = String(result?.unit || result?.units || '').trim().toLowerCase();
+  return unit;
+}
+
+function normalizeActivitySecondsFromAggregate(result) {
+  const value = Math.max(0, Number(extractAggregatedNumericValue(result)) || 0);
+  const unit = extractAggregatedUnit(result);
+
+  if (unit.includes('millisecond') || unit === 'ms') {
+    return Math.max(0, Math.floor(value / 1000));
+  }
+  if (unit.includes('minute') || unit === 'min' || unit === 'm') {
+    return Math.max(0, Math.floor(value * 60));
+  }
+  if (unit.includes('second') || unit === 's') {
+    return Math.max(0, Math.floor(value));
+  }
+
+  // Fallback heuristico: valores muy altos suelen venir en ms.
+  if (value > 50000) return Math.max(0, Math.floor(value / 1000));
+  return Math.max(0, Math.floor(value));
+}
+
+function normalizeDistanceKmFromAggregate(result) {
+  const value = Math.max(0, Number(extractAggregatedNumericValue(result)) || 0);
+  const unit = extractAggregatedUnit(result);
+
+  if (unit.includes('kilometer') || unit === 'km') {
+    return value;
+  }
+  if (unit.includes('meter') || unit === 'm') {
+    return value / 1000;
+  }
+
+  // Fallback heuristico: >100 suele estar en metros.
+  if (value > 100) return value / 1000;
+  return value;
+}
+
+function upsertDailyHistoryEntry(dateKey, { steps = 0, activeSeconds = 0, distanceKm = 0 } = {}) {
+  if (!dateKey) return false;
+
+  const normalizedSteps = Math.max(0, Math.floor(Number(steps) || 0));
+  const normalizedActive = Math.max(0, Math.floor(Number(activeSeconds) || 0));
+  const normalizedDistance = Math.max(0, Number(distanceKm) || 0);
+
+  if (normalizedSteps <= 0 && normalizedActive <= 0 && normalizedDistance <= 0) return false;
+
+  const history = JSON.parse(localStorage.getItem(HOME_DAILY_HISTORY_KEY) || '[]');
+  const index = history.findIndex((entry) => entry?.date === dateKey);
+  const current = index >= 0 ? history[index] : { date: dateKey };
+  const next = {
+    date: dateKey,
+    steps: Math.max(0, Math.floor(Number(current?.steps) || 0), normalizedSteps),
+    calories: Math.max(0, Math.floor(Number(current?.calories) || 0)),
+    activeSeconds: Math.max(0, Math.floor(Number(current?.activeSeconds) || 0), normalizedActive),
+    distanceKm: Math.max(0, Number(current?.distanceKm) || 0, normalizedDistance)
+  };
+
+  next.calories = Math.max(next.calories, calculateCalories(next.distanceKm, next.activeSeconds));
+
+  const changed = index < 0
+    || next.steps !== Math.max(0, Math.floor(Number(current?.steps) || 0))
+    || next.activeSeconds !== Math.max(0, Math.floor(Number(current?.activeSeconds) || 0))
+    || Number(next.distanceKm.toFixed(4)) !== Number((Math.max(0, Number(current?.distanceKm) || 0)).toFixed(4))
+    || next.calories !== Math.max(0, Math.floor(Number(current?.calories) || 0));
+
+  if (index >= 0) {
+    history[index] = next;
+  } else {
+    history.unshift(next);
+  }
+
+  history.sort((a, b) => String(b?.date || '').localeCompare(String(a?.date || '')));
+  if (history.length > HOME_DAILY_HISTORY_LIMIT) history.length = HOME_DAILY_HISTORY_LIMIT;
+  localStorage.setItem(HOME_DAILY_HISTORY_KEY, JSON.stringify(history));
+  return changed;
+}
+
+function shouldRunHealthHistorySync(force = false) {
+  if (force) return true;
+  const now = Date.now();
+  const lastSyncTs = Number(localStorage.getItem(HOME_HEALTH_HISTORY_SYNC_KEY) || 0);
+  const sixHoursMs = 6 * 60 * 60 * 1000;
+  return !Number.isFinite(lastSyncTs) || lastSyncTs <= 0 || (now - lastSyncTs) >= sixHoursMs;
+}
+
+async function syncCordovaHealthHistoryDays({ days = 14, force = false } = {}) {
+  if (homeHistorySyncInProgress) return;
+  if (!shouldRunHealthHistorySync(force)) {
+    updateStepDebugState({
+      note: 'Historial salud: omitido por throttle'
+    });
+    return;
+  }
+
+  const plugin = getCordovaHealthPlugin();
+  if (!plugin || typeof plugin.queryAggregated !== 'function') return;
+
+  homeHistorySyncInProgress = true;
+  updateStepDebugState({
+    status: 'health:history-sync',
+    source: 'cordova-health',
+    mode: 'history',
+    historyDaysScanned: 0,
+    historyDaysUpdated: 0,
+    note: 'Sincronizando historial diario...'
+  });
+  try {
+    const totalDays = Math.max(1, Math.min(60, Math.floor(Number(days) || 14)));
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    let daysUpdated = 0;
+
+    for (let offset = 1; offset <= totalDays; offset++) {
+      const startDate = new Date(today);
+      startDate.setDate(today.getDate() - offset);
+      startDate.setHours(0, 0, 0, 0);
+
+      const endDate = new Date(startDate);
+      endDate.setHours(23, 59, 59, 999);
+
+      const [stepsAgg, activityAgg, distanceAgg] = await Promise.all([
+        runWithTimeout(
+          () => queryCordovaHealthAggregated(plugin, 'steps', startDate, endDate),
+          5000,
+          'cordova.health.history.steps'
+        ).catch(() => null),
+        runWithTimeout(
+          () => queryCordovaHealthAggregated(plugin, 'activity', startDate, endDate),
+          5000,
+          'cordova.health.history.activity'
+        ).catch(() => null),
+        runWithTimeout(
+          () => queryCordovaHealthAggregated(plugin, 'distance', startDate, endDate),
+          5000,
+          'cordova.health.history.distance'
+        ).catch(() => null)
+      ]);
+
+      const steps = Math.max(0, Math.floor(extractAggregatedNumericValue(stepsAgg)));
+      const activeSeconds = normalizeActivitySecondsFromAggregate(activityAgg);
+      const distanceKm = normalizeDistanceKmFromAggregate(distanceAgg);
+
+      const changed = upsertDailyHistoryEntry(toDateKey(startDate), {
+        steps,
+        activeSeconds,
+        distanceKm
+      });
+      if (changed) daysUpdated += 1;
+
+      updateStepDebugState({
+        historyDaysScanned: offset,
+        historyDaysUpdated: daysUpdated,
+        note: `Historial salud: ${offset}/${totalDays} dias, actualizados=${daysUpdated}`
+      });
+    }
+
+    const nowTs = Date.now();
+    localStorage.setItem(HOME_HEALTH_HISTORY_SYNC_KEY, String(nowTs));
+    updateStepDebugState({
+      status: 'health:history-done',
+      historyDaysScanned: totalDays,
+      historyDaysUpdated: daysUpdated,
+      historyLastSyncTs: nowTs,
+      timestamp: nowTs,
+      note: `Historial salud completado: ${daysUpdated}/${totalDays} dias actualizados`
+    });
+  } catch (err) {
+    console.warn('Fallo al sincronizar historial diario de salud:', err?.message || err);
+    updateStepDebugState({
+      status: 'health:history-error',
+      source: 'cordova-health',
+      mode: 'history',
+      note: err?.message || String(err)
+    });
+  } finally {
+    homeHistorySyncInProgress = false;
+  }
+}
+
 async function requestNativeHealthConnectAuthorization(plugin) {
   return plugin.requestHealthPermissions({
+    read: ['Steps'],
+    write: []
+  });
+}
+
+async function checkNativeHealthConnectAuthorization(plugin) {
+  return plugin.checkHealthPermissions({
     read: ['Steps'],
     write: []
   });
@@ -893,8 +2238,62 @@ function applyNativeStepCounterUpdate(snapshot = {}) {
 
   const total = Math.max(0, Math.floor(Number(snapshot?.totalSteps ?? snapshot?.steps ?? snapshot?.value ?? 0) || 0));
   const bootTimeMs = Math.max(0, Math.floor(Number(snapshot?.bootTimeMs) || 0));
+  const counterMode = String(snapshot?.counterMode || '').toLowerCase();
+  const persistentCounterMode = counterMode === 'persistentdelta' || counterMode === 'dailydelta' || counterMode === 'dailydeltadetector';
+  const source = String(snapshot?.source || 'native');
+  const snapshotDelta = Math.max(0, Math.floor(Number(snapshot?.deltaSteps) || 0));
+  const sensorValue = Math.max(0, Math.floor(Number(snapshot?.sensorValue ?? snapshot?.totalSteps ?? 0) || 0));
   const eventTs = Math.max(0, Math.floor(Number(snapshot?.timestamp) || 0)) || Date.now();
   const currentSteps = Math.max(0, Math.floor(Number(homeDailyData.stepsSensor) || 0));
+
+  updateStepDebugState({
+    status: 'native:event',
+    source,
+    mode: counterMode || 'legacy',
+    totalSteps: total,
+    deltaSteps: snapshotDelta,
+    sensorValue,
+    cached: snapshot?.cached === true,
+    timestamp: eventTs,
+    note: ''
+  });
+
+  if (persistentCounterMode) {
+    // Para eventos en vivo con delta válido, sumamos el delta al acumulado JS.
+    // Esto evita que el contador se quede bloqueado cuando el total de Java
+    // (dailyTotalSteps) es menor que el acumulado JS (ej. SharedPreferences
+    // perdidas tras matar la app). Para snapshots cacheados usamos Math.max
+    // para sincronizar sin perder pasos ya contados.
+    const isCached = snapshot?.cached === true;
+    const nextSteps = (!isCached && snapshotDelta > 0)
+      ? Math.max(currentSteps + snapshotDelta, total)
+      : Math.max(currentSteps, total);
+    const deltaSteps = Math.max(0, nextSteps - currentSteps);
+    let activeSecondsDelta = 0;
+
+    homeDailyData.stepCounterBase = 0;
+    if (bootTimeMs > 0) {
+      homeDailyData.stepCounterBootTime = bootTimeMs;
+    }
+    homeDailyData.stepCounterLastTotal = nextSteps;
+    homeDailyData.stepsSensor = nextSteps;
+
+    if (deltaSteps > 0) {
+      homeLastStepTs = eventTs;
+      activeSecondsDelta = addStepActiveSecondsFromMovement(eventTs);
+    }
+
+    saveHomeDailyData();
+    renderHomeDashboard();
+    updateStepDebugState({
+      status: 'native:applied',
+      appSteps: nextSteps,
+      dailySensor: Math.max(0, Math.floor(Number(homeDailyData.stepsSensor) || 0)),
+      note: `branch=${counterMode || 'legacy'} | activo +${activeSecondsDelta}s`
+    });
+    return true;
+  }
+
   const previousTotal = Math.max(0, Math.floor(Number(homeDailyData.stepCounterLastTotal) || 0));
   const previousBootTime = Math.max(0, Math.floor(Number(homeDailyData.stepCounterBootTime) || 0));
 
@@ -902,8 +2301,8 @@ function applyNativeStepCounterUpdate(snapshot = {}) {
     ? Number(homeDailyData.stepCounterBase)
     : null;
 
-  const sensorReset = total < previousTotal;
-  const bootChanged = bootTimeMs > 0 && previousBootTime > 0 && bootTimeMs !== previousBootTime;
+  const sensorReset = !persistentCounterMode && total < previousTotal;
+  const bootChanged = !persistentCounterMode && bootTimeMs > 0 && previousBootTime > 0 && bootTimeMs !== previousBootTime;
 
   if (base == null || sensorReset || bootChanged) {
     // Mantener el acumulado diario ya conocido cuando el sensor se reinicia o el móvil se reinicia.
@@ -913,6 +2312,7 @@ function applyNativeStepCounterUpdate(snapshot = {}) {
   const dailySteps = Math.max(0, Math.floor(total - base));
   const nextSteps = Math.max(currentSteps, dailySteps);
   const deltaSteps = Math.max(0, nextSteps - currentSteps);
+  let activeSecondsDelta = 0;
 
   homeDailyData.stepCounterBase = base;
   if (bootTimeMs > 0) {
@@ -923,39 +2323,131 @@ function applyNativeStepCounterUpdate(snapshot = {}) {
 
   if (deltaSteps > 0) {
     homeLastStepTs = eventTs;
-    homeDailyData.stepActiveSeconds = (homeDailyData.stepActiveSeconds || 0) + deltaSteps;
-    homeDailyData.activeSeconds = (homeDailyData.gpsActiveSeconds || 0) + homeDailyData.stepActiveSeconds;
+    activeSecondsDelta = addStepActiveSecondsFromMovement(eventTs);
   }
 
   saveHomeDailyData();
   renderHomeDashboard();
+  updateStepDebugState({
+    status: 'native:legacy-applied',
+    appSteps: nextSteps,
+    dailySensor: Math.max(0, Math.floor(Number(homeDailyData.stepsSensor) || 0)),
+    note: `base=${Math.floor(base || 0)} | activo +${activeSecondsDelta}s`
+  });
   return true;
 }
 
 
-function applyHealthConnectDailySteps(dailyTotal) {
+function applyExternalDailyMetrics({ dailyTotal = 0, activeSeconds = null, distanceKm = null, source = 'health-sync', mode = 'daily-total' } = {}) {
   ensureHomeDailyData();
   const total = Math.max(0, Math.floor(Number(dailyTotal) || 0));
-  if (!total) return false;
+  const normalizedActiveSeconds = Number.isFinite(Number(activeSeconds))
+    ? Math.max(0, Math.floor(Number(activeSeconds) || 0))
+    : null;
+  const normalizedDistanceKm = Number.isFinite(Number(distanceKm))
+    ? Math.max(0, Number(distanceKm) || 0)
+    : null;
 
-  // Health Connect devuelve total diario: conservar siempre el mayor valor observado.
+  if (total <= 0 && normalizedActiveSeconds == null && normalizedDistanceKm == null) {
+    updateStepDebugState({
+      status: 'health:empty',
+      source,
+      mode,
+      note: 'total=0'
+    });
+    return false;
+  }
+
   const currentSteps = Math.max(0, Math.floor(Number(homeDailyData.stepsSensor) || 0));
-  homeDailyData.stepsSensor = Math.max(currentSteps, total);
+  const nextSteps = Math.max(currentSteps, total);
+  const recoveredDelta = Math.max(0, nextSteps - currentSteps);
+  const activeSecondsDelta = addRecoveredActiveSecondsFromSteps(recoveredDelta, Date.now());
+
+  homeDailyData.stepsSensor = nextSteps;
   homeDailyData.stepCounterLastTotal = total;
+
+  if (normalizedActiveSeconds != null) {
+    const nextStepActiveSeconds = Math.max(
+      0,
+      normalizedActiveSeconds - Math.max(0, Math.floor(Number(homeDailyData.gpsActiveSeconds) || 0))
+    );
+    homeDailyData.stepActiveSeconds = Math.max(
+      Math.max(0, Math.floor(Number(homeDailyData.stepActiveSeconds) || 0)),
+      nextStepActiveSeconds
+    );
+    homeDailyData.activeSeconds = (homeDailyData.gpsActiveSeconds || 0) + homeDailyData.stepActiveSeconds;
+  }
+
+  if (normalizedDistanceKm != null) {
+    homeDailyData.distanceKm = Math.max(
+      Math.max(0, Number(homeDailyData.distanceKm) || 0),
+      normalizedDistanceKm
+    );
+  }
+
   homeLastStepTs = Date.now();
   saveHomeDailyData();
   renderHomeDashboard();
+  updateStepDebugState({
+    status: 'health:applied',
+    source,
+    mode,
+    totalSteps: total,
+    appSteps: Math.max(0, Math.floor(Number(homeDailyData.stepsSensor) || 0)),
+    dailySensor: Math.max(0, Math.floor(Number(homeDailyData.stepsSensor) || 0)),
+    timestamp: Date.now(),
+    note: `sync ok | recuperado +${recoveredDelta} pasos | activo +${activeSecondsDelta}s | activo-real=${normalizedActiveSeconds ?? 'n/a'} | km-real=${normalizedDistanceKm != null ? normalizedDistanceKm.toFixed(2) : 'n/a'}`
+  });
   return true;
 }
 
-async function syncHealthConnectDailySteps({ requestPermissions = false } = {}) {
+async function syncHealthConnectDailySteps({ requestPermissions = false, force = false } = {}) {
   const todayKey = getTodayKey();
-  if (!requestPermissions && homeHealthConnectSyncDate === todayKey) return;
+  if (!force && !requestPermissions && homeHealthConnectSyncDate === todayKey) return;
 
   const plugin = getNativeHealthConnectPlugin();
   if (!plugin || typeof plugin.readRecords !== 'function') return;
 
   try {
+    // Verificar disponibilidad antes de cualquier llamada para evitar crashes
+    if (typeof plugin.checkAvailability === 'function') {
+      const avail = await runWithTimeout(
+        () => plugin.checkAvailability(),
+        3000,
+        'HealthConnect.checkAvailability'
+      );
+      if (avail?.availability !== 'Available') {
+        updateStepDebugState({
+          status: 'health:unavailable',
+          source: 'health-sync',
+          note: `HC no disponible: ${avail?.availability ?? 'unknown'}`
+        });
+        return;
+      }
+    }
+
+    if (typeof plugin.checkHealthPermissions === 'function') {
+      const permissionState = await runWithTimeout(
+        () => checkNativeHealthConnectAuthorization(plugin),
+        4000,
+        'HealthConnect.checkHealthPermissions'
+      );
+      const hasAllPermissions = permissionState?.hasAllPermissions === true;
+
+      updateStepDebugState({
+        hcPermission: hasAllPermissions ? 'granted' : 'missing'
+      });
+
+      if (!hasAllPermissions && !requestPermissions) {
+        updateStepDebugState({
+          status: 'health:permission-missing',
+          source: 'health-sync',
+          note: 'Faltan permisos de lectura de pasos en Health Connect'
+        });
+        return;
+      }
+    }
+
     if (requestPermissions && typeof plugin.requestHealthPermissions === 'function') {
       await runWithTimeout(
         () => requestNativeHealthConnectAuthorization(plugin),
@@ -971,10 +2463,28 @@ async function syncHealthConnectDailySteps({ requestPermissions = false } = {}) 
     );
 
     const records = Array.isArray(recordsResult?.records) ? recordsResult.records : [];
+    const sourceSet = new Set();
+    records.forEach((record) => {
+      const dataOrigin = record?.metadata?.dataOrigin;
+      if (typeof dataOrigin === 'string' && dataOrigin.trim()) {
+        sourceSet.add(dataOrigin.trim());
+      }
+    });
+    const hcSources = sourceSet.size > 0 ? Array.from(sourceSet).join(', ') : '-';
+
+    updateStepDebugState({
+      hcRecords: records.length,
+      hcSources
+    });
+
     const total = Math.max(0, Math.floor(records.reduce((sum, record) => sum + (Number(record?.count) || 0), 0)));
     if (total <= 0) return;
 
-    if (applyHealthConnectDailySteps(total)) {
+    if (applyExternalDailyMetrics({
+      dailyTotal: total,
+      source: 'health-sync',
+      mode: 'daily-total'
+    })) {
       console.log(`Health Connect: Pasos diarios sincronizados = ${total}`);
     }
     homeHealthConnectSyncDate = todayKey;
@@ -992,9 +2502,9 @@ function scheduleHealthConnectDailySync(options = {}) {
   }, 0);
 }
 
-async function syncCordovaHealthDailySteps({ requestPermissions = false } = {}) {
+async function syncCordovaHealthDailySteps({ requestPermissions = false, force = false } = {}) {
   const todayKey = getTodayKey();
-  if (!requestPermissions && homeCordovaHealthSyncDate === todayKey) return;
+  if (!force && !requestPermissions && homeCordovaHealthSyncDate === todayKey) return;
 
   const plugin = getCordovaHealthPlugin();
   if (!plugin || typeof plugin.queryAggregated !== 'function') return;
@@ -1008,17 +2518,44 @@ async function syncCordovaHealthDailySteps({ requestPermissions = false } = {}) 
       );
     }
 
-    const aggregated = await runWithTimeout(
+    const [aggregated, activityAggregated, distanceAggregated] = await Promise.all([
+      runWithTimeout(
       () => queryCordovaHealthStepsToday(plugin),
       6500,
       'cordova.health.queryAggregated'
-    );
+      ),
+      runWithTimeout(
+        () => queryCordovaHealthActivityToday(plugin),
+        6500,
+        'cordova.health.queryAggregated.activity'
+      ).catch(() => null),
+      runWithTimeout(
+        () => queryCordovaHealthDistanceToday(plugin),
+        6500,
+        'cordova.health.queryAggregated.distance'
+      ).catch(() => null)
+    ]);
 
-    const total = Math.max(0, Math.floor(Number(aggregated?.value ?? aggregated?.steps ?? 0) || 0));
-    if (total <= 0) return;
+    const total = Math.max(0, Math.floor(extractAggregatedNumericValue(aggregated)));
+    const activeSeconds = normalizeActivitySecondsFromAggregate(activityAggregated);
+    const distanceKm = normalizeDistanceKmFromAggregate(distanceAggregated);
 
-    if (applyHealthConnectDailySteps(total)) {
-      console.log(`Cordova Health: Pasos diarios sincronizados = ${total}`);
+    updateStepDebugState({
+      chActivitySeconds: activeSeconds,
+      chDistanceKm: distanceKm,
+      note: `Cordova agg -> steps=${total}, act=${activeSeconds}s, km=${distanceKm.toFixed(2)}`
+    });
+
+    if (total <= 0 && activeSeconds <= 0 && distanceKm <= 0) return;
+
+    if (applyExternalDailyMetrics({
+      dailyTotal: total,
+      activeSeconds,
+      distanceKm,
+      source: 'cordova-health',
+      mode: 'daily-aggregate'
+    })) {
+      console.log(`Cordova Health: pasos=${total}, activo=${activeSeconds}s, distancia=${distanceKm.toFixed(2)}km`);
     }
     homeCordovaHealthSyncDate = todayKey;
     stopHealthConnectCatchup();
@@ -1035,7 +2572,18 @@ function scheduleCordovaHealthDailySync(options = {}) {
   }, 0);
 }
 
-async function syncExternalDailySteps({ requestPermissions = false } = {}) {
+async function syncExternalDailySteps({ requestPermissions = false, force = false } = {}) {
+  const compatibility = getStepHealthSyncCompatibility();
+  if (!compatibility.compatible) {
+    updateStepDebugState({
+      status: 'health:hidden-incompatible',
+      source: 'health-sync',
+      mode: 'disabled',
+      note: `Health Connect oculto por incompatibilidad (${compatibility.reason})`
+    });
+    return;
+  }
+
   if (!currentUser || homeHealthSyncInProgress) return;
 
   homeHealthSyncInProgress = true;
@@ -1045,10 +2593,16 @@ async function syncExternalDailySteps({ requestPermissions = false } = {}) {
       homeHealthPermissionPrompted = true;
     }
 
-    await syncHealthConnectDailySteps({ requestPermissions: shouldRequestPermissions });
-    await syncCordovaHealthDailySteps({ requestPermissions: shouldRequestPermissions });
+    await syncHealthConnectDailySteps({ requestPermissions: shouldRequestPermissions, force });
+    await syncCordovaHealthDailySteps({ requestPermissions: shouldRequestPermissions, force });
+    await syncCordovaHealthHistoryDays({ days: 21, force });
   } catch (err) {
     console.warn('Fallo en sincronizacion de pasos diarios del sistema:', err?.message || err);
+    updateStepDebugState({
+      status: 'health:error',
+      source: 'health-sync',
+      note: err?.message || String(err)
+    });
   } finally {
     homeHealthSyncInProgress = false;
   }
@@ -1085,24 +2639,11 @@ function ensureStepActiveTimer() {
   if (_stepActiveTimer) return;
 
   _stepActiveTimer = setInterval(() => {
-    if (homeRouteIsRecording || !homeDailyData) return;
-    const now = Date.now();
-    // Intervalo más generoso: 5 minutos (300 seg) para permitir actividad intermitente o lenta
-    // Este intervalo permite que se registre tiempo activo aunque haya pausas de hasta 5 minutos
-    const ACTIVITY_TIMEOUT = 5 * 60 * 1000; // 5 minutos
-    const MINUTES_PER_TICK = 1; // Incrementar 1 minuto cada tick
-    
-    if (homeLastStepTs && now - homeLastStepTs < ACTIVITY_TIMEOUT) {
-      ensureHomeDailyData();
-      // Incrementar tiempo activo en minutos (60 segundos)
-      const newStepActiveSeconds = (homeDailyData.stepActiveSeconds || 0) + (MINUTES_PER_TICK * 60);
-      homeDailyData.stepActiveSeconds = newStepActiveSeconds;
-      homeDailyData.activeSeconds = (homeDailyData.gpsActiveSeconds || 0) + newStepActiveSeconds;
-      _lastStepActiveUpdateMs = now;
-      saveHomeDailyData();
-      renderHomeDashboard();
+    if (!homeDailyData) return;
+    if (!Number.isFinite(_lastStepActiveUpdateMs) || _lastStepActiveUpdateMs <= 0) {
+      _lastStepActiveUpdateMs = Date.now();
     }
-  }, 60000); // Ejecutar cada 60 segundos (1 minuto)
+  }, 60000);
 }
 
 function pushMotionCandidateTimestamp(ts) {
@@ -1180,20 +2721,30 @@ function handleHomeMotion(event) {
     const cadenceSpm = getRecentCadenceSpm();
     if (cadenceSpm && (cadenceSpm < minCadenceSpm || cadenceSpm > maxCadenceSpm)) return;
 
-    if (homeMotionPendingSteps < 2) return;
+    if (homeMotionPendingSteps < 2 && cadenceSpm === 0) return;
 
-    const stepsToAdd = homeMotionPendingSteps === 2 ? 2 : 1;
-    homeMotionPendingSteps = Math.min(homeMotionPendingSteps, 3);
+    const stepsToAdd = 1;
+    homeMotionPendingSteps = Math.min(homeMotionPendingSteps, 2);
+    let activeSecondsDelta = 0;
 
     homeLastStepTs = now;
     homeDailyData.stepsSensor = (homeDailyData.stepsSensor || 0) + stepsToAdd;
     
-    // Incrementar tiempo activo: aproximadamente 1 segundo por cada paso detectado
-    // (ritmo normal de caminar/correr es ~2-3 pasos por segundo, así que esto es conservador)
     if (stepsToAdd > 0) {
-      homeDailyData.stepActiveSeconds = (homeDailyData.stepActiveSeconds || 0) + stepsToAdd;
-      homeDailyData.activeSeconds = (homeDailyData.gpsActiveSeconds || 0) + homeDailyData.stepActiveSeconds;
+      activeSecondsDelta = addStepActiveSecondsFromMovement(now);
     }
+
+    updateStepDebugState({
+      status: 'motion:step',
+      source: 'devicemotion',
+      mode: 'fallback',
+      deltaSteps: stepsToAdd,
+      totalSteps: Math.max(0, Math.floor(Number(homeDailyData.stepsSensor) || 0)),
+      appSteps: Math.max(0, Math.floor(Number(homeDailyData.stepsSensor) || 0)),
+      dailySensor: Math.max(0, Math.floor(Number(homeDailyData.stepsSensor) || 0)),
+      timestamp: now,
+      note: `Paso por acelerometro | activo +${activeSecondsDelta}s`
+    });
     
     updateHomeStepsUI();
     saveHomeDailyData();
@@ -1208,15 +2759,47 @@ async function enableHomeMotionTracking({ silent = false } = {}) {
   if (_initMotionInProgress) return true;
   _initMotionInProgress = true;
 
+  updateStepDebugState({
+    status: 'init:tracking',
+    note: 'Inicializando sensor de pasos'
+  });
+
   try {
     const nativeStepCounter = getNativeStepCounterPlugin();
-    if (nativeStepCounter) {
+    const nativeGuardEnabled = nativeStepCounter ? isNativeStepGuardEnabled() : false;
+    if (nativeStepCounter && nativeGuardEnabled && !STEP_FORCE_NATIVE_ONLY) {
+      updateStepDebugState({
+        status: 'native:guard-skip',
+        source: 'TYPE_STEP_COUNTER',
+        mode: 'guard',
+        note: 'Guardia anti-crash activa: se omite nativo en este arranque'
+      });
+    } else if (nativeStepCounter) {
+      if (nativeGuardEnabled && STEP_FORCE_NATIVE_ONLY) {
+        // En modo solo nativo no podemos saltar el flujo por guardia o el contador quedaria bloqueado.
+        setNativeStepGuard(false);
+      }
+
+      // Si la app se cerrase durante la inicializacion nativa, este flag queda activo
+      // y el siguiente arranque evitara entrar en el flujo nativo.
+      setNativeStepGuard(true);
+
       try {
         const availability = await runWithTimeout(
           () => nativeStepCounter.isAvailable(),
           2500,
           'StepCounter.isAvailable'
         );
+
+        updateStepDebugState({
+          status: 'native:availability',
+          source: availability?.hasStepCounter ? 'TYPE_STEP_COUNTER' : (availability?.hasStepDetector ? 'TYPE_STEP_DETECTOR' : 'none'),
+          mode: 'availability',
+          permission: availability?.permissionRequired === false
+            ? 'not-required'
+            : (availability?.permissionGranted ? 'granted' : 'missing'),
+          note: `available=${availability?.available === true}`
+        });
 
         if (availability?.available) {
           let nativePermissionGranted = availability?.permissionRequired === false || availability?.permissionGranted === true;
@@ -1229,8 +2812,16 @@ async function enableHomeMotionTracking({ silent = false } = {}) {
                 'StepCounter.requestPermission'
               );
               nativePermissionGranted = permissionResult?.granted === true;
+              updateStepDebugState({
+                permission: nativePermissionGranted ? 'granted' : 'denied',
+                note: 'requestPermission completado'
+              });
             } catch (permErr) {
               console.warn('No se pudo solicitar permiso de actividad física:', permErr);
+              updateStepDebugState({
+                status: 'native:permission-error',
+                note: permErr?.message || String(permErr)
+              });
             }
           }
 
@@ -1250,22 +2841,68 @@ async function enableHomeMotionTracking({ silent = false } = {}) {
 
             if (initialSnapshot && typeof initialSnapshot === 'object') {
               applyNativeStepCounterUpdate(initialSnapshot);
+            } else {
+              updateStepDebugState({
+                status: 'native:listener-ready',
+                note: 'Sin snapshot inicial en timeout (esperando evento)'
+              });
             }
 
             ensureStepActiveTimer();
             homeMotionEnabled = true;
+            setNativeStepGuard(false);
+
+            updateStepDebugState({
+              status: 'native:enabled',
+              note: 'Listener nativo activo'
+            });
 
             if (!silent) showToast('Contador de pasos (nativo) activado.', 'success');
             return true;
           }
 
-          // Evitar prompts nativos inestables: usar fallback hasta que el permiso se conceda por otro flujo.
-          if (!silent) {
+          // Evitar prompts nativos inestables. Si no hay modo solo nativo, usar fallback.
+          if (!silent && !STEP_FORCE_NATIVE_ONLY) {
             showToast('Permiso de actividad física no disponible. Activando contador alternativo.', 'info');
+          }
+          setNativeStepGuard(false);
+          updateStepDebugState({
+            status: 'native:permission-missing',
+            note: 'Fallback a acelerometro/sync'
+          });
+          if (STEP_FORCE_NATIVE_ONLY) {
+            updateStepDebugState({
+              status: 'native:permission-required',
+              note: 'Modo solo nativo activo: fallback desactivado'
+            });
+            if (!silent) {
+              setHomeGpsStatus('Permiso de actividad física requerido para usar el contador nativo.', 'warning');
+              showToast('Permiso de actividad física requerido para contar pasos.', 'error');
+            }
+            return false;
+          }
+        } else {
+          setNativeStepGuard(false);
+          updateStepDebugState({
+            status: 'native:unsupported-device',
+            source: 'TYPE_STEP_COUNTER',
+            mode: 'availability',
+            note: 'Este dispositivo no soporta sensor de pasos'
+          });
+          if (!silent) {
+            setHomeGpsStatus('Este dispositivo no soporta sensor de pasos nativo.', 'warning');
+            showToast('Este dispositivo no soporta sensor de pasos nativo.', 'info');
+          }
+          if (STEP_FORCE_NATIVE_ONLY) {
+            return false;
           }
         }
       } catch (err) {
         console.warn('No se pudo activar el contador de pasos nativo:', err);
+        updateStepDebugState({
+          status: 'native:error',
+          note: err?.message || String(err)
+        });
         try {
           await homeNativeStepListener?.remove?.();
         } catch (_) {
@@ -1273,13 +2910,51 @@ async function enableHomeMotionTracking({ silent = false } = {}) {
         }
         homeNativeStepListener = null;
       }
+    } else {
+      updateStepDebugState({
+        status: 'native:plugin-missing',
+        source: 'TYPE_STEP_COUNTER',
+        mode: 'availability',
+        note: 'Plugin nativo de pasos no disponible'
+      });
+      if (STEP_FORCE_NATIVE_ONLY) {
+        if (!silent) {
+          setHomeGpsStatus('No se pudo cargar el plugin nativo de pasos.', 'warning');
+          showToast('No se pudo activar el contador nativo de pasos.', 'error');
+        }
+        return false;
+      }
+    }
+
+    if (STEP_FORCE_NATIVE_ONLY) {
+      updateStepDebugState({
+        status: 'motion:disabled-native-only',
+        source: 'devicemotion',
+        mode: 'disabled',
+        note: 'Modo solo nativo activo'
+      });
+      return false;
     }
 
     if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
-      if (silent) return false;
+      if (silent) {
+        updateStepDebugState({
+          status: 'motion:permission-pending',
+          source: 'devicemotion',
+          mode: 'fallback',
+          note: 'Se requiere permiso de movimiento (abrir panel manual)'
+        });
+        return false;
+      }
       const permissionState = await DeviceMotionEvent.requestPermission();
       if (permissionState !== 'granted') {
         console.warn('Permiso de movimiento denegado por el usuario.');
+        updateStepDebugState({
+          status: 'motion:permission-denied',
+          source: 'devicemotion',
+          mode: 'fallback',
+          note: 'Permiso de movimiento denegado'
+        });
         return false;
       }
     }
@@ -1287,10 +2962,22 @@ async function enableHomeMotionTracking({ silent = false } = {}) {
     window.addEventListener('devicemotion', handleHomeMotion, { passive: true });
     homeMotionEnabled = true;
     ensureStepActiveTimer();
+    updateStepDebugState({
+      status: 'motion:enabled',
+      source: 'devicemotion',
+      mode: 'fallback',
+      note: 'Fallback web activo'
+    });
     if (!silent) showToast('Contador de pasos (acelerometro) activado.', 'success');
     return true;
   } catch (err) {
     console.warn('No se pudo activar el sensor de pasos web:', err);
+    updateStepDebugState({
+      status: 'motion:error',
+      source: 'devicemotion',
+      mode: 'fallback',
+      note: err?.message || String(err)
+    });
     if (!silent) showToast('No se pudo activar el sensor de pasos en este dispositivo.', 'error');
     return false;
   } finally {
@@ -2179,6 +3866,7 @@ function getPlanDisplayName(planKey = planActual) {
   return {
     '30min': 'Corre 30 Minutos',
     '5k': 'Corre 5K',
+    'ejercicios': 'Rutinas de fuerza y core',
     '10k': 'Plan 10K Personalizado',
     'fartlek': 'Entrenamiento Fartlek',
     'hiit': 'Entrenamiento HIIT',
@@ -3527,11 +5215,49 @@ function centerHomeMap() {
 }
 
 function initHomeDashboard() {
+  ensureStepDebugOverlay();
   ensureHomeDailyData();
   renderHomeDashboard();
   setHomeRouteButtonsState();
+  updateStepDebugState({
+    status: 'dashboard:init',
+    appSteps: getHomeTotalSteps(),
+    dailySensor: Math.max(0, Math.floor(Number(homeDailyData?.stepsSensor) || 0)),
+    note: 'Init Home Dashboard'
+  });
   if (currentUser) {
-    enableHomeMotionTracking({ silent: true });
+    enableHomeMotionTracking({ silent: true })
+      .catch((err) => {
+        console.warn('No se pudo iniciar contador nativo al arrancar:', err?.message || err);
+        updateStepDebugState({
+          status: 'init:error',
+          note: err?.message || String(err)
+        });
+      });
+
+    const healthSyncCompatibility = getStepHealthSyncCompatibility();
+    if (STEP_STARTUP_EXTERNAL_SYNC_ENABLED && healthSyncCompatibility.compatible) {
+      // Via alternativa: sincronizar pasos del sistema (Health Connect / Cordova Health)
+      // para evitar depender exclusivamente del listener nativo del sensor.
+      syncExternalDailySteps({ requestPermissions: getHomeTotalSteps() <= 0 }).catch((err) => {
+        console.warn('No se pudo sincronizar pasos del sistema al iniciar:', err?.message || err);
+        updateStepDebugState({
+          status: 'health:init-error',
+          source: 'health-sync',
+          note: err?.message || String(err)
+        });
+      });
+      startHealthConnectCatchup();
+    } else {
+      updateStepDebugState({
+        status: 'health:init-skipped',
+        source: 'health-sync',
+        mode: healthSyncCompatibility.compatible ? 'safe-mode' : 'incompatible',
+        note: healthSyncCompatibility.compatible
+          ? 'Sync externa desactivada en arranque (modo seguro)'
+          : `Health Connect oculto por incompatibilidad (${healthSyncCompatibility.reason})`
+      });
+    }
   }
 
   if (homeOpenGpsPanelBtn && !homeOpenGpsPanelBtn.dataset.bound) {
@@ -3969,56 +5695,162 @@ function initEventListeners() {
     });
   }
 
-  function savePedometerIfValid() {
-    if (!currentUser) return;
-    const upper = Number(profilePedometerUpper?.value);
-    const lower = Number(profilePedometerLower?.value);
-    if (!Number.isFinite(upper) || upper < 8 || upper > 20) {
-      showToast('Umbral alto debe estar entre 8 y 20.', 'error');
-      return;
-    }
-    if (!Number.isFinite(lower) || lower < 6 || lower > 18) {
-      showToast('Umbral bajo debe estar entre 6 y 18.', 'error');
-      return;
-    }
-    if (lower >= upper) {
-      showToast('El umbral bajo debe ser menor que el alto.', 'error');
-      return;
-    }
-    currentUser.pedometerUpper = upper;
-    currentUser.pedometerLower = lower;
-    saveUserData();
-    updatePedometerHelpText();
-    showToast('Sensibilidad del pedómetro guardada.', 'success');
-  }
-
-  if (profilePedometerUpper && !profilePedometerUpper.dataset.bound) {
-    profilePedometerUpper.dataset.bound = '1';
-    profilePedometerUpper.addEventListener('change', savePedometerIfValid);
-  }
-
-  if (profilePedometerLower && !profilePedometerLower.dataset.bound) {
-    profilePedometerLower.dataset.bound = '1';
-    profilePedometerLower.addEventListener('change', savePedometerIfValid);
-  }
-
-  if (profilePedometerModeSelect && !profilePedometerModeSelect.dataset.bound) {
-    profilePedometerModeSelect.dataset.bound = '1';
-    profilePedometerModeSelect.addEventListener('change', () => {
+  if (profileDietGoalSelect && !profileDietGoalSelect.dataset.bound) {
+    profileDietGoalSelect.dataset.bound = '1';
+    profileDietGoalSelect.addEventListener('change', () => {
       if (!currentUser) return;
-      const mode = PEDOMETER_MODES.includes(profilePedometerModeSelect.value) ? profilePedometerModeSelect.value : 'walk';
-      applyRecommendedPedometerSettings(mode);
+      const profile = ensureDietProfile();
+      if (!profile) return;
+      const goal = DIET_LIBRARY[profileDietGoalSelect.value] ? profileDietGoalSelect.value : 'maintain';
+      profile.goal = goal;
+      profile.kcalTarget = DIET_LIBRARY[goal].kcalDefault;
+      saveUserData();
+      renderDietCard();
+      showToast(`Objetivo nutricional: ${DIET_LIBRARY[goal].label}`, 'success');
     });
   }
 
-  if (profilePedometerRecommendedBtn && !profilePedometerRecommendedBtn.dataset.bound) {
-    profilePedometerRecommendedBtn.dataset.bound = '1';
-    profilePedometerRecommendedBtn.addEventListener('click', () => {
+  if (profileDietPreferenceSelect && !profileDietPreferenceSelect.dataset.bound) {
+    profileDietPreferenceSelect.dataset.bound = '1';
+    profileDietPreferenceSelect.addEventListener('change', () => {
       if (!currentUser) return;
-      const selectedMode = PEDOMETER_MODES.includes(profilePedometerModeSelect?.value)
-        ? profilePedometerModeSelect.value
-        : getPedometerMode();
-      applyRecommendedPedometerSettings(selectedMode);
+      const profile = ensureDietProfile();
+      if (!profile) return;
+      const preference = normalizeDietPreference(profileDietPreferenceSelect.value);
+      profile.preference = preference;
+      saveUserData();
+      renderDietCard();
+      showToast(preference === 'vegan' ? 'Dieta vegana activada.' : 'Dieta estándar activada.', 'success');
+    });
+  }
+
+  if (profileDietKcalTarget && !profileDietKcalTarget.dataset.bound) {
+    profileDietKcalTarget.dataset.bound = '1';
+    profileDietKcalTarget.addEventListener('change', () => {
+      if (!currentUser) return;
+      const profile = ensureDietProfile();
+      if (!profile) return;
+      const kcal = Math.max(1200, Math.min(4500, Number(profileDietKcalTarget.value) || profile.kcalTarget));
+      profile.kcalTarget = kcal;
+      saveUserData();
+      renderDietCard();
+      showToast(`Calorías objetivo: ${kcal} kcal`, 'success');
+    });
+  }
+
+  if (profileDietWeight && !profileDietWeight.dataset.bound) {
+    profileDietWeight.dataset.bound = '1';
+    profileDietWeight.addEventListener('change', () => {
+      if (!currentUser) return;
+      const profile = ensureDietProfile();
+      if (!profile) return;
+      const weightKg = Math.max(40, Math.min(180, Number(profileDietWeight.value) || profile.weightKg));
+      profile.weightKg = weightKg;
+      saveUserData();
+      renderDietCard();
+      showToast(`Peso actualizado: ${weightKg} kg`, 'success');
+    });
+  }
+
+  if (dietGramSummaryMode && !dietGramSummaryMode.dataset.bound) {
+    dietGramSummaryMode.dataset.bound = '1';
+    dietGramSummaryMode.addEventListener('change', () => {
+      if (!currentUser) return;
+      const profile = ensureDietProfile();
+      if (!profile) return;
+      profile.gramSummaryMode = dietGramSummaryMode.value === 'perMeal' ? 'perMeal' : 'daily';
+      saveUserData();
+      renderDietCard();
+      showToast(profile.gramSummaryMode === 'daily' ? 'Resumen diario activado.' : 'Resumen por comida activado.', 'success');
+    });
+  }
+
+  if (dietWaterPlusBtn && !dietWaterPlusBtn.dataset.bound) {
+    dietWaterPlusBtn.dataset.bound = '1';
+    dietWaterPlusBtn.addEventListener('click', () => {
+      if (!currentUser) return;
+      const profile = ensureDietProfile();
+      if (!profile) return;
+      profile.waterIntakeMl = Math.min(profile.waterGoalMl, profile.waterIntakeMl + 250);
+      saveUserData();
+      renderDietCard();
+    });
+  }
+
+  if (dietWaterMinusBtn && !dietWaterMinusBtn.dataset.bound) {
+    dietWaterMinusBtn.dataset.bound = '1';
+    dietWaterMinusBtn.addEventListener('click', () => {
+      if (!currentUser) return;
+      const profile = ensureDietProfile();
+      if (!profile) return;
+      profile.waterIntakeMl = Math.max(0, profile.waterIntakeMl - 250);
+      saveUserData();
+      renderDietCard();
+    });
+  }
+
+  if (dietWaterGoalInput && !dietWaterGoalInput.dataset.bound) {
+    dietWaterGoalInput.dataset.bound = '1';
+    dietWaterGoalInput.addEventListener('change', () => {
+      if (!currentUser) return;
+      const profile = ensureDietProfile();
+      if (!profile) return;
+      const newGoal = Math.max(1000, Math.min(5000, Number(dietWaterGoalInput.value) || profile.waterGoalMl));
+      profile.waterGoalMl = newGoal;
+      if (profile.waterIntakeMl > newGoal) {
+        profile.waterIntakeMl = newGoal;
+      }
+      saveUserData();
+      renderDietCard();
+      showToast(`Objetivo de agua: ${newGoal} ml`, 'success');
+    });
+  }
+
+  if (dietMealList && !dietMealList.dataset.bound) {
+    dietMealList.dataset.bound = '1';
+    dietMealList.addEventListener('change', (event) => {
+      const check = event.target.closest('.diet-meal-check');
+      if (!check || !currentUser) return;
+      const profile = ensureDietProfile();
+      if (!profile) return;
+      const mealKey = check.dataset.mealKey;
+      if (!mealKey) return;
+      const todayKey = getTodayKey();
+      if (!profile.checksByDate[todayKey]) profile.checksByDate[todayKey] = {};
+      profile.checksByDate[todayKey][mealKey] = check.checked === true;
+      saveUserData();
+      renderDietCard();
+    });
+  }
+
+  if (dietResetDayBtn && !dietResetDayBtn.dataset.bound) {
+    dietResetDayBtn.dataset.bound = '1';
+    dietResetDayBtn.addEventListener('click', () => {
+      if (!currentUser) return;
+      const profile = ensureDietProfile();
+      if (!profile) return;
+      const todayKey = getTodayKey();
+      const dayData = getCurrentDietDayData();
+      const mealKeys = dayData ? dayData.meals.map(([mealKey]) => mealKey) : [];
+      profile.checksByDate[todayKey] = {};
+      mealKeys.forEach((mealKey) => {
+        profile.checksByDate[todayKey][mealKey] = false;
+      });
+      profile.waterIntakeMl = 0;
+      profile.waterDate = todayKey;
+      saveUserData();
+      renderDietCard();
+      showToast('Seguimiento de dieta reiniciado para hoy.', 'success');
+    });
+  }
+
+  if (dietShow30DaysBtn && !dietShow30DaysBtn.dataset.bound) {
+    dietShow30DaysBtn.dataset.bound = '1';
+    dietShow30DaysBtn.addEventListener('click', () => {
+      if (!currentUser) return;
+      ensureDietProfile();
+      dietNext30Open = !dietNext30Open;
+      renderDietCard();
     });
   }
 
@@ -4207,10 +6039,11 @@ function initBottomNavigation() {
     entrenamientos: trainingView,
     'mis-rutas': myRoutesView,
     calendario: calendarView,
-    yo: profileModal
+    yo: profileModal,
+    dieta: dietView
   };
 
-  const NAV_ORDER = ['inicio', 'entrenamientos', 'mis-rutas', 'calendario', 'yo'];
+  const NAV_ORDER = ['inicio', 'entrenamientos', 'dieta', 'calendario', 'yo'];
 
   function moveIndicator(idx) {
     const indicator = document.getElementById('bottomNavIndicator');
@@ -4222,8 +6055,9 @@ function initBottomNavigation() {
   }
 
   function setActiveBottomNav(navKey) {
+    const safeNavKey = (navKey === 'mis-rutas') ? 'inicio' : navKey;
     bottomNav.querySelectorAll('.bottom-nav-btn').forEach((btn) => {
-      const isActive = btn.dataset.nav === navKey;
+      const isActive = btn.dataset.nav === safeNavKey;
       btn.classList.toggle('active', isActive);
       if (isActive) {
         btn.setAttribute('aria-current', 'page');
@@ -4231,11 +6065,13 @@ function initBottomNavigation() {
         btn.removeAttribute('aria-current');
       }
     });
-    const idx = NAV_ORDER.indexOf(navKey);
+    const idx = NAV_ORDER.indexOf(safeNavKey);
     moveIndicator(idx >= 0 ? idx : 0);
   }
 
   function showAppView(navKey) {
+    document.body.classList.toggle('my-routes-open', navKey === 'mis-rutas');
+
     Object.entries(sectionByNav).forEach(([key, section]) => {
       if (!section) return;
       const isActive = key === navKey;
@@ -4248,7 +6084,8 @@ function initBottomNavigation() {
       entrenamientos: 'Entrenamientos',
       'mis-rutas': 'Mis rutas',
       calendario: 'Perspectivas',
-      yo: 'Tu perfil'
+      yo: 'Tu perfil',
+      dieta: 'Dietas'
     };
     if (NAV_LABELS[navKey]) speakGpsMessage(NAV_LABELS[navKey], { plain: true });
 
@@ -4271,8 +6108,15 @@ function initBottomNavigation() {
       renderBadges();
     }
 
+    if (navKey === 'dieta') {
+      renderDietCard();
+    }
+
     if (navKey === 'calendario') {
       requestAnimationFrame(() => {
+        updateProfileModal();
+        checkBadges();
+        renderBadges();
         updateChart();
         renderCalendarTrainingLog();
         renderPerspectivas();
@@ -4293,6 +6137,26 @@ function initBottomNavigation() {
     }
 
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  if (homeGpsMyRoutesBtn && !homeGpsMyRoutesBtn.dataset.bound) {
+    homeGpsMyRoutesBtn.dataset.bound = '1';
+    homeGpsMyRoutesBtn.addEventListener('click', () => {
+      closeGpsSettingsPanel();
+      closeHomeGpsPanel();
+      showAppView('mis-rutas');
+    });
+  }
+
+  if (myRoutesBackBtn && !myRoutesBackBtn.dataset.bound) {
+    myRoutesBackBtn.dataset.bound = '1';
+    myRoutesBackBtn.addEventListener('click', () => {
+      showAppView('inicio');
+      requestAnimationFrame(() => {
+        openHomeGpsPanel();
+        openGpsSettingsPanel();
+      });
+    });
   }
 
   bottomNav.addEventListener('click', (event) => {
@@ -4321,6 +6185,7 @@ function initBottomNavigation() {
   }, { passive: true });
 
   showAppView('inicio');
+  window.openDietView = () => showAppView('dieta');
   requestAnimationFrame(() => moveIndicator(0));
 }
 
@@ -5048,7 +6913,9 @@ function getLevelLabel(level) {
 }
 
 function isRestDay(description = '') {
-  return /descanso|recuperaci[oó]n/i.test(description.toLowerCase());
+  const normalized = String(description || '').trim().toLowerCase();
+  // Considerar descanso solo cuando la sesión empieza como día de descanso/recuperación.
+  return /^(descanso|recuperaci[oó]n)\b/i.test(normalized);
 }
 
 function getWeekTrainingStats(weekIndex) {
@@ -5144,11 +7011,9 @@ function updateProfileModal() {
   if (profileMinStepsHelp) {
     profileMinStepsHelp.textContent = `Objetivo actual en Inicio: ${getHomeStepsGoal().toLocaleString('es-ES')} pasos.`;
   }
-  const { upperThreshold, lowerThreshold } = getPedometerThresholds();
-  if (profilePedometerUpper) profilePedometerUpper.value = String(upperThreshold);
-  if (profilePedometerLower) profilePedometerLower.value = String(lowerThreshold);
-  if (profilePedometerModeSelect) profilePedometerModeSelect.value = getPedometerMode();
-  updatePedometerHelpText();
+
+  ensureDietProfile();
+  renderDietCard();
 
   populateCoachVoiceOptions().then(() => {
     updateCoachControlsFromSettings();
@@ -5229,7 +7094,7 @@ function initApp() {
   }
 }
 
-function cambiarPlan(tipo, { showMotivationalBubble = false } = {}) {
+function cambiarPlan(tipo, { showMotivationalBubble = true } = {}) {
   if (!currentUser) return;
   
   // Cerrar todos los desplegables de semanas del plan anterior
@@ -5255,7 +7120,7 @@ function cambiarPlan(tipo, { showMotivationalBubble = false } = {}) {
   });
   
   // Marcar la tarjeta activa
-  const planIndex = ['sobrepeso', '30min', '5k', '10k', '20k', 'maraton', 'trail', 'hiit', 'fartlek'].indexOf(tipo);
+  const planIndex = ['sobrepeso', '30min', '5k', '10k', '20k', 'maraton', 'trail', 'hiit', 'fartlek', 'ejercicios'].indexOf(tipo);
   if (planIndex >= 0) {
     const cards = document.querySelectorAll('.plan-card');
     if (cards[planIndex]) {
@@ -5337,13 +7202,20 @@ function renderWeeks() {
     }
   };
 
-  diasSemana.forEach(([day, description], dayIndex) => {
+  const isInfoOnlyPlan = planActual === 'ejercicios';
+
+    diasSemana.forEach(([day, description], dayIndex) => {
       const dayItem = document.createElement("div");
       dayItem.className = "day-item";
 
+      const effectiveDescription = planActual === 'hiit'
+        ? getAdjustedHiitDescriptionByLevel(description, currentUser?.level)
+        : description;
+      const displayDescription = getTrainingDescriptionForDisplay(planActual, description, currentUser?.level);
+
       const dayText = document.createElement("div");
       dayText.className = "day-text-wrap";
-      dayText.innerHTML = `<span class="day-name-badge">${day}</span><span class="day-description">${description}</span>`;
+      dayText.innerHTML = `<span class="day-name-badge">${day}</span><span class="day-description">${displayDescription}</span>`;
 
       const actionsDiv = document.createElement("div");
       actionsDiv.className = "actions";
@@ -5361,21 +7233,29 @@ function renderWeeks() {
 
       const timerButton = document.createElement("button");
       const hasTimer = hasTimerPreset(description);
-      if (hasTimer) {
+      if (isInfoOnlyPlan) {
+        timerButton.className = "btn btn-sm btn-secondary";
+        timerButton.innerHTML = 'Ver rutina';
+        timerButton.onclick = (e) => {
+            e.stopPropagation();
+            speakGpsMessage(`${day}. ${displayDescription}`, { plain: true });
+            showToast('Rutina del día cargada.', 'success');
+        };
+      } else if (hasTimer) {
         timerButton.className = "btn btn-sm btn-secondary";
         timerButton.innerHTML = '⏱️ Temporizador';
         timerButton.onclick = (e) => {
             e.stopPropagation();
-            speakGpsMessage(`${day}. ${description}`);
-            openTimerModal(description);
+            speakGpsMessage(`${day}. ${displayDescription}`);
+            openTimerModal(effectiveDescription);
         };
       } else {
         timerButton.className = "btn btn-sm btn-secondary";
         timerButton.innerHTML = '📍 Iniciar Entrenamiento';
         timerButton.onclick = (e) => {
             e.stopPropagation();
-            speakGpsMessage(`${day}. ${description}`);
-            openDistanceModal(description, weekIndex, dayIndex);
+            speakGpsMessage(`${day}. ${displayDescription}`);
+            openDistanceModal(effectiveDescription, weekIndex, dayIndex);
         };
       }
 
@@ -6490,8 +8370,29 @@ function disableWakeLock() {
 document.addEventListener("visibilitychange", () => {
   if (document.visibilityState === "visible") {
     enableWakeLock();
+    if (currentUser) {
+      ensureHomeDailyData();
+      renderHomeDashboard();
+      // Pedir snapshot actual al plugin para capturar pasos hechos en segundo plano
+      if (homeMotionEnabled) {
+        const plugin = getNativeStepCounterPlugin();
+        if (plugin && typeof plugin.getSnapshot === 'function') {
+          plugin.getSnapshot().then(snapshot => {
+            if (snapshot) applyNativeStepCounterUpdate(snapshot);
+          }).catch(() => {});
+        }
+      }
+      // Sincronizar con Health Connect para recuperar pasos acumulados mientras la app estuvo cerrada/en background
+      const healthSyncCompatibility = getStepHealthSyncCompatibility();
+      if (healthSyncCompatibility.compatible) {
+        syncExternalDailySteps({ requestPermissions: getHomeTotalSteps() <= 0 && !homeHealthPermissionPrompted, force: true }).catch((err) => {
+          console.warn('No se pudo sincronizar pasos del sistema al reanudar:', err?.message || err);
+        });
+      }
+    }
   } else {
     disableWakeLock();
+    if (homeDailyData) saveHomeDailyData();
   }
 });
 

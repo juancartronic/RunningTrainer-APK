@@ -10,6 +10,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="styles.css?v=20260517a">
 </head>
 <body>
@@ -211,6 +212,15 @@
           <div class="plan-badge">6 semanas</div>
         </div>
       </div>
+
+      <div class="plan-card" onclick="cambiarPlan('ejercicios')">
+        <div class="plan-circle"><span class="plan-icon">🏋️</span></div>
+        <div class="plan-text-wrap">
+          <h3 class="plan-title">Ejercicios</h3>
+          <p class="plan-description">Rutinas de fuerza y core</p>
+          <div class="plan-badge">4 semanas</div>
+        </div>
+      </div>
     </div>
     <div id="motivationalMessage" class="motivational-card low"></div>
     <div id="weeksDefaultAnchor"></div>
@@ -238,6 +248,10 @@
         <div id="perspectiveChartSummary" class="perspective-chart-summary"></div>
 
         <div class="perspective-chart-card">
+          <div class="perspective-chart-header">
+            <span id="perspectiveChartTitle" class="perspective-chart-title">Pasos</span>
+            <span id="perspectiveChartBadge" class="perspective-chart-badge">Últimos 7 días</span>
+          </div>
           <canvas id="perspectivesChart" width="400" height="220"></canvas>
         </div>
 
@@ -264,10 +278,32 @@
         </div>
         <canvas id="progressChart" width="400" height="220"></canvas>
       </div>
+
+      <div class="xp-section">
+        <div class="xp-header">
+          <span class="xp-label">Experiencia (XP)</span>
+          <span class="xp-current" id="profileXP">0 / 300 XP</span>
+        </div>
+        <div class="xp-bar-container">
+          <div class="xp-bar" id="profileXPBar" style="width: 0%"></div>
+        </div>
+        <div class="xp-next-level" id="profileNextLevel">Siguiente nivel: Intermedio</div>
+      </div>
+
+      <div class="badges-container">
+        <div class="badges-title">🏆 Mis Logros</div>
+        <div class="badges-grid" id="badgesGrid"></div>
+      </div>
     </section>
 
     <section id="myRoutesSection" class="app-view my-routes-view">
       <div class="my-routes-card">
+        <div class="my-routes-topbar">
+          <button id="myRoutesBackBtn" type="button" class="home-gps-icon-btn" aria-label="Volver a Ajustes GPS">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+          </button>
+        </div>
+
         <div class="my-routes-actions">
           <button id="myRoutesImportBtn" type="button" class="btn btn-primary my-routes-btn">Añadir</button>
           <button id="myRoutesClearActiveBtn" type="button" class="btn btn-secondary my-routes-btn">Borrar</button>
@@ -355,22 +391,6 @@
           </div>
         </div>
 
-        <div class="xp-section">
-          <div class="xp-header">
-            <span class="xp-label">Experiencia (XP)</span>
-            <span class="xp-current" id="profileXP">0 / 300 XP</span>
-          </div>
-          <div class="xp-bar-container">
-            <div class="xp-bar" id="profileXPBar" style="width: 0%"></div>
-          </div>
-          <div class="xp-next-level" id="profileNextLevel">Siguiente nivel: Intermedio</div>
-        </div>
-
-        <div class="badges-container">
-          <div class="badges-title">🏆 Mis Logros</div>
-          <div class="badges-grid" id="badgesGrid"></div>
-        </div>
-
         <div class="profile-stats">
           <div class="stat-item">
             <span>Plan actual:</span>
@@ -410,6 +430,123 @@
       </div>
     </section>
 
+    <section id="dietSection" class="app-view">
+      <div class="diet-screen-shell">
+
+
+        <div class="diet-overview-card">
+          <div class="diet-overview-head">
+            <span class="diet-card-pill">Nutrición</span>
+            <span id="dietOverviewCalories" class="diet-overview-kcal">0 kcal/día</span>
+          </div>
+          <p id="dietOverviewFocus" class="diet-overview-line">-</p>
+          <div class="diet-overview-macros">
+            <div class="diet-overview-macro">
+              <strong id="dietOverviewProtein">0g</strong>
+              <small>Proteína</small>
+            </div>
+            <div class="diet-overview-macro">
+              <strong id="dietOverviewCarbs">0g</strong>
+              <small>Carbohidratos</small>
+            </div>
+            <div class="diet-overview-macro">
+              <strong id="dietOverviewFats">0g</strong>
+              <small>Grasas</small>
+            </div>
+          </div>
+          <label class="diet-control" style="margin-top: 0.65rem;">
+            <span>Resumen de gramos</span>
+            <select id="dietGramSummaryMode" class="home-gps-setting-input">
+              <option value="daily">Totales diarios</option>
+              <option value="perMeal">Distribución por comida</option>
+            </select>
+          </label>
+          <p id="dietOverviewGramSummary" class="diet-overview-line">Totales diarios: Proteína 0g | Carbohidratos 0g | Grasas 0g.</p>
+          <p id="dietOverviewWeekSummary" class="diet-overview-line">Próximos 7 días (estimado): 0 kcal | P 0g | C 0g | G 0g | Agua 0.0 L.</p>
+          <p id="dietOverviewHydration" class="diet-overview-line">Hidratación recomendada: 2.0 L</p>
+          <p id="dietOverviewStrategy" class="diet-overview-line">-</p>
+          <p id="dietOverviewPre" class="diet-overview-line">-</p>
+          <p id="dietOverviewPost" class="diet-overview-line">-</p>
+          <p id="dietOverviewMicros" class="diet-overview-line">-</p>
+        </div>
+
+        <div class="diet-card" id="dietDailyCard">
+          <div class="diet-card-head">
+            <h3>Plan semanal</h3>
+            <span id="dietMonthWeekInfo" class="diet-card-pill">Semana 1 de 4</span>
+          </div>
+
+          <p class="diet-card-subtitle">Organiza tus comidas e hidratación diaria.</p>
+
+          <div class="diet-controls-grid">
+            <label class="diet-control">
+              <span>Objetivo</span>
+              <select id="profileDietGoalSelect" class="home-gps-setting-input">
+                <option value="cut">Definición</option>
+                <option value="maintain">Mantenimiento</option>
+                <option value="bulk">Ganancia muscular</option>
+              </select>
+            </label>
+
+            <label class="diet-control">
+              <span>Preferencia</span>
+              <select id="profileDietPreferenceSelect" class="home-gps-setting-input">
+                <option value="standard">Estándar</option>
+                <option value="vegan">Vegana</option>
+              </select>
+            </label>
+
+            <label class="diet-control">
+              <span>Calorías objetivo</span>
+              <input id="profileDietKcalTarget" class="home-gps-setting-input" type="number" min="1200" max="4500" step="50" inputmode="numeric" placeholder="2200">
+            </label>
+
+            <label class="diet-control">
+              <span>Peso corporal (kg)</span>
+              <input id="profileDietWeight" class="home-gps-setting-input" type="number" min="40" max="180" step="0.5" inputmode="decimal" placeholder="70">
+            </label>
+          </div>
+
+          <div class="diet-water-card">
+            <div class="diet-water-head">
+              <strong>Hidratación diaria</strong>
+              <small><span id="dietWaterValue">0</span> / <span id="dietWaterGoalValue">2000</span> ml</small>
+            </div>
+            <div class="diet-water-actions">
+              <button id="dietWaterMinusBtn" type="button" class="btn btn-secondary btn-sm">-250 ml</button>
+              <button id="dietWaterPlusBtn" type="button" class="btn btn-primary btn-sm">+250 ml</button>
+            </div>
+            <label class="diet-control diet-water-goal-edit">
+              <span>Objetivo de agua (ml)</span>
+              <input id="dietWaterGoalInput" class="home-gps-setting-input" type="number" min="1000" max="5000" step="250" inputmode="numeric" placeholder="2000">
+            </label>
+          </div>
+
+          <div class="diet-day-card">
+            <div class="diet-day-head">
+              <strong>Comidas de hoy</strong>
+              <span id="dietCompletionPct">0%</span>
+            </div>
+            <div class="diet-completion-bar">
+              <div id="dietCompletionBar" class="diet-completion-fill" style="width: 0%"></div>
+            </div>
+            <div id="dietMealList" class="diet-meal-list"></div>
+          </div>
+
+          <div class="diet-card-footer">
+            <button id="dietResetDayBtn" type="button" class="btn btn-secondary btn-sm">Reiniciar día</button>
+            <button id="dietShow30DaysBtn" type="button" class="btn btn-secondary btn-sm">Ver próximos 30 días</button>
+          </div>
+          <div id="dietNext30DaysPanel" class="diet-next30-panel hidden">
+            <div class="diet-next30-head">
+              <strong>Dieta detallada de los próximos 30 días</strong>
+            </div>
+            <div id="dietNext30DaysList" class="diet-next30-list"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
   </div>
 
   <nav id="bottomNav" class="bottom-nav" aria-label="Navegacion principal">
@@ -430,12 +567,14 @@
       <span class="bnav-label">Entrenamientos</span>
     </button>
 
-    <button type="button" class="bottom-nav-btn" data-nav="mis-rutas" data-target="homeSection">
+    <button type="button" class="bottom-nav-btn" data-nav="dieta">
       <svg class="bnav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <path d="M3 7h5l2 3h11"></path>
-        <path d="M3 17h6l2-4h10"></path>
+        <line x1="8" y1="2" x2="8" y2="22"/>
+        <path d="M5 2v6a3 3 0 0 0 6 0V2"/>
+        <line x1="16" y1="2" x2="16" y2="22"/>
+        <path d="M19 2v4a3 3 0 0 1-3 3v13"/>
       </svg>
-      <span class="bnav-label">Mis rutas</span>
+      <span class="bnav-label">Dietas</span>
     </button>
 
     <button type="button" class="bottom-nav-btn" data-nav="calendario" data-target="calendarSection">
@@ -744,22 +883,12 @@
 
           <div class="home-gps-setting-row home-gps-setting-row--col">
             <div class="home-gps-setting-info">
-              <span class="home-gps-setting-label">Sensibilidad del pedómetro</span>
-              <span class="home-gps-setting-desc">Ajusta si el contador detecta pocos o demasiados pasos. Valores por defecto: alto 12.2 / bajo 10.5.</span>
+              <span class="home-gps-setting-label">Mis rutas</span>
+              <span class="home-gps-setting-desc">Abre y gestiona todas tus rutas guardadas.</span>
             </div>
             <div class="home-gps-setting-controls">
-              <label class="home-gps-setting-sublabel" for="profilePedometerModeSelect">Modo</label>
-              <select id="profilePedometerModeSelect" class="home-gps-setting-input home-gps-setting-input--sm">
-                <option value="walk">Caminar</option>
-                <option value="run">Correr</option>
-              </select>
-              <label class="home-gps-setting-sublabel">Umbral alto</label>
-              <input id="profilePedometerUpper" type="number" min="8" max="20" step="0.1" inputmode="decimal" placeholder="12.2" class="home-gps-setting-input home-gps-setting-input--sm">
-              <label class="home-gps-setting-sublabel">Umbral bajo</label>
-              <input id="profilePedometerLower" type="number" min="6" max="18" step="0.1" inputmode="decimal" placeholder="10.5" class="home-gps-setting-input home-gps-setting-input--sm">
-              <button id="profilePedometerRecommendedBtn" type="button" class="btn btn-secondary btn-sm">Aplicar valores recomendados</button>
+              <button id="homeGpsMyRoutesBtn" type="button" class="btn btn-secondary btn-sm">Abrir Mis rutas</button>
             </div>
-            <div id="profilePedometerHelp" class="home-gps-setting-desc" style="margin-top:4px;"></div>
           </div>
 
         </div>
@@ -799,7 +928,7 @@
 
   <script src="data.js"></script>
   <script src="gps.js"></script>
-  <script src="app.js?v=20260517a"></script>
+  <script src="app.js?v=20260605c"></script>
   <script src="runningtrainer.config.js"></script>
 </body>
 </html>
