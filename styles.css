@@ -1994,32 +1994,47 @@ body.dark-mode .home-welcome-card {
   align-items: center;
   justify-content: center;
   text-align: center;
-  padding: 16px;
+  padding: clamp(10px, 2.2vw, 16px) clamp(12px, 3vw, 20px);
+  gap: clamp(2px, 0.8vw, 7px);
 }
 
 .home-steps-label {
-  font-size: 1.05rem;
+  font-size: clamp(0.98rem, 2.8vw, 1.08rem);
   color: var(--text-secondary);
-  margin-bottom: 6px;
+  margin: 0;
+  line-height: 1;
 }
 
 .home-steps-value {
-  font-size: clamp(2.5rem, 12vw, 5.3rem);
+  font-size: clamp(2rem, 9vw, 4.5rem);
   font-weight: 800;
   color: #0ea5e9;
   letter-spacing: 0.02em;
-  line-height: 0.95;
+  line-height: 0.9;
 }
 
 .home-steps-goal {
-  margin-top: 6px;
-  font-size: clamp(0.82rem, 2.6vw, 1rem);
+  margin-top: 0;
+  font-size: clamp(0.72rem, 2.15vw, 0.9rem);
   color: var(--text-primary);
+  max-width: min(66%, 148px);
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  line-height: 1.18;
+}
+
+.home-steps-goal #homeStepsGoal {
+  display: block;
+  font-weight: 700;
+  line-height: 1;
 }
 
 .home-steps-progress {
-  margin-top: 4px;
-  font-size: clamp(0.8rem, 2.4vw, 1rem);
+  margin-top: 0;
+  font-size: clamp(0.7rem, 2vw, 0.88rem);
+  line-height: 1.1;
   color: #94a3b8;
 }
 
