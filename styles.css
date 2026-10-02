@@ -1049,6 +1049,309 @@ body.dark-mode .profile-modal-overlay .profile-modal-content input[type="passwor
   z-index: 2;
 }
 
+/* --- MODAL DE RUTINA ILUSTRADA --- */
+.routine-modal-content {
+  width: min(100%, 640px);
+  max-height: min(calc(100dvh - 24px), 760px);
+  text-align: left;
+  gap: 0.9rem;
+}
+
+.routine-modal-top {
+  align-items: flex-start;
+  text-align: left;
+  gap: 0.45rem;
+  padding-right: 2rem;
+}
+
+.routine-modal-day {
+  margin: 0;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: #1d4ed8;
+  background: #dbeafe;
+}
+
+.routine-modal-summary {
+  margin: 0;
+  line-height: 1.45;
+  color: #475569;
+}
+
+.routine-exercise-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+.routine-exercise-list.single-exercise {
+  gap: 0;
+}
+
+.routine-ex-item {
+  display: grid;
+  grid-template-columns: 118px minmax(0, 1fr);
+  gap: 0.75rem;
+  align-items: center;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 0.6rem;
+  background: linear-gradient(135deg, #f8fbff, #f1f5f9);
+}
+
+.routine-ex-item-single {
+  grid-template-columns: minmax(140px, 210px) minmax(0, 1fr);
+  padding: 0.75rem;
+}
+
+.routine-ex-item-single .routine-ex-figure-wrap {
+  max-width: 210px;
+  min-height: 118px;
+}
+
+.routine-ex-item-single .exercise-figure-svg {
+  height: 118px;
+}
+
+.routine-ex-item-single .routine-ex-text {
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.routine-ex-figure-wrap {
+  width: 100%;
+  min-height: 94px;
+}
+
+.exercise-figure-svg {
+  width: 100%;
+  height: 96px;
+  display: block;
+}
+
+.exercise-figure-bg {
+  fill: #ffffff;
+  stroke: #dbe7f7;
+  stroke-width: 1.2;
+}
+
+.exercise-floor {
+  stroke: #cbd5e1;
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+.figure-head {
+  fill: var(--figure-color, #2563eb);
+  fill-opacity: 0.2;
+  stroke: var(--figure-color, #2563eb);
+  stroke-width: 2.2;
+}
+
+.figure-part {
+  stroke: var(--figure-color, #2563eb);
+  stroke-width: 4;
+  stroke-linecap: round;
+}
+
+.figure-character {
+  transform-origin: 50% 60%;
+  animation: routineFigureFloat 2.6s ease-in-out infinite;
+}
+
+.figure-prop {
+  stroke: var(--figure-color, #1d4ed8);
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+
+.figure-prop-weight {
+  fill: var(--figure-color, #1d4ed8);
+  opacity: 0.3;
+  stroke: var(--figure-color, #1d4ed8);
+  stroke-width: 2;
+}
+
+.figure-rest-wave {
+  fill: none;
+  stroke: var(--figure-color, #64748b);
+  stroke-width: 2;
+  stroke-linecap: round;
+  opacity: 0.8;
+}
+
+.exercise-figure-svg .figure-arm,
+.exercise-figure-svg .figure-leg {
+  transform-box: fill-box;
+  transform-origin: top center;
+}
+
+.exercise-figure-svg.type-run { --figure-color: #2563eb; }
+.exercise-figure-svg.type-squat { --figure-color: #ef4444; }
+.exercise-figure-svg.type-lunge { --figure-color: #f97316; }
+.exercise-figure-svg.type-plank { --figure-color: #7c3aed; }
+.exercise-figure-svg.type-pushup { --figure-color: #22c55e; }
+.exercise-figure-svg.type-burpee { --figure-color: #ec4899; }
+.exercise-figure-svg.type-climber { --figure-color: #0ea5e9; }
+.exercise-figure-svg.type-strength { --figure-color: #f59e0b; }
+.exercise-figure-svg.type-core { --figure-color: #8b5cf6; }
+.exercise-figure-svg.type-mobility { --figure-color: #10b981; }
+.exercise-figure-svg.type-rest { --figure-color: #64748b; }
+
+.exercise-figure-svg.type-run .arm-left,
+.exercise-figure-svg.type-run .leg-right {
+  animation: routineLimbLeft 0.85s ease-in-out infinite;
+}
+
+.exercise-figure-svg.type-run .arm-right,
+.exercise-figure-svg.type-run .leg-left {
+  animation: routineLimbRight 0.85s ease-in-out infinite;
+}
+
+.exercise-figure-svg.type-squat .figure-character {
+  animation: routineSquatPulse 1.2s ease-in-out infinite;
+}
+
+.exercise-figure-svg.type-lunge .figure-character {
+  animation: routineLungeDrive 1.2s ease-in-out infinite;
+}
+
+.exercise-figure-svg.type-burpee .figure-character {
+  animation: routineBurpeePulse 1s ease-in-out infinite;
+}
+
+.exercise-figure-svg.type-climber .figure-character {
+  animation: routineClimberDrive 0.95s ease-in-out infinite;
+}
+
+.exercise-figure-svg.type-core .figure-character,
+.exercise-figure-svg.type-plank .figure-character,
+.exercise-figure-svg.type-pushup .figure-character {
+  animation: routineCorePulse 1.8s ease-in-out infinite;
+}
+
+.exercise-figure-svg.type-rest .figure-character {
+  animation-duration: 3.4s;
+}
+
+.routine-ex-content {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.routine-ex-chip {
+  width: fit-content;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  border-radius: 999px;
+  padding: 3px 9px;
+}
+
+.routine-ex-chip.tone-run { background: #dbeafe; color: #1d4ed8; }
+.routine-ex-chip.tone-squat { background: #fee2e2; color: #b91c1c; }
+.routine-ex-chip.tone-lunge { background: #ffedd5; color: #c2410c; }
+.routine-ex-chip.tone-plank { background: #ede9fe; color: #5b21b6; }
+.routine-ex-chip.tone-pushup { background: #dcfce7; color: #166534; }
+.routine-ex-chip.tone-burpee { background: #fce7f3; color: #9d174d; }
+.routine-ex-chip.tone-climber { background: #cffafe; color: #0e7490; }
+.routine-ex-chip.tone-strength { background: #fef3c7; color: #92400e; }
+.routine-ex-chip.tone-core { background: #ede9fe; color: #6d28d9; }
+.routine-ex-chip.tone-mobility { background: #d1fae5; color: #047857; }
+.routine-ex-chip.tone-rest { background: #e2e8f0; color: #475569; }
+.routine-ex-chip.tone-generic { background: #e2e8f0; color: #334155; }
+
+.routine-ex-text {
+  margin: 0;
+  color: #1e293b;
+  line-height: 1.4;
+  font-size: 0.87rem;
+  word-break: break-word;
+}
+
+.routine-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 0.2rem;
+}
+
+body.dark-mode .routine-modal-content {
+  background: #0f172a;
+}
+
+body.dark-mode .routine-modal-day {
+  background: #1e3a8a;
+  color: #dbeafe;
+}
+
+body.dark-mode .routine-modal-summary,
+body.dark-mode .routine-ex-text {
+  color: #cbd5e1;
+}
+
+body.dark-mode .routine-ex-item {
+  border-color: #334155;
+  background: linear-gradient(135deg, #0b1a2e, #111827);
+}
+
+body.dark-mode .exercise-floor {
+  stroke: #334155;
+}
+
+body.dark-mode .exercise-figure-bg {
+  fill: #0f172a;
+  stroke: #334155;
+}
+
+@keyframes routineFigureFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-2px); }
+}
+
+@keyframes routineLimbLeft {
+  0%, 100% { transform: rotate(-8deg); }
+  50% { transform: rotate(14deg); }
+}
+
+@keyframes routineLimbRight {
+  0%, 100% { transform: rotate(10deg); }
+  50% { transform: rotate(-14deg); }
+}
+
+@keyframes routineSquatPulse {
+  0%, 100% { transform: translateY(0) scaleY(1); }
+  50% { transform: translateY(6px) scaleY(0.96); }
+}
+
+@keyframes routineLungeDrive {
+  0%, 100% { transform: translateX(0) translateY(0); }
+  50% { transform: translateX(4px) translateY(3px); }
+}
+
+@keyframes routineBurpeePulse {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(4px) scale(0.95); }
+}
+
+@keyframes routineClimberDrive {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(-4px); }
+}
+
+@keyframes routineCorePulse {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-1px) scale(1.02); }
+}
+
 @media (max-width: 768px) {
   .timer-modal-content {
     width: min(100%, 440px);
@@ -1064,6 +1367,18 @@ body.dark-mode .profile-modal-overlay .profile-modal-content input[type="passwor
     min-width: 92px;
     padding: 0.6rem 0.45rem;
     font-size: 0.9rem;
+  }
+
+  .routine-modal-content {
+    width: min(100%, 520px);
+  }
+
+  .routine-ex-item {
+    grid-template-columns: 106px minmax(0, 1fr);
+  }
+
+  .routine-ex-item-single {
+    grid-template-columns: 128px minmax(0, 1fr);
   }
   
   .plans-grid {
@@ -1157,6 +1472,43 @@ body.dark-mode .profile-modal-overlay .profile-modal-content input[type="passwor
     min-width: 84px;
     font-size: 0.82rem;
     padding: 0.55rem 0.35rem;
+  }
+
+  .routine-modal-content {
+    margin-top: 6px;
+    width: 100%;
+    max-height: calc(100dvh - 16px);
+    padding: 0.85rem;
+  }
+
+  .routine-modal-top {
+    padding-right: 1.5rem;
+  }
+
+  .routine-ex-item {
+    grid-template-columns: 1fr;
+    gap: 0.55rem;
+  }
+
+  .routine-ex-item-single {
+    text-align: center;
+  }
+
+  .routine-ex-figure-wrap {
+    max-width: 126px;
+  }
+
+  .routine-ex-item-single .routine-ex-figure-wrap {
+    max-width: 150px;
+    margin: 0 auto;
+  }
+
+  .routine-ex-item-single .routine-ex-chip {
+    margin: 0 auto;
+  }
+
+  .routine-modal-actions .btn {
+    width: 100%;
   }
 
   .sound-controls {
@@ -2804,12 +3156,20 @@ body.dark-mode .home-route-gps-btn--unload {
 .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(59, 130, 246, 0.3); }
 .btn-secondary { background: var(--light); color: var(--dark); border: 1px solid #e2e8f0; }
 .btn-secondary:hover { background: white; transform: translateY(-2px); }
+.btn-routine { background: linear-gradient(135deg, #e0f2fe, #dbeafe); color: #1d4ed8; border: 1px solid #bfdbfe; }
+.btn-routine:hover { background: linear-gradient(135deg, #eff6ff, #dbeafe); transform: translateY(-1px); }
 .btn-danger { background: var(--danger); color: white; }
 .btn-warning { background: var(--warning); color: white; }
 .btn-success { background: var(--success); color: white; }
 .btn-icon { margin-right: 8px; }
 .btn.completed { background: #9ca3af; text-decoration: line-through; box-shadow: none; }
 .btn-sm { padding: 6px 12px; font-size: 0.8rem; }
+
+body.dark-mode .btn-routine {
+  background: linear-gradient(135deg, #0f172a, #1e3a8a);
+  color: #dbeafe;
+  border: 1px solid #1d4ed8;
+}
 .controls { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin-bottom: 50px; }
 
 /* --- ESTILOS DE TARJETAS DE PLANES CON CÍRCULOS --- */
@@ -3110,7 +3470,19 @@ body.dark-mode .plan-card.active .plan-title {
 
 /* Acciones del día */
 .day-item .actions {
-  display: flex; gap: 6px; align-items: center; flex-shrink: 0;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  flex-shrink: 0;
+}
+
+.day-item .actions .btn-sm {
+  flex: 0 0 auto;
+  min-width: 0;
+  padding: 5px 9px;
+  font-size: 0.74rem;
 }
 
 /* Día de descanso */

@@ -791,6 +791,23 @@
     </div>
   </div>
 
+  <div id="routineModal" class="timer-modal-overlay routine-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="routineModalTitle">
+    <div class="timer-modal-content routine-modal-content">
+      <button id="closeRoutineModalBtn" class="timer-modal-close" aria-label="Cerrar rutina">&times;</button>
+      <div class="timer-top routine-modal-top">
+        <h2 id="routineModalTitle" class="section-title timer-title">🖼 Ver rutina</h2>
+        <p id="routineModalDay" class="routine-modal-day">Lunes · Semana 1</p>
+        <p id="routineModalSummary" class="timer-workout-title routine-modal-summary">Resumen del entrenamiento</p>
+      </div>
+
+      <ul id="routineExerciseList" class="routine-exercise-list" aria-live="polite"></ul>
+
+      <div class="routine-modal-actions">
+        <button id="routinePrimaryActionBtn" class="btn btn-primary" type="button">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
   <div id="toast" class="toast"></div>
 
   <!-- Modal confirmación borrado rutas -->

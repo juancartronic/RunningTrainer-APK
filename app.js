@@ -1,7 +1,38 @@
 // ===========================================
 // SISTEMA DE AUTENTICACIÓN Y USUARIOS
 // ===========================================
-let users = JSON.parse(localStorage.getItem("runningTrainerUsers")) || {};
+const STORAGE_RECOVERY_KEYS = new Set();
+
+function readJsonObjectFromStorage(key, fallback = {}) {
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return { ...fallback };
+
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+      STORAGE_RECOVERY_KEYS.add(key);
+      try {
+        localStorage.removeItem(key);
+      } catch (_) {
+        // Sin accion: el objetivo es no bloquear el flujo de autenticacion.
+      }
+      return { ...fallback };
+    }
+
+    return parsed;
+  } catch (error) {
+    STORAGE_RECOVERY_KEYS.add(key);
+    console.warn(`No se pudo leer ${key} desde localStorage. Se restauran valores por defecto.`, error);
+    try {
+      localStorage.removeItem(key);
+    } catch (_) {
+      // Sin accion: el objetivo es no bloquear el flujo de autenticacion.
+    }
+    return { ...fallback };
+  }
+}
+
+let users = readJsonObjectFromStorage("runningTrainerUsers", {});
 let currentUser = null;
 let planActual = "30min";
 const AUTH_CONFIG = {
@@ -13,7 +44,7 @@ const AUTH_CONFIG = {
   lockoutMs: 5 * 60 * 1000
 };
 const LOGIN_ATTEMPTS_KEY = 'runningTrainerLoginAttempts';
-let loginAttempts = JSON.parse(localStorage.getItem(LOGIN_ATTEMPTS_KEY) || '{}');
+let loginAttempts = readJsonObjectFromStorage(LOGIN_ATTEMPTS_KEY, {});
 let chart;
 let perspectivesChart;
 const PERSPECTIVE_PERIODS = [7, 30, 180, 365];
@@ -449,6 +480,12 @@ const timerLabel = document.getElementById('timerLabel');
 const timerRingProgress = document.getElementById('timerRingProgress');
 const countdownDisplay = document.getElementById('countdown');
 const timerPhaseHint = document.getElementById('timerPhaseHint');
+const routineModal = document.getElementById('routineModal');
+const closeRoutineModalBtn = document.getElementById('closeRoutineModalBtn');
+const routineModalDay = document.getElementById('routineModalDay');
+const routineModalSummary = document.getElementById('routineModalSummary');
+const routineExerciseList = document.getElementById('routineExerciseList');
+const routinePrimaryActionBtn = document.getElementById('routinePrimaryActionBtn');
 
 let currentDayWorkout = null;
 let timerInterval = null;
@@ -462,6 +499,7 @@ let timerStartTimestamp = null;
 let lastTimerElapsedSeconds = null;
 let lastGpsData = null; // Datos GPS del último entrenamiento
 let gpsUpdateInterval = null; // Intervalo para actualizar UI del GPS
+let routineModalAction = null;
 
 const TIMER_RING_RADIUS = 96;
 const TIMER_RING_CIRCUMFERENCE = 2 * Math.PI * TIMER_RING_RADIUS;
@@ -1480,6 +1518,316 @@ function getTrainingDescriptionForDisplay(planKey, description, userLevel = 'beg
   const adjustedDescription = getAdjustedHiitDescriptionByLevel(description, userLevel);
 
   return `${adjustedDescription} | ${levelAdvice[userLevel] || levelAdvice.beginner}`;
+}
+
+const EXERCISE_VISUAL_META = Object.freeze({
+  run: { label: 'Cardio', tone: 'run' },
+  squat: { label: 'Pierna', tone: 'squat' },
+  lunge: { label: 'Estabilidad', tone: 'lunge' },
+  plank: { label: 'Core', tone: 'plank' },
+  pushup: { label: 'Tren superior', tone: 'pushup' },
+  burpee: { label: 'Explosivo', tone: 'burpee' },
+  climber: { label: 'Core cardio', tone: 'climber' },
+  strength: { label: 'Fuerza', tone: 'strength' },
+  core: { label: 'Abdominal', tone: 'core' },
+  mobility: { label: 'Movilidad', tone: 'mobility' },
+  rest: { label: 'Recuperacion', tone: 'rest' },
+  generic: { label: 'Tecnica', tone: 'generic' }
+});
+
+const EXERCISE_FIGURE_POSES = Object.freeze({
+  run: {
+    head: [66, 20],
+    torso: [66, 30, 68, 62],
+    armLeft: [66, 40, 48, 50],
+    armRight: [66, 40, 86, 56],
+    legLeft: [68, 62, 50, 92],
+    legRight: [68, 62, 88, 82]
+  },
+  squat: {
+    head: [70, 23],
+    torso: [70, 33, 70, 62],
+    armLeft: [70, 42, 52, 54],
+    armRight: [70, 42, 88, 54],
+    legLeft: [70, 62, 55, 84],
+    legRight: [70, 62, 85, 84]
+  },
+  lunge: {
+    head: [68, 22],
+    torso: [68, 32, 68, 64],
+    armLeft: [68, 42, 50, 58],
+    armRight: [68, 42, 84, 46],
+    legLeft: [68, 64, 50, 90],
+    legRight: [68, 64, 90, 92]
+  },
+  plank: {
+    head: [40, 56],
+    torso: [48, 56, 86, 56],
+    armLeft: [58, 56, 58, 78],
+    armRight: [64, 56, 64, 78],
+    legLeft: [86, 56, 98, 72],
+    legRight: [86, 56, 100, 44]
+  },
+  pushup: {
+    head: [42, 66],
+    torso: [50, 64, 90, 56],
+    armLeft: [58, 62, 56, 84],
+    armRight: [66, 60, 70, 84],
+    legLeft: [90, 56, 100, 66],
+    legRight: [90, 56, 102, 46]
+  },
+  burpee: {
+    head: [72, 26],
+    torso: [72, 36, 72, 66],
+    armLeft: [72, 45, 54, 66],
+    armRight: [72, 45, 90, 66],
+    legLeft: [72, 66, 58, 94],
+    legRight: [72, 66, 90, 88]
+  },
+  climber: {
+    head: [44, 46],
+    torso: [52, 50, 88, 54],
+    armLeft: [58, 50, 54, 80],
+    armRight: [66, 52, 68, 80],
+    legLeft: [88, 54, 74, 86],
+    legRight: [88, 54, 102, 70]
+  },
+  strength: {
+    head: [68, 22],
+    torso: [68, 32, 68, 66],
+    armLeft: [68, 44, 46, 50],
+    armRight: [68, 44, 90, 50],
+    legLeft: [68, 66, 56, 94],
+    legRight: [68, 66, 82, 94]
+  },
+  core: {
+    head: [42, 70],
+    torso: [50, 68, 86, 60],
+    armLeft: [58, 66, 68, 80],
+    armRight: [64, 64, 74, 78],
+    legLeft: [86, 60, 100, 74],
+    legRight: [86, 60, 98, 50]
+  },
+  mobility: {
+    head: [62, 24],
+    torso: [62, 34, 62, 66],
+    armLeft: [62, 44, 42, 52],
+    armRight: [62, 44, 86, 40],
+    legLeft: [62, 66, 46, 92],
+    legRight: [62, 66, 78, 94]
+  },
+  rest: {
+    head: [58, 30],
+    torso: [58, 40, 58, 66],
+    armLeft: [58, 48, 44, 62],
+    armRight: [58, 48, 72, 62],
+    legLeft: [58, 66, 50, 88],
+    legRight: [58, 66, 66, 88]
+  },
+  generic: {
+    head: [70, 22],
+    torso: [70, 32, 70, 66],
+    armLeft: [70, 42, 52, 58],
+    armRight: [70, 42, 88, 58],
+    legLeft: [70, 66, 56, 94],
+    legRight: [70, 66, 84, 94]
+  }
+});
+
+function escapeHtmlText(value = '') {
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function normalizeRoutineDescription(description = '') {
+  return String(description || '')
+    .replace(/\s*\|\s*Ajuste nivel[^|]*$/i, '')
+    .replace(/[–—]/g, '-')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function extractRoutineExercises(description = '') {
+  const normalized = normalizeRoutineDescription(description);
+  if (!normalized) return [];
+
+  const exercises = [];
+  const seen = new Set();
+
+  const pushExercise = (raw) => {
+    const cleaned = String(raw || '')
+      .replace(/^[•\-\s]+/, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    if (!cleaned || /^\d+\s*rondas?$/i.test(cleaned)) return;
+
+    const key = cleaned.toLowerCase();
+    if (seen.has(key)) return;
+    seen.add(key);
+    exercises.push(cleaned);
+  };
+
+  const splitAndPush = (chunk = '') => {
+    String(chunk)
+      .split(/\s*\+\s*/g)
+      .map((part) => part.trim())
+      .filter(Boolean)
+      .forEach(pushExercise);
+  };
+
+  const parenthesizedChunks = [...normalized.matchAll(/\(([^)]+)\)/g)];
+  parenthesizedChunks.forEach((match) => splitAndPush(match[1]));
+
+  let withoutParenthesis = normalized.replace(/\([^)]*\)/g, ' ');
+  if (withoutParenthesis.includes(':')) {
+    withoutParenthesis = withoutParenthesis.split(':').slice(1).join(':');
+  }
+
+  splitAndPush(withoutParenthesis);
+
+  if (exercises.length <= 1 && /\sy\s/i.test(withoutParenthesis)) {
+    withoutParenthesis
+      .split(/\s+y\s+/i)
+      .map((part) => part.trim())
+      .filter(Boolean)
+      .forEach(pushExercise);
+  }
+
+  if (!exercises.length) {
+    pushExercise(normalized);
+  }
+
+  return exercises.slice(0, 12);
+}
+
+function detectExerciseVisualType(exerciseText = '') {
+  const text = String(exerciseText || '').toLowerCase();
+
+  if (/\b(descanso|desc\b|pausa|recuperaci[oó]n)\b/.test(text)) return 'rest';
+  if (/\b(sentadilla|squat|gemelos|sumo)\b/.test(text)) return 'squat';
+  if (/\b(zancada|lunge|búlgara|bulgara)\b/.test(text)) return 'lunge';
+  if (/\b(plancha lateral|plancha dinámica|plancha dinamica|plancha)\b/.test(text)) return 'plank';
+  if (/\b(flexiones?|push\s?up|fondos?)\b/.test(text)) return 'pushup';
+  if (/\bburpees?\b/.test(text)) return 'burpee';
+  if (/\b(mountain climbers?|escaladores?|escalador|rodillas al pecho)\b/.test(text)) return 'climber';
+  if (/\b(remo|press hombro|peso muerto|puente de gl[uú]teo|elevación de gemelos|elevacion de gemelos)\b/.test(text)) return 'strength';
+  if (/\b(abdominales?|crunch|bicicleta|v-ups?|elevaciones? de piernas|core)\b/.test(text)) return 'core';
+  if (/\b(movilidad|estirar|estiramientos?|respiraci[oó]n|equilibrio)\b/.test(text)) return 'mobility';
+  if (/\b(skipping|jumping jacks|saltos?|sprint|trote|carrera|camina|caminar|ritmo|km|sendero|cuesta|fartlek|tempo|activaci[oó]n)\b/.test(text)) return 'run';
+
+  return 'generic';
+}
+
+function buildExerciseFigureSvg(type = 'generic') {
+  const safeType = EXERCISE_FIGURE_POSES[type] ? type : 'generic';
+  const pose = EXERCISE_FIGURE_POSES[safeType];
+  const isStrength = safeType === 'strength';
+  const isRest = safeType === 'rest';
+
+  return `
+    <svg class="exercise-figure-svg type-${safeType}" viewBox="0 0 140 110" aria-hidden="true" focusable="false">
+      <rect class="exercise-figure-bg" x="2" y="2" width="136" height="106" rx="18"></rect>
+      <line class="exercise-floor" x1="16" y1="96" x2="124" y2="96"></line>
+      <g class="figure-character pose-${safeType}">
+        <circle class="figure-head" cx="${pose.head[0]}" cy="${pose.head[1]}" r="8"></circle>
+        <line class="figure-part figure-torso" x1="${pose.torso[0]}" y1="${pose.torso[1]}" x2="${pose.torso[2]}" y2="${pose.torso[3]}"></line>
+        <line class="figure-part figure-arm arm-left" x1="${pose.armLeft[0]}" y1="${pose.armLeft[1]}" x2="${pose.armLeft[2]}" y2="${pose.armLeft[3]}"></line>
+        <line class="figure-part figure-arm arm-right" x1="${pose.armRight[0]}" y1="${pose.armRight[1]}" x2="${pose.armRight[2]}" y2="${pose.armRight[3]}"></line>
+        <line class="figure-part figure-leg leg-left" x1="${pose.legLeft[0]}" y1="${pose.legLeft[1]}" x2="${pose.legLeft[2]}" y2="${pose.legLeft[3]}"></line>
+        <line class="figure-part figure-leg leg-right" x1="${pose.legRight[0]}" y1="${pose.legRight[1]}" x2="${pose.legRight[2]}" y2="${pose.legRight[3]}"></line>
+      </g>
+      ${isStrength ? `
+      <line class="figure-prop" x1="38" y1="50" x2="98" y2="50"></line>
+      <circle class="figure-prop-weight" cx="35" cy="50" r="4"></circle>
+      <circle class="figure-prop-weight" cx="101" cy="50" r="4"></circle>
+      ` : ''}
+      ${isRest ? `
+      <path class="figure-rest-wave" d="M84 72c5-6 9-6 14 0"></path>
+      <path class="figure-rest-wave" d="M90 64c4-5 7-5 11 0"></path>
+      ` : ''}
+    </svg>
+  `;
+}
+
+function renderRoutineExerciseList(exercises = [], fallbackDescription = '') {
+  if (!routineExerciseList) return;
+
+  routineExerciseList.innerHTML = '';
+  routineExerciseList.classList.add('single-exercise');
+
+  const primaryExercise = String(exercises[0] || fallbackDescription || '').trim();
+  if (!primaryExercise) return;
+
+  const type = detectExerciseVisualType(primaryExercise);
+  const visual = EXERCISE_VISUAL_META[type] || EXERCISE_VISUAL_META.generic;
+
+  const item = document.createElement('li');
+  item.className = 'routine-ex-item routine-ex-item-single';
+  item.innerHTML = `
+    <div class="routine-ex-figure-wrap">
+      ${buildExerciseFigureSvg(type)}
+    </div>
+    <div class="routine-ex-content">
+      <span class="routine-ex-chip tone-${visual.tone}">${visual.label}</span>
+      <p class="routine-ex-text">${escapeHtmlText(primaryExercise)}</p>
+    </div>
+  `;
+  routineExerciseList.appendChild(item);
+}
+
+function openRoutineModal({ dayName = '', weekIndex = 0, dayIndex = 0, displayDescription = '', effectiveDescription = '', actionType = 'none' } = {}) {
+  if (!routineModal) return;
+
+  const baseDescription = normalizeRoutineDescription(effectiveDescription || displayDescription);
+  const exercises = extractRoutineExercises(baseDescription);
+
+  if (routineModalDay) {
+    routineModalDay.textContent = `${dayName} · Semana ${weekIndex + 1}`;
+  }
+  if (routineModalSummary) {
+    routineModalSummary.textContent = displayDescription || baseDescription;
+  }
+
+  renderRoutineExerciseList(exercises, baseDescription);
+
+  routineModalAction = null;
+  if (routinePrimaryActionBtn) {
+    routinePrimaryActionBtn.style.display = '';
+    routinePrimaryActionBtn.classList.remove('btn-success', 'btn-secondary');
+    routinePrimaryActionBtn.classList.add('btn-primary');
+
+    if (actionType === 'timer') {
+      routinePrimaryActionBtn.textContent = 'Abrir temporizador';
+      routineModalAction = () => {
+        closeRoutineModal();
+        openTimerModal(effectiveDescription || baseDescription);
+      };
+    } else if (actionType === 'distance') {
+      routinePrimaryActionBtn.textContent = 'Iniciar entrenamiento';
+      routineModalAction = () => {
+        closeRoutineModal();
+        openDistanceModal(effectiveDescription || baseDescription, weekIndex, dayIndex);
+      };
+    } else {
+      routinePrimaryActionBtn.textContent = 'Cerrar';
+      routinePrimaryActionBtn.classList.remove('btn-primary');
+      routinePrimaryActionBtn.classList.add('btn-secondary');
+      routineModalAction = () => closeRoutineModal();
+    }
+  }
+
+  routineModal.classList.add('active');
+}
+
+function closeRoutineModal() {
+  if (!routineModal) return;
+  routineModal.classList.remove('active');
+  routineModalAction = null;
 }
 
 function renderDietOverview() {
@@ -5660,6 +6008,11 @@ function initEventListeners() {
 
   initPerspectivasControls();
 
+  if (STORAGE_RECOVERY_KEYS.size > 0) {
+    console.warn('Claves de almacenamiento local recuperadas:', Array.from(STORAGE_RECOVERY_KEYS).join(', '));
+    showToast('Se repararon datos locales dañados. Si no podías registrarte, vuelve a intentarlo.', 'info');
+  }
+
   // Dark Mode Toggle
   if (darkModeToggle) {
     darkModeToggle.addEventListener('click', toggleDarkMode);
@@ -6006,6 +6359,21 @@ function initEventListeners() {
   timerModal.addEventListener('click', (e) => {
       if (e.target === timerModal) closeTimerModal();
   });
+  if (closeRoutineModalBtn) {
+    closeRoutineModalBtn.addEventListener('click', closeRoutineModal);
+  }
+  if (routineModal) {
+    routineModal.addEventListener('click', (e) => {
+      if (e.target === routineModal) closeRoutineModal();
+    });
+  }
+  if (routinePrimaryActionBtn) {
+    routinePrimaryActionBtn.addEventListener('click', () => {
+      if (typeof routineModalAction === 'function') {
+        routineModalAction();
+      }
+    });
+  }
   startBtn.addEventListener('click', startTimer);
   pauseBtn.addEventListener('click', pauseTimer);
   resetBtn.addEventListener('click', resetTimer);
@@ -6013,6 +6381,11 @@ function initEventListeners() {
   // Cerrar modales con tecla Escape
   document.addEventListener('keydown', (e) => {
     if (e.key !== 'Escape') return;
+
+    if (routineModal && routineModal.classList.contains('active')) {
+      closeRoutineModal();
+      return;
+    }
 
     if (timerModal.classList.contains('active')) {
       closeTimerModal();
@@ -7231,32 +7604,49 @@ function renderWeeks() {
         return;
       }
 
-      const timerButton = document.createElement("button");
       const hasTimer = hasTimerPreset(description);
-      if (isInfoOnlyPlan) {
-        timerButton.className = "btn btn-sm btn-secondary";
-        timerButton.innerHTML = 'Ver rutina';
-        timerButton.onclick = (e) => {
-            e.stopPropagation();
-            speakGpsMessage(`${day}. ${displayDescription}`, { plain: true });
-            showToast('Rutina del día cargada.', 'success');
-        };
-      } else if (hasTimer) {
-        timerButton.className = "btn btn-sm btn-secondary";
-        timerButton.innerHTML = '⏱️ Temporizador';
-        timerButton.onclick = (e) => {
-            e.stopPropagation();
-            speakGpsMessage(`${day}. ${displayDescription}`);
-            openTimerModal(effectiveDescription);
-        };
-      } else {
-        timerButton.className = "btn btn-sm btn-secondary";
-        timerButton.innerHTML = '📍 Iniciar Entrenamiento';
-        timerButton.onclick = (e) => {
-            e.stopPropagation();
-            speakGpsMessage(`${day}. ${displayDescription}`);
-            openDistanceModal(effectiveDescription, weekIndex, dayIndex);
-        };
+
+      const routineActionType = isInfoOnlyPlan ? 'none' : (hasTimer ? 'timer' : 'distance');
+      const routineButton = document.createElement("button");
+      routineButton.className = "btn btn-sm btn-routine";
+      routineButton.innerHTML = '🖼 Ver rutina';
+      routineButton.onclick = (e) => {
+          e.stopPropagation();
+          speakGpsMessage(`${day}. ${displayDescription}`, { plain: true });
+          openRoutineModal({
+            dayName: day,
+            weekIndex,
+            dayIndex,
+            displayDescription,
+            effectiveDescription,
+            actionType: routineActionType
+          });
+          showToast('Rutina del día cargada.', 'success');
+      };
+
+      actionsDiv.appendChild(routineButton);
+
+      if (!isInfoOnlyPlan) {
+        const trainButton = document.createElement("button");
+        trainButton.className = "btn btn-sm btn-secondary";
+
+        if (hasTimer) {
+          trainButton.innerHTML = '⏱️ Temporizador';
+          trainButton.onclick = (e) => {
+              e.stopPropagation();
+              speakGpsMessage(`${day}. ${displayDescription}`);
+              openTimerModal(effectiveDescription);
+          };
+        } else {
+          trainButton.innerHTML = '📍 Iniciar Entrenamiento';
+          trainButton.onclick = (e) => {
+              e.stopPropagation();
+              speakGpsMessage(`${day}. ${displayDescription}`);
+              openDistanceModal(effectiveDescription, weekIndex, dayIndex);
+          };
+        }
+
+        actionsDiv.appendChild(trainButton);
       }
 
       const completeButton = document.createElement("button");
@@ -7268,7 +7658,6 @@ function renderWeeks() {
         toggleDayComplete(weekIndex, dayIndex, completeButton, weekButton);
       };
 
-      actionsDiv.appendChild(timerButton);
       actionsDiv.appendChild(completeButton);
       dayItem.appendChild(dayText);
       dayItem.appendChild(actionsDiv);
