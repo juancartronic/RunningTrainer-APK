@@ -6749,6 +6749,59 @@ function applyDarkMode() {
   }
 }
 
+// Cola para encadenar celebraciones de badges sin solaparlas
+const _badgeCelebrationQueue = [];
+let _badgeCelebrationActive = false;
+
+function enqueueBadgeCelebration(badgeId) {
+  _badgeCelebrationQueue.push(badgeId);
+  if (!_badgeCelebrationActive) _dequeueBadgeCelebration();
+}
+
+function _dequeueBadgeCelebration() {
+  const overlay = document.getElementById('badgeCelebrationOverlay');
+  if (!overlay || !_badgeCelebrationQueue.length) {
+    _badgeCelebrationActive = false;
+    return;
+  }
+
+  _badgeCelebrationActive = true;
+  const badgeId   = _badgeCelebrationQueue.shift();
+  const badgeInfo = BADGES[badgeId];
+  if (!badgeInfo) { _dequeueBadgeCelebration(); return; }
+
+  document.getElementById('badgeCelebrationIcon').textContent = badgeInfo.icon;
+  document.getElementById('badgeCelebrationName').textContent = badgeInfo.name;
+  document.getElementById('badgeCelebrationDesc').textContent = badgeInfo.description;
+
+  // Reiniciar animaciones clonando el nodo de confeti
+  const confetti = overlay.querySelector('.badge-celebration-confetti');
+  if (confetti) {
+    const clone = confetti.cloneNode(true);
+    confetti.replaceWith(clone);
+  }
+
+  overlay.removeAttribute('hidden');
+  overlay.removeAttribute('aria-hidden');
+
+  if (navigator.vibrate) navigator.vibrate([80, 60, 160]);
+  speakGpsMessage(`¡Logro desbloqueado! ${badgeInfo.name}.`);
+
+  const close = () => {
+    overlay.setAttribute('hidden', '');
+    overlay.setAttribute('aria-hidden', 'true');
+    _dequeueBadgeCelebration();
+  };
+
+  const closeBtn = document.getElementById('badgeCelebrationCloseBtn');
+  if (closeBtn) {
+    const handler = () => { closeBtn.removeEventListener('click', handler); close(); };
+    closeBtn.addEventListener('click', handler);
+  }
+
+  overlay.onclick = (e) => { if (e.target === overlay) close(); };
+}
+
 function renderBadges() {
   if (!badgesGrid || !currentUser) return;
 
@@ -6873,11 +6926,9 @@ function checkBadges() {
   saveUserData();
   renderBadges();
 
+  // Mostrar pantalla de celebración para cada badge nuevo (en cola)
   addedBadges.forEach((badgeId) => {
-    const badgeInfo = BADGES[badgeId];
-    if (badgeInfo) {
-      showToast(`Logro desbloqueado: ${badgeInfo.name}`, 'success');
-    }
+    enqueueBadgeCelebration(badgeId);
   });
 }
 
