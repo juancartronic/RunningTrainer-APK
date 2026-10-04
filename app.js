@@ -7770,22 +7770,35 @@ function toggleDayComplete(weekIndex, dayIndex, button, weekButton) {
     showToast('El dia de descanso no se marca como entrenamiento.', 'error');
     return;
   }
-  
+
   const currentStatus = currentUser.progressData[planActual][`semana${weekIndex}`][dayIndex];
+
+  // Al desmarcar, pedir confirmación antes de restar XP
+  if (currentStatus) {
+    const xpPerdido = XP_POR_PLAN[planActual] || 15;
+    showConfirmModal({
+      title: '¿Desmarcar entrenamiento?',
+      message: `Se desmarcará "${dayName}" y perderás ${xpPerdido} XP. ¿Continuar?`,
+      okLabel: 'Desmarcar',
+      onConfirm: () => applyToggleDayComplete(weekIndex, dayIndex, button, weekButton, currentStatus, dayName, dayDescription)
+    });
+    return;
+  }
+
+  applyToggleDayComplete(weekIndex, dayIndex, button, weekButton, currentStatus, dayName, dayDescription);
+}
+
+function applyToggleDayComplete(weekIndex, dayIndex, button, weekButton, currentStatus, dayName, dayDescription) {
   const wasWeekComplete = isWeekCompleteForPlan(planActual, weekIndex);
   currentUser.progressData[planActual][`semana${weekIndex}`][dayIndex] = !currentStatus;
-  
-  // Si se completa el entrenamiento, añadir XP
+
   if (!currentStatus) {
     const xpGanado = XP_POR_PLAN[planActual] || 15;
     const nivelAnterior = currentUser.level;
     currentUser.xp = (currentUser.xp || 0) + xpGanado;
-    
-    // Verificar si sube de nivel
     checkLevelUp(nivelAnterior, xpGanado);
     recordPlanCompletion(planActual, weekIndex, dayIndex, dayName, dayDescription);
   } else {
-    // Si desmarca, restar XP
     const xpPerdido = XP_POR_PLAN[planActual] || 15;
     currentUser.xp = Math.max(0, (currentUser.xp || 0) - xpPerdido);
     removePlanCompletion(planActual, weekIndex, dayIndex);
@@ -9231,6 +9244,30 @@ function calcularYMostrarPaces10K(secs) {
   const s = paces.time10k % 60;
   document.getElementById('time10k').textContent = `${m} min ${String(s).padStart(2,'0')} seg`;
   document.getElementById('paceSummary10K').style.display = 'block';
+}
+
+// Modal de confirmación genérico: muestra título/mensaje y ejecuta callback al confirmar
+function showConfirmModal({ title = '¿Estás seguro?', message = '', okLabel = 'Confirmar', onConfirm = () => {} } = {}) {
+  const modal   = document.getElementById('confirmActionModal');
+  const titleEl = document.getElementById('confirmActionTitle');
+  const msgEl   = document.getElementById('confirmActionMsg');
+  const okBtn   = document.getElementById('confirmActionOkBtn');
+  const cancelBtn = document.getElementById('confirmActionCancelBtn');
+  if (!modal || !titleEl || !msgEl || !okBtn || !cancelBtn) { onConfirm(); return; }
+
+  titleEl.textContent = title;
+  msgEl.textContent   = message;
+  okBtn.textContent   = okLabel;
+
+  const close = () => modal.classList.remove('active');
+
+  const onOk = () => { close(); onConfirm(); };
+  okBtn.onclick = onOk;
+  cancelBtn.onclick = close;
+  modal.onclick = (e) => { if (e.target === modal) close(); };
+
+  modal.classList.add('active');
+  cancelBtn.focus();
 }
 
 // Event listeners del modal 10K

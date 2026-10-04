@@ -835,6 +835,18 @@
     </div>
   </div>
 
+  <!-- Modal de confirmación genérico reutilizable -->
+  <div id="confirmActionModal" class="profile-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="confirmActionTitle">
+    <div class="profile-modal-content" style="max-width:360px;">
+      <h2 class="section-title" id="confirmActionTitle" style="font-size:1.1rem;margin-bottom:0.5rem;"></h2>
+      <p id="confirmActionMsg" style="color:var(--text-secondary);font-size:0.9rem;margin-bottom:1.4rem;line-height:1.5;"></p>
+      <div style="display:flex;gap:0.6rem;justify-content:flex-end;">
+        <button id="confirmActionCancelBtn" type="button" class="btn btn-secondary btn-sm">Cancelar</button>
+        <button id="confirmActionOkBtn" type="button" class="btn btn-danger btn-sm">Confirmar</button>
+      </div>
+    </div>
+  </div>
+
   <aside id="homeGpsPanel" class="home-gps-panel" aria-hidden="true">
     <div class="home-gps-screen">
       <header class="home-gps-topbar">
