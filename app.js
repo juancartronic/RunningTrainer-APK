@@ -7335,6 +7335,39 @@ function getLevelLabel(level) {
   return labels[level] || 'Principiante';
 }
 
+// Devuelve el tipo de carga visual de un día para el calendario de carga semanal
+function getDayLoadType(description, planKey, dayIndex) {
+  if (isRestDay(description)) return 'rest';
+  const completed = currentUser.progressData[planKey]?.[`semana${dayIndex}`];
+  const text = description.toLowerCase();
+  if (/hiit|tabata|circuito|explosiv|burpee|sprint|salto/i.test(text)) return 'hiit';
+  if (/fuerza|sentadilla|plancha|flexion|zancada|peso muerto|remo|press|abdominales|core/i.test(text)) return 'strength';
+  if (/trail|sendero|mont/i.test(text)) return 'trail';
+  if (/fartlek|cambios de ritmo/i.test(text)) return 'speed';
+  if (/km|trote|carrera|ritmo|tempo|progresiv/i.test(text)) return 'run';
+  if (/camina|caminata/i.test(text)) return 'walk';
+  if (/movilidad|estiram|recuperaci/i.test(text)) return 'mobility';
+  return 'generic';
+}
+
+// Genera la fila de chips del calendario de carga para una semana
+function buildWeekLoadBar(weekIndex) {
+  const days = planes[planActual][weekIndex] || [];
+  const progress = currentUser.progressData[planActual]?.[`semana${weekIndex}`] || [];
+  const DAY_ABBR = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
+
+  const chips = days.map(([dayName, desc], di) => {
+    const done = progress[di] === true;
+    const rest = isRestDay(desc);
+    const type = rest ? 'rest' : getDayLoadType(desc, planActual, weekIndex);
+    const abbr = DAY_ABBR[di] ?? String(di + 1);
+    const doneCls = done ? ' wlb-done' : '';
+    return `<span class="wlb-chip wlb-${type}${doneCls}" title="${dayName}: ${rest ? 'Descanso' : desc.slice(0,60)}">${abbr}</span>`;
+  });
+
+  return `<span class="week-load-bar" aria-hidden="true">${chips.join('')}</span>`;
+}
+
 function isRestDay(description = '') {
   const normalized = String(description || '').trim().toLowerCase();
   // Considerar descanso solo cuando la sesión empieza como día de descanso/recuperación.
@@ -7607,6 +7640,7 @@ function renderWeeks() {
 
   weekButton.innerHTML = `
     <span class="week-btn-label">Semana ${weekIndex + 1}/${totalWeeks}</span>
+    ${buildWeekLoadBar(weekIndex)}
     <span class="week-btn-meta">
       <span class="week-progress-pill">${pillText}</span>
       <span class="week-btn-arrow">▶</span>

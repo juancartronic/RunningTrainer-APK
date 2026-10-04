@@ -3686,7 +3686,60 @@ body.dark-mode .plan-card.active .plan-title {
 }
 .week-button.completed::before { background: linear-gradient(to bottom, var(--success), #0d9488); }
 
-/* Nombre de semana */
+/* ── Calendario de carga semanal ── */
+.week-load-bar {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  flex-shrink: 0;
+}
+
+.wlb-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0;
+  color: #fff;
+  flex-shrink: 0;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+  cursor: default;
+}
+
+/* Tipos de carga */
+.wlb-run      { background: #3b82f6; }
+.wlb-walk     { background: #93c5fd; color: #1e3a5f; }
+.wlb-hiit     { background: #ef4444; }
+.wlb-strength { background: #f97316; }
+.wlb-trail    { background: #16a34a; }
+.wlb-speed    { background: #8b5cf6; }
+.wlb-mobility { background: #0d9488; }
+.wlb-generic  { background: #64748b; }
+.wlb-rest     { background: #e2e8f0; color: #94a3b8; }
+
+/* Día completado: tachado + verde */
+.wlb-chip.wlb-done {
+  background: #22c55e !important;
+  color: #fff !important;
+  opacity: 0.72;
+  text-decoration: line-through;
+}
+
+/* Día de descanso completado */
+.wlb-chip.wlb-rest.wlb-done {
+  background: #bbf7d0 !important;
+  color: #166534 !important;
+}
+
+body.dark-mode .wlb-rest     { background: #334155; color: #64748b; }
+body.dark-mode .wlb-walk     { background: #1e3a5f; color: #93c5fd; }
+body.dark-mode .wlb-chip.wlb-done { opacity: 0.9; }
+
+/* Nombres de semana */
 .week-btn-label {
   font-size: 0.86rem; font-weight: 700; color: var(--dark); flex: 1;
 }
@@ -4113,7 +4166,9 @@ body.dark-mode .bottom-nav {
   .header-badge { font-size: 0.8rem; padding: 6px 12px; }
   .controls { flex-direction: column; align-items: center; }
   .controls .btn { width: 100%; max-width: 300px; }
-  .week-button { padding: 8px 12px; font-size: 0.84rem; }
+  .week-button { padding: 8px 10px; font-size: 0.84rem; }
+  .wlb-chip { width: 20px; height: 20px; font-size: 0.58rem; border-radius: 5px; }
+  .week-load-bar { gap: 2px; }
   .day-item { grid-template-columns: 1fr; gap: 6px; }
   .day-item .actions { align-self: flex-end; }
   .timer-modal-content { padding: 1rem; }
@@ -4139,7 +4194,9 @@ body.dark-mode .bottom-nav {
   .app-title { font-size: 1.55rem; }
   .app-subtitle { font-size: 0.92rem; margin: 6px 0 10px; }
   .header-badge { display: none; }
-  .week-button { font-size: 0.82rem; padding: 7px 10px; }
+  .week-button { font-size: 0.82rem; padding: 7px 8px; }
+  .wlb-chip { width: 18px; height: 18px; font-size: 0.54rem; border-radius: 4px; }
+  .week-load-bar { gap: 2px; }
   .day-details { padding: 4px 10px 10px; }
   .chart-container, .progress-container, .motivational-card { padding: 15px; }
   .timer-modal-content { padding: 0.85rem; }
