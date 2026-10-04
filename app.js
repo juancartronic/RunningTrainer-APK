@@ -499,6 +499,12 @@ let totalReps = 0;
 let currentRep = 0;
 let timerStartTimestamp = null;
 let lastTimerElapsedSeconds = null;
+// 'warmup' | 'workout' | 'cooldown'
+let timerPhase = 'workout';
+let warmupTimeLeft = 0;
+let cooldownTimeLeft = 0;
+const WARMUP_SECONDS = 300;   // 5 min
+const COOLDOWN_SECONDS = 180; // 3 min
 let lastGpsData = null; // Datos GPS del último entrenamiento
 let gpsUpdateInterval = null; // Intervalo para actualizar UI del GPS
 let routineModalAction = null;
@@ -8602,14 +8608,35 @@ function startTimer() {
   isRunning = true;
   isExercise = true;
   timerStartTimestamp = Date.now();
+  timerPhase = 'warmup';
+  warmupTimeLeft = WARMUP_SECONDS;
+  phaseDuration = WARMUP_SECONDS;
+  timeLeft = WARMUP_SECONDS;
   timerModal.classList.add('running');
   ensureAudioContext();
 
-  // Iniciar GPS tracking
   startGpsTracking();
 
-  speakGpsMessage(`Comenzando entrenamiento. ${currentDayWorkout.title}. ${currentDayWorkout.reps} series.`);
-  nextPhase();
+  timerLabel.textContent = 'CALENTAMIENTO';
+  timerLabel.className = 'warmup';
+  timerPhaseHint.textContent = `Activa músculos antes de empezar`;
+  currentRepDisplay.textContent = '0';
+
+  speakGpsMessage(`Calentamiento de 5 minutos. Activa tu cuerpo antes de empezar.`);
+  if (soundMode === 'on' || soundMode === 'motivation') createBellSound();
+
+  updateDisplay();
+  timerInterval = setInterval(() => {
+    timeLeft--;
+    updateDisplay();
+    if (timeLeft === 30) speakGpsMessage('Quedan 30 segundos de calentamiento.');
+    if (timeLeft === 3 && (soundMode === 'on' || soundMode === 'motivation')) createBellSound();
+    if (timeLeft <= 0) {
+      if (soundMode === 'on' || soundMode === 'motivation') createCompletionSound();
+      timerPhase = 'workout';
+      nextPhase();
+    }
+  }, 1000);
 }
 
 function pauseTimer() {
@@ -8626,6 +8653,7 @@ function resetTimer() {
   isExercise = true;
   timeLeft = 0;
   phaseDuration = 0;
+  timerPhase = 'workout';
   countdownDisplay.textContent = '00';
   timerLabel.textContent = 'Listo';
   timerLabel.className = '';
@@ -8641,36 +8669,66 @@ function resetTimer() {
 
 function updateDisplay() {
   countdownDisplay.textContent = formatSeconds(timeLeft);
-  setRingProgress(timeLeft, phaseDuration, isExercise ? 'exercise' : 'rest');
+  if (timerPhase === 'warmup') {
+    setRingProgress(timeLeft, WARMUP_SECONDS, 'warmup');
+  } else if (timerPhase === 'cooldown') {
+    setRingProgress(timeLeft, COOLDOWN_SECONDS, 'rest');
+  } else {
+    setRingProgress(timeLeft, phaseDuration, isExercise ? 'exercise' : 'rest');
+  }
 }
 
 function nextPhase() {
   clearInterval(timerInterval);
 
+  // --- FASE VUELTA A LA CALMA ---
+  if (timerPhase === 'cooldown') {
+    countdownDisplay.textContent = 'FIN';
+    timerLabel.textContent = '¡Sesión completa!';
+    timerLabel.className = 'exercise';
+    timerPhaseHint.textContent = '¡Excelente trabajo!';
+    isRunning = false;
+    timerModal.classList.remove('running');
+
+    if (timerStartTimestamp) {
+      lastTimerElapsedSeconds = Math.round((Date.now() - timerStartTimestamp) / 1000);
+      timerStartTimestamp = null;
+    }
+    stopGpsTracking();
+    if (soundMode === 'on' || soundMode === 'success') createCompletionSound();
+    speakGpsMessage('¡Sesión completa! ¡Excelente trabajo!');
+    showToast('¡Entrenamiento completado! 🎉', 'success');
+    return;
+  }
+
+  // --- TRANSICIÓN AL COOLDOWN ---
+  if (timerPhase === 'workout' && isExercise && currentRep >= totalReps) {
+    timerPhase = 'cooldown';
+    timeLeft = COOLDOWN_SECONDS;
+    phaseDuration = COOLDOWN_SECONDS;
+    timerLabel.textContent = 'VUELTA A LA CALMA';
+    timerLabel.className = 'cooldown';
+    timerPhaseHint.textContent = 'Estira y recupera el ritmo cardíaco';
+    speakGpsMessage('Entrenamiento terminado. Vuelta a la calma. 3 minutos de estiramientos.');
+    if (soundMode === 'on' || soundMode === 'motivation') createBellSound();
+    updateDisplay();
+    timerInterval = setInterval(() => {
+      timeLeft--;
+      updateDisplay();
+      if (timeLeft === 60) speakGpsMessage('Queda 1 minuto de vuelta a la calma.');
+      if (timeLeft === 3 && (soundMode === 'on' || soundMode === 'motivation')) createBellSound();
+      if (timeLeft <= 0) {
+        if (soundMode === 'on' || soundMode === 'motivation') createCompletionSound();
+        nextPhase();
+      }
+    }, 1000);
+    return;
+  }
+
+  // --- FASE PRINCIPAL (workout) ---
   if (isExercise) {
     if (currentRep >= totalReps) {
-      countdownDisplay.textContent = 'FIN';
-      timerLabel.textContent = 'Entrenamiento completado';
-      timerLabel.className = 'exercise';
-      timerPhaseHint.textContent = 'Excelente trabajo';
-      isRunning = false;
-      timerModal.classList.remove('running');
-
-      // Guardar tiempo real del temporizador
-      if (timerStartTimestamp) {
-        lastTimerElapsedSeconds = Math.round((Date.now() - timerStartTimestamp) / 1000);
-        timerStartTimestamp = null;
-      }
-
-      // Parar GPS y guardar datos
-      stopGpsTracking();
-
-      if (soundMode === 'on' || soundMode === 'success') {
-        createCompletionSound();
-      }
-
-      speakGpsMessage('¡Entrenamiento completado! ¡Excelente trabajo!');
-      showToast('¡Entrenamiento completado! 🎉', 'success');
+      // No debería llegar aquí, el bloque de arriba lo intercepta
       return;
     }
 
@@ -8683,10 +8741,7 @@ function nextPhase() {
     timerPhaseHint.textContent = `Serie ${currentRep} de ${totalReps}`;
 
     speakGpsMessage(`Serie ${currentRep} de ${totalReps}. ¡${currentDayWorkout.exerciseLabel}!`);
-
-    if (soundMode === 'on' || soundMode === 'motivation') {
-      createBellSound();
-    }
+    if (soundMode === 'on' || soundMode === 'motivation') createBellSound();
   } else {
     timeLeft = currentDayWorkout.restTime;
     phaseDuration = currentDayWorkout.restTime;
@@ -8695,13 +8750,10 @@ function nextPhase() {
     timerPhaseHint.textContent = `Preparando serie ${Math.min(currentRep + 1, totalReps)}`;
 
     speakGpsMessage(`${currentDayWorkout.restLabel}. ${currentDayWorkout.restTime} segundos.`);
-
-    if (soundMode === 'on' || soundMode === 'motivation') {
-      createBellSound();
-    }
+    if (soundMode === 'on' || soundMode === 'motivation') createBellSound();
   }
 
-  // Si no existe fase de descanso, saltar directamente a la siguiente serie.
+  // Si no hay fase de descanso, saltar directamente a la siguiente serie.
   if (!phaseDuration || phaseDuration <= 0) {
     isExercise = !isExercise;
     nextPhase();
@@ -8721,7 +8773,6 @@ function nextPhase() {
       if (soundMode === 'on' || soundMode === 'motivation') {
         createCompletionSound();
       }
-
       isExercise = !isExercise;
       nextPhase();
     }

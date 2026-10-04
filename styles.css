@@ -973,6 +973,8 @@ body.dark-mode .profile-modal-overlay .profile-modal-content input[type="passwor
 #timerLabel.exercise { color: var(--success); }
 #timerLabel.rest { color: var(--warning); }
 #timerLabel.paused { color: var(--gray); }
+#timerLabel.warmup  { color: #f97316; }
+#timerLabel.cooldown { color: #10b981; }
 
 .timer-visual {
   position: relative;
@@ -1008,6 +1010,14 @@ body.dark-mode .profile-modal-overlay .profile-modal-content input[type="passwor
 
 .timer-ring-progress.rest {
   stroke: var(--warning);
+}
+
+.timer-ring-progress.warmup {
+  stroke: #f97316;
+}
+
+.timer-ring-progress.cooldown {
+  stroke: #10b981;
 }
 
 .timer-countdown-center {
