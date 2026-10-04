@@ -7749,10 +7749,82 @@ function cambiarPlan(tipo, { showMotivationalBubble = true } = {}) {
   updateMotivationalMessage({ showBubble: showMotivationalBubble });
 }
 
+// Devuelve los días naturales transcurridos desde el último entrenamiento registrado
+function getDaysSinceLastTraining() {
+  if (!currentUser) return null;
+  const log = ensureCurrentUserTrainingLog().filter(e => e?.type === 'plan' && e?.completedAt);
+  if (!log.length) return null;
+  const latestTs = Math.max(...log.map(e => new Date(e.completedAt).getTime()));
+  if (!latestTs) return null;
+  const msPerDay = 86400000;
+  return Math.floor((Date.now() - latestTs) / msPerDay);
+}
+
+// Genera el banner de sugerencia adaptativa de carga
+function buildLoadAdviceBanner(daysSince) {
+  const snoozeKey = `loadAdviceSnooze_${planActual}`;
+  const snoozeUntil = Number(localStorage.getItem(snoozeKey) || 0);
+  if (Date.now() < snoozeUntil) return null;
+
+  let icon, title, lines, level;
+
+  if (daysSince >= 14) {
+    level = 'high';
+    icon  = '🔄';
+    title = `${daysSince} días sin entrenar`;
+    lines = [
+      'El cuerpo necesita reacostumbrarse. Empieza con la sesión más corta de la semana.',
+      'Reduce el volumen a la mitad en los primeros 2 días de vuelta.'
+    ];
+  } else if (daysSince >= 7) {
+    level = 'mid';
+    icon  = '⚠️';
+    title = `${daysSince} días sin actividad`;
+    lines = [
+      'Una semana de pausa es normal. Retoma con calentamiento extendido.',
+      'Si tienes agujetas, haz el entrenamiento más suave de la semana.'
+    ];
+  } else {
+    level = 'low';
+    icon  = '💡';
+    title = `${daysSince} días desde el último entreno`;
+    lines = [
+      '¡Es buen momento para retomar! Empieza cuando quieras.'
+    ];
+  }
+
+  const div = document.createElement('div');
+  div.className = `load-advice-banner lab-${level}`;
+  div.innerHTML = `
+    <div class="lab-icon">${icon}</div>
+    <div class="lab-body">
+      <div class="lab-title">${title}</div>
+      ${lines.map(l => `<div class="lab-line">${l}</div>`).join('')}
+    </div>
+    <button type="button" class="lab-close" aria-label="Cerrar sugerencia">&times;</button>
+  `;
+
+  div.querySelector('.lab-close').addEventListener('click', () => {
+    // Silenciar 48 h para no abrumar al usuario
+    localStorage.setItem(snoozeKey, String(Date.now() + 48 * 3600000));
+    div.remove();
+  });
+
+  return div;
+}
+
 function renderWeeks() {
   if (!currentUser) return;
 
   weeksContainerElement.innerHTML = "";
+
+  // Inyectar banner de carga si han pasado ≥3 días desde el último entrenamiento
+  const daysSince = getDaysSinceLastTraining();
+  if (daysSince !== null && daysSince >= 3) {
+    const banner = buildLoadAdviceBanner(daysSince);
+    if (banner) weeksContainerElement.appendChild(banner);
+  }
+
   const weekIndex = getVisibleWeekIndex(planActual);
   const diasSemana = planes[planActual][weekIndex] || [];
   const totalWeeks = planes[planActual].length;

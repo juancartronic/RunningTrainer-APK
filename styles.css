@@ -3665,6 +3665,63 @@ body.dark-mode .plan-card.active .plan-title {
   box-shadow: 0 2px 8px rgba(16, 185, 129, 0.4);
 }
 
+/* ── Banner de sugerencia adaptativa de carga ── */
+.load-advice-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  border-radius: 12px;
+  padding: 10px 12px;
+  margin-bottom: 10px;
+  border-left: 4px solid;
+  position: relative;
+  animation: lab-slide 0.3s ease;
+}
+
+@keyframes lab-slide {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.lab-low  { background: #eff6ff; border-color: #3b82f6; }
+.lab-mid  { background: #fffbeb; border-color: #f59e0b; }
+.lab-high { background: #fff1f2; border-color: #ef4444; }
+
+body.dark-mode .lab-low  { background: #1e2d45; border-color: #3b82f6; }
+body.dark-mode .lab-mid  { background: #2d2208; border-color: #f59e0b; }
+body.dark-mode .lab-high { background: #2d0a0a; border-color: #ef4444; }
+
+.lab-icon { font-size: 1.3rem; line-height: 1; flex-shrink: 0; margin-top: 1px; }
+
+.lab-body { flex: 1; min-width: 0; }
+
+.lab-title {
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 3px;
+}
+
+.lab-line {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  line-height: 1.45;
+}
+
+.lab-close {
+  border: none;
+  background: transparent;
+  font-size: 1.1rem;
+  line-height: 1;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 2px 4px;
+  flex-shrink: 0;
+  opacity: 0.65;
+}
+
+.lab-close:hover { opacity: 1; }
+
 /* ── Botón de semana ── */
 .week-button {
   background: white;
