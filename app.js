@@ -8622,7 +8622,8 @@ function startTimer() {
   timerPhaseHint.textContent = `Activa músculos antes de empezar`;
   currentRepDisplay.textContent = '0';
 
-  speakGpsMessage(`Calentamiento de 5 minutos. Activa tu cuerpo antes de empezar.`);
+  vibratePhase('warmup');
+  speakTimerPhase('warmup', currentDayWorkout, 0, totalReps);
   if (soundMode === 'on' || soundMode === 'motivation') createBellSound();
 
   updateDisplay();
@@ -8696,7 +8697,8 @@ function nextPhase() {
     }
     stopGpsTracking();
     if (soundMode === 'on' || soundMode === 'success') createCompletionSound();
-    speakGpsMessage('¡Sesión completa! ¡Excelente trabajo!');
+    vibratePhase('finish');
+    speakTimerPhase('finish', currentDayWorkout, currentRep, totalReps);
     showToast('¡Entrenamiento completado! 🎉', 'success');
     return;
   }
@@ -8709,7 +8711,8 @@ function nextPhase() {
     timerLabel.textContent = 'VUELTA A LA CALMA';
     timerLabel.className = 'cooldown';
     timerPhaseHint.textContent = 'Estira y recupera el ritmo cardíaco';
-    speakGpsMessage('Entrenamiento terminado. Vuelta a la calma. 3 minutos de estiramientos.');
+    vibratePhase('cooldown');
+    speakTimerPhase('cooldown', currentDayWorkout, currentRep, totalReps);
     if (soundMode === 'on' || soundMode === 'motivation') createBellSound();
     updateDisplay();
     timerInterval = setInterval(() => {
@@ -8740,7 +8743,8 @@ function nextPhase() {
     timerLabel.className = 'exercise';
     timerPhaseHint.textContent = `Serie ${currentRep} de ${totalReps}`;
 
-    speakGpsMessage(`Serie ${currentRep} de ${totalReps}. ¡${currentDayWorkout.exerciseLabel}!`);
+    vibratePhase('exercise');
+    speakTimerPhase('exercise', currentDayWorkout, currentRep, totalReps);
     if (soundMode === 'on' || soundMode === 'motivation') createBellSound();
   } else {
     timeLeft = currentDayWorkout.restTime;
@@ -8749,7 +8753,8 @@ function nextPhase() {
     timerLabel.className = 'rest';
     timerPhaseHint.textContent = `Preparando serie ${Math.min(currentRep + 1, totalReps)}`;
 
-    speakGpsMessage(`${currentDayWorkout.restLabel}. ${currentDayWorkout.restTime} segundos.`);
+    vibratePhase('rest');
+    speakTimerPhase('rest', currentDayWorkout, currentRep, totalReps);
     if (soundMode === 'on' || soundMode === 'motivation') createBellSound();
   }
 
@@ -8777,6 +8782,66 @@ function nextPhase() {
       nextPhase();
     }
   }, 1000);
+}
+
+// Patrones de vibración diferenciados por fase del entrenamiento
+function vibratePhase(phase) {
+  if (!navigator.vibrate) return;
+  switch (phase) {
+    case 'exercise': navigator.vibrate([120, 60, 120]); break;   // doble golpe fuerte
+    case 'rest':     navigator.vibrate([60]);           break;   // pulso suave
+    case 'warmup':   navigator.vibrate([40, 30, 40]);   break;   // doble suave
+    case 'cooldown': navigator.vibrate([80, 40, 40]);   break;   // bajada
+    case 'finish':   navigator.vibrate([150, 80, 150, 80, 150]); break; // triple celebración
+    default: break;
+  }
+}
+
+// Mensajes de voz claros y directos para cada transición de fase
+function speakTimerPhase(phase, workout, rep, totalReps) {
+  if (!workout) return;
+  const isHIIT = /ronda|circuito|tabata|hiit/i.test(workout.title);
+
+  switch (phase) {
+    case 'warmup':
+      speakGpsMessage('Calentamiento. 5 minutos. Activa el cuerpo.');
+      break;
+    case 'exercise': {
+      const remaining = totalReps - rep;
+      if (isHIIT) {
+        const msg = rep === 1
+          ? `¡Trabajo! Serie ${rep} de ${totalReps}.`
+          : remaining === 0
+          ? `¡Última serie! ¡Todo!`
+          : `¡Trabajo! ${remaining} ${remaining === 1 ? 'serie restante' : 'series restantes'}.`;
+        speakGpsMessage(msg);
+      } else {
+        const msg = rep === 1
+          ? `¡${workout.exerciseLabel}! Serie ${rep} de ${totalReps}.`
+          : remaining === 0
+          ? `¡Última serie! ¡Vamos!`
+          : `¡${workout.exerciseLabel}! Serie ${rep}.`;
+        speakGpsMessage(msg);
+      }
+      break;
+    }
+    case 'rest': {
+      const next = rep + 1;
+      if (isHIIT) {
+        speakGpsMessage(next <= totalReps ? `Descansa. Viene la ${next}.` : 'Descansa.');
+      } else {
+        speakGpsMessage(next <= totalReps ? `${workout.restLabel}. Prepara la ${next}.` : `${workout.restLabel}.`);
+      }
+      break;
+    }
+    case 'cooldown':
+      speakGpsMessage('Vuelta a la calma. 3 minutos. Estira y respira.');
+      break;
+    case 'finish':
+      speakGpsMessage('¡Sesión completa! ¡Excelente trabajo!');
+      break;
+    default: break;
+  }
 }
 
 // Generador de sonidos
