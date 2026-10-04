@@ -4268,6 +4268,34 @@ function getPlanDisplayName(planKey = planActual) {
   }[planKey] || 'Plan';
 }
 
+// Estima la duración de una sesión en minutos a partir de su descripción textual
+function estimateSessionMinutes(description = '') {
+  const text = String(description).toLowerCase();
+  let total = 0;
+
+  // Sumar todos los valores de minutos explícitos
+  for (const m of text.matchAll(/(\d+(?:[.,]\d+)?)\s*min/gi)) {
+    total += parseFloat(m[1].replace(',', '.'));
+  }
+
+  // Convertir segundos explícitos
+  for (const m of text.matchAll(/(\d+)\s*seg/gi)) {
+    total += parseInt(m[1], 10) / 60;
+  }
+
+  // Estimar por kilómetros si no hay tiempos: 7 min/km media
+  if (total === 0) {
+    for (const m of text.matchAll(/(\d+(?:[.,]\d+)?)\s*km/gi)) {
+      total += parseFloat(m[1].replace(',', '.')) * 7;
+    }
+  }
+
+  // Fallback para sesiones sin tiempo ni distancia
+  if (total === 0) total = 30;
+
+  return Math.round(Math.max(5, Math.min(180, total)));
+}
+
 function ensureCurrentUserTrainingLog() {
   if (!currentUser) return [];
   if (!Array.isArray(currentUser.trainingLog)) {
@@ -4287,10 +4315,17 @@ function recordPlanCompletion(planKey, weekIndex, dayIndex, dayName, description
     Number(entry?.dayIndex) === Number(dayIndex)
   );
 
+  const sessionType    = getDayLoadType(description, planKey, weekIndex);
+  const estimatedMins  = estimateSessionMinutes(description);
+  const xpEarned       = XP_POR_PLAN[planKey] || 15;
+
   if (existing) {
-    existing.completedAt = new Date().toISOString();
-    existing.dayName = dayName;
-    existing.description = description;
+    existing.completedAt    = new Date().toISOString();
+    existing.dayName        = dayName;
+    existing.description    = description;
+    existing.sessionType    = sessionType;
+    existing.estimatedMins  = estimatedMins;
+    existing.xpEarned       = xpEarned;
     return;
   }
 
@@ -4302,6 +4337,9 @@ function recordPlanCompletion(planKey, weekIndex, dayIndex, dayName, description
     dayIndex,
     dayName,
     description,
+    sessionType,
+    estimatedMins,
+    xpEarned,
     completedAt: new Date().toISOString()
   });
 }
@@ -4350,6 +4388,10 @@ function buildPlanEntriesForCalendar() {
         const logKey = `${planKey}:${weekIndex}:${dayIndex}`;
         const logEntry = logByKey.get(logKey);
 
+        const sessionType   = logEntry?.sessionType  || getDayLoadType(description, planKey, weekIndex);
+        const estimatedMins = logEntry?.estimatedMins || estimateSessionMinutes(description);
+        const xpEarned      = logEntry?.xpEarned      || XP_POR_PLAN[planKey] || 15;
+
         entries.push({
           source: 'plan',
           title: `${getPlanDisplayName(planKey)} · Semana ${weekIndex + 1} · ${dayName}`,
@@ -4357,6 +4399,9 @@ function buildPlanEntriesForCalendar() {
             ? `${new Date(logEntry.completedAt).toLocaleString('es-ES')}`
             : 'Sin fecha exacta (registro anterior)',
           extra: description,
+          sessionType,
+          estimatedMins,
+          xpEarned,
           timestamp: logEntry?.completedAt ? new Date(logEntry.completedAt).getTime() : 0
         });
       });
@@ -4371,11 +4416,17 @@ function buildFreeEntriesForCalendar() {
     const dateLabel = new Date(item.createdAt).toLocaleString('es-ES');
     const distance = (item.distanceMeters / 1000).toFixed(2).replace('.', ',');
     const total = GPS.formatTime(item.elapsedSeconds);
+    const paceDisplay = item.elapsedSeconds > 0 && item.distanceMeters > 0
+      ? GPS.formatPace(Math.round(item.elapsedSeconds / (item.distanceMeters / 1000))) + '/km'
+      : null;
     return {
       source: 'libre',
       title: item.routeName || 'Ruta libre',
       meta: `${dateLabel} · ${distance} km`,
-      extra: `Tiempo total ${total}`,
+      extra: `Tiempo total ${total}${paceDisplay ? ' · Ritmo ' + paceDisplay : ''}`,
+      sessionType: 'run',
+      estimatedMins: Math.round(item.elapsedSeconds / 60),
+      xpEarned: null,
       timestamp: new Date(item.createdAt).getTime() || 0
     };
   });
@@ -4383,12 +4434,41 @@ function buildFreeEntriesForCalendar() {
 
 function calendarTrainingItemTemplate(item) {
   const sourceLabel = item.source === 'plan' ? 'Plan' : 'Libre';
+
+  const SESSION_META = {
+    run:      { label: 'Carrera',   color: '#3b82f6', icon: '🏃' },
+    walk:     { label: 'Caminata',  color: '#93c5fd', icon: '🚶' },
+    hiit:     { label: 'HIIT',      color: '#ef4444', icon: '🔥' },
+    strength: { label: 'Fuerza',    color: '#f97316', icon: '💪' },
+    trail:    { label: 'Trail',     color: '#16a34a', icon: '⛰️'  },
+    speed:    { label: 'Velocidad', color: '#8b5cf6', icon: '⚡'  },
+    mobility: { label: 'Movilidad', color: '#0d9488', icon: '🧘' },
+    generic:  { label: 'Entreno',   color: '#64748b', icon: '✅'   }
+  };
+
+  const sType = item.sessionType || 'generic';
+  const sm = SESSION_META[sType] || SESSION_META.generic;
+
+  const durationChip = item.estimatedMins
+    ? `<span class="cal-chip cal-chip-dur">⏱ ~${item.estimatedMins} min</span>`
+    : '';
+
+  const xpChip = item.xpEarned
+    ? `<span class="cal-chip cal-chip-xp">+${item.xpEarned} XP</span>`
+    : '';
+
   return `
     <article class="calendar-log-item">
       <div class="calendar-log-item-head">
-        <div>
+        <div class="cal-type-icon" style="--cal-color:${sm.color}">${sm.icon}</div>
+        <div class="cal-item-body">
           <p class="calendar-log-item-title">${item.title}</p>
           <div class="calendar-log-item-meta">${item.meta}</div>
+          <div class="cal-chips">
+            <span class="cal-chip cal-chip-type" style="background:${sm.color}20;color:${sm.color}">${sm.label}</span>
+            ${durationChip}
+            ${xpChip}
+          </div>
         </div>
         <span class="calendar-log-type ${item.source}">${sourceLabel}</span>
       </div>
