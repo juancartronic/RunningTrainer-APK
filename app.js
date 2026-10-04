@@ -153,6 +153,8 @@ const homeDistanceEl = document.getElementById('homeDistance');
 const homeStepsGoalEl = document.getElementById('homeStepsGoal');
 const homeStepsProgressTextEl = document.getElementById('homeStepsProgressText');
 const homeStepsRingProgressEl = document.getElementById('homeStepsRingProgress');
+const homeStepsRingWrapEl = document.querySelector('.home-steps-ring-wrap');
+const homeStepsMarkerEl = document.getElementById('homeStepsMarker');
 const homeOpenGpsPanelBtn = document.getElementById('homeOpenGpsPanelBtn');
 const homeGpsPanel = document.getElementById('homeGpsPanel');
 const homeCloseGpsPanelBtn = document.getElementById('homeCloseGpsPanelBtn');
@@ -1758,26 +1760,40 @@ function renderRoutineExerciseList(exercises = [], fallbackDescription = '') {
   if (!routineExerciseList) return;
 
   routineExerciseList.innerHTML = '';
-  routineExerciseList.classList.add('single-exercise');
 
-  const primaryExercise = String(exercises[0] || fallbackDescription || '').trim();
-  if (!primaryExercise) return;
+  const list = exercises.length ? exercises : [String(fallbackDescription || '').trim()].filter(Boolean);
+  if (!list.length) return;
 
-  const type = detectExerciseVisualType(primaryExercise);
-  const visual = EXERCISE_VISUAL_META[type] || EXERCISE_VISUAL_META.generic;
+  const isSingle = list.length === 1;
+  routineExerciseList.classList.toggle('single-exercise', isSingle);
 
-  const item = document.createElement('li');
-  item.className = 'routine-ex-item routine-ex-item-single';
-  item.innerHTML = `
-    <div class="routine-ex-figure-wrap">
-      ${buildExerciseFigureSvg(type)}
-    </div>
-    <div class="routine-ex-content">
-      <span class="routine-ex-chip tone-${visual.tone}">${visual.label}</span>
-      <p class="routine-ex-text">${escapeHtmlText(primaryExercise)}</p>
-    </div>
-  `;
-  routineExerciseList.appendChild(item);
+  list.forEach((exerciseText, idx) => {
+    const text = String(exerciseText || '').trim();
+    if (!text) return;
+
+    const type = detectExerciseVisualType(text);
+    const visual = EXERCISE_VISUAL_META[type] || EXERCISE_VISUAL_META.generic;
+
+    const item = document.createElement('li');
+    item.className = isSingle
+      ? 'routine-ex-item routine-ex-item-single'
+      : 'routine-ex-item';
+
+    item.innerHTML = `
+      <div class="routine-ex-figure-wrap">
+        ${buildExerciseFigureSvg(type)}
+      </div>
+      <div class="routine-ex-content">
+        <div class="routine-ex-header">
+          <span class="routine-ex-number">${idx + 1}</span>
+          <span class="routine-ex-chip tone-${visual.tone}">${visual.label}</span>
+        </div>
+        <p class="routine-ex-text">${escapeHtmlText(text)}</p>
+      </div>
+    `;
+
+    routineExerciseList.appendChild(item);
+  });
 }
 
 function openRoutineModal({ dayName = '', weekIndex = 0, dayIndex = 0, displayDescription = '', effectiveDescription = '', actionType = 'none' } = {}) {
@@ -2127,6 +2143,39 @@ function addRecoveredActiveSecondsFromSteps(stepDelta, eventTimestampMs = Date.n
 
 let _lastRenderDashboardMs = 0;
 
+function updateHomeStepsRing(totalSteps, stepsGoal, progress = 0) {
+  const safeGoal = Math.max(1, Number(stepsGoal) || 1);
+  const rawRatio = Number(totalSteps) / safeGoal;
+  const ratio = Number.isFinite(rawRatio) ? Math.max(0, Math.min(1, rawRatio)) : 0;
+  const progressColor = progress >= 100 ? '#22c55e' : '#2f93dd';
+
+  if (homeStepsRingProgressEl) {
+    const dashOffset = HOME_STEPS_RING_CIRCUMFERENCE * (1 - ratio);
+    homeStepsRingProgressEl.style.strokeDasharray = `${HOME_STEPS_RING_CIRCUMFERENCE}`;
+    homeStepsRingProgressEl.style.strokeDashoffset = `${dashOffset}`;
+    homeStepsRingProgressEl.style.stroke = progressColor;
+  }
+
+  if (!homeStepsMarkerEl || !homeStepsRingWrapEl) return;
+
+  const ringRect = homeStepsRingWrapEl.getBoundingClientRect();
+  if (ringRect.width <= 0 || ringRect.height <= 0) return;
+
+  const viewBoxSize = 220;
+  const markerRadius = (HOME_STEPS_RING_RADIUS * ringRect.width) / viewBoxSize;
+  const angleDeg = -90 + ratio * 360;
+  const angleRad = (angleDeg * Math.PI) / 180;
+  const centerX = ringRect.width / 2;
+  const centerY = ringRect.height / 2;
+  const markerX = centerX + Math.cos(angleRad) * markerRadius;
+  const markerY = centerY + Math.sin(angleRad) * markerRadius;
+
+  homeStepsMarkerEl.style.left = `${markerX}px`;
+  homeStepsMarkerEl.style.top = `${markerY}px`;
+  homeStepsMarkerEl.style.transform = `translate(-50%, -50%) rotate(${angleDeg + 90}deg)`;
+  homeStepsMarkerEl.classList.toggle('completed', progress >= 100);
+}
+
 function renderHomeDashboard() {
   ensureHomeDailyData();
 
@@ -2166,13 +2215,7 @@ function renderHomeDashboard() {
     homeStepsProgressTextEl.textContent = `${progress}% completado`;
   }
 
-  if (homeStepsRingProgressEl) {
-    const ratio = Math.min(1, totalSteps / stepsGoal);
-    const dashOffset = HOME_STEPS_RING_CIRCUMFERENCE * (1 - ratio);
-    homeStepsRingProgressEl.style.strokeDasharray = `${HOME_STEPS_RING_CIRCUMFERENCE}`;
-    homeStepsRingProgressEl.style.strokeDashoffset = `${dashOffset}`;
-    homeStepsRingProgressEl.style.stroke = progress >= 100 ? '#22c55e' : '#0ea5e9';
-  }
+  updateHomeStepsRing(totalSteps, stepsGoal, progress);
 
   updateStepDebugState({
     appSteps: totalSteps,
@@ -2192,13 +2235,7 @@ function updateHomeStepsUI() {
   if (homeStepsProgressTextEl) {
     homeStepsProgressTextEl.textContent = `${progress}% completado`;
   }
-  if (homeStepsRingProgressEl) {
-    const ratio = Math.min(1, totalSteps / stepsGoal);
-    const dashOffset = HOME_STEPS_RING_CIRCUMFERENCE * (1 - ratio);
-    homeStepsRingProgressEl.style.strokeDasharray = `${HOME_STEPS_RING_CIRCUMFERENCE}`;
-    homeStepsRingProgressEl.style.strokeDashoffset = `${dashOffset}`;
-    homeStepsRingProgressEl.style.stroke = progress >= 100 ? '#22c55e' : '#0ea5e9';
-  }
+  updateHomeStepsRing(totalSteps, stepsGoal, progress);
 }
 
 function getPedometerConfig() {
@@ -6398,8 +6435,14 @@ function initEventListeners() {
     }
   });
 
-  window.addEventListener('resize', handleWeeksContainerPlacement);
-  window.addEventListener('orientationchange', updateHomeFitHeight, { passive: true });
+  window.addEventListener('resize', () => {
+    handleWeeksContainerPlacement();
+    updateHomeStepsUI();
+  });
+  window.addEventListener('orientationchange', () => {
+    updateHomeFitHeight();
+    updateHomeStepsUI();
+  }, { passive: true });
   updateHomeFitHeight();
   initBottomNavigation();
 }
@@ -6555,6 +6598,7 @@ function initBottomNavigation() {
     const activeNavKey = activeButton?.dataset.nav || 'inicio';
     setActiveBottomNav(activeNavKey);
     updateHomeFitHeight();
+    updateHomeStepsUI();
   }, { passive: true });
 
   showAppView('inicio');

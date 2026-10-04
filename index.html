@@ -115,6 +115,7 @@
               <circle class="home-steps-ring-bg" cx="110" cy="110" r="94"></circle>
               <circle id="homeStepsRingProgress" class="home-steps-ring-progress" cx="110" cy="110" r="94"></circle>
             </svg>
+            <span id="homeStepsMarker" class="home-steps-marker" aria-hidden="true"></span>
             <div class="home-steps-center">
               <div class="home-steps-label">Hoy</div>
               <div id="homeSteps" class="home-steps-value">0</div>
@@ -123,7 +124,19 @@
             </div>
           </div>
           <div class="home-steps-actions">
-            <button id="homeOpenGpsPanelBtn" type="button" class="home-open-gps-btn">GPS</button>
+            <button id="homeOpenGpsPanelBtn" type="button" class="home-open-gps-btn" aria-label="Abrir panel GPS">
+              <span class="home-open-gps-track" aria-hidden="true"></span>
+              <span class="home-open-gps-trail" aria-hidden="true"></span>
+              <span class="home-open-gps-badge" aria-hidden="true">
+                <svg class="home-open-gps-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <circle cx="16.5" cy="4.6" r="2.2" fill="currentColor"></circle>
+                  <path d="M12 10.2l3.2-1.4 2.5 2.5 2.3.1" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"></path>
+                  <path d="M9.2 20.2l2.5-5.1 3.2 1.6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"></path>
+                  <path d="M7.2 15.5l3.4-3.2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"></path>
+                </svg>
+              </span>
+              <span class="home-open-gps-a11y">GPS</span>
+            </button>
           </div>
         </article>
 
